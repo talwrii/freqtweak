@@ -18,14 +18,14 @@ LF_SET_WARNINGS
 AC_PROG_RANLIB
 
 
-FREQTWEAK_VERSION=0.4.1
+FREQTWEAK_VERSION=0.4.2dev1
 
 AC_SUBST(FREQTWEAK_VERSION)
 
 
 use_fftw=yes
 
-AC_ARG_WITH(fftw ,[  --with-fftw=PFX        Prefix where fftw is installed (optional)],
+AC_ARG_WITH(fftw,[  --with-fftw=PFX        Prefix where fftw is installed (optional)],
  fftw_prefix="$withval", fftw_prefix="/usr/local") 
 
 if test "$use_fftw" = "yes"
