@@ -149,7 +149,7 @@ void FTprocCompressor::initialize()
 	_as = new float[A_TBL];
 	_as[0] = 1.0f;
 	for (unsigned int i=1; i<A_TBL; i++) {
-		_as[i] = expf(-1.0f / (_sampleRate * (float)i / (float)A_TBL));
+		_as[i] = expf(-1.0f / ((_sampleRate/(float)nbins) * (float)i / (float)A_TBL));
 	}
 	
 	_inited = true;
@@ -199,6 +199,12 @@ void FTprocCompressor::setFFTsize (unsigned int fftn)
 	memset(_gain_t, 0, nbins * sizeof(float));
 	memset(_env, 0, nbins * sizeof(float));
 	memset(_count, 0, nbins * sizeof(unsigned int));
+
+	_as[0] = 1.0f;
+	for (unsigned int i=1; i<A_TBL; i++) {
+		_as[i] = expf(-1.0f / ((_sampleRate/(float)nbins) * (float)i / (float)A_TBL));
+	}
+
 }
 
 FTprocCompressor::~FTprocCompressor()
