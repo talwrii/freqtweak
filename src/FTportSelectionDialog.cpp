@@ -115,7 +115,7 @@ void FTportSelectionDialog::update()
 		}
 		free (availports);
 
-		for (int i=0; i < _listBox->Number(); i++) {
+		for (int i=0; i < _listBox->GetCount(); i++) {
 			_listBox->Deselect(i);
 		}
 		if (connports) {
@@ -149,7 +149,7 @@ const char ** FTportSelectionDialog::getSelectedPorts()
 
 void FTportSelectionDialog::OnDeselectAll(wxCommandEvent &event)
 {
-	for (int i=0; i < _listBox->Number(); i++) {
+	for (int i=0; i < _listBox->GetCount(); i++) {
 		_listBox->Deselect(i);
 	}
 }
