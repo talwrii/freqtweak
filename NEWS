@@ -1,9 +1,23 @@
 freqtweak -- History of visible changes.
 
-Copyright (C) 2002, Jesse Chappell <jesse@essej.net>
+Copyright (C) 2002-2003, Jesse Chappell <jesse@essej.net>
 See the end for copying conditions.
 
 Please send freqtweak bug reports to freqtweak-user@lists.sourceforge.net .
+
+Version 0.4.7
+ * fixed tempo=0 bug
+ * new gcc and 64 bit fixes
+
+Version 0.4.6
+ * Many stability fixes
+ * Grid and grid snap options
+ * optional tempo based grid for delay time
+ * THIS time I did finally fix the FFT changing problems!
+ * Added adjustable max delay time levels (up to 20secs)
+ * Pitch now uses semitones as units
+ * Min/max legend text on plots. 
+
 
 Version 0.4.5
  * This time, I think I might have licked the changing FFT sizes problem!
@@ -52,7 +66,7 @@ Version 0.4
 -------------------------------------------------------
 Copying information:
 
-Copyright (C) 2002, Jesse Chappell <jesse@essej.net>
+Copyright (C) 2002-2003, Jesse Chappell <jesse@essej.net>
 
    Permission is granted to anyone to make or distribute verbatim copies
    of this document as received, in any medium, provided that the
