@@ -22,6 +22,8 @@
 
 #include "FTtypes.hpp"
 
+#include "xml++.hpp"
+
 #include <string>
 #include <list>
 using namespace std;
@@ -101,6 +103,10 @@ class FTspectrumModifier
 	// user notification
 	void registerListener (Listener * listener);
 	void unregisterListener (Listener *listener);
+
+	XMLNode * getExtraNode();
+	void setExtraNode(XMLNode * node);
+
 	
   protected:
 
@@ -132,6 +138,9 @@ class FTspectrumModifier
 	bool _bypassed;
 
 	list<Listener *> _listenerList;
+
+	XMLNode * _extra_node;
+
 };
 
 

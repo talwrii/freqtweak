@@ -42,10 +42,10 @@ class FTconfigManager
 	virtual ~FTconfigManager();
 
 
-	bool storeSettings (const char * name);
+	bool storeSettings (const char * name, bool uselast=false);
 
-	bool loadSettings (const char * name, bool restore_ports=false);
-	bool loadSettings (const char * name, bool restore_ports, bool ignore_iosup, vector<vector <FTprocI *> > & procvec);
+	bool loadSettings (const char * name, bool restore_ports=false, bool uselast=false);
+	bool loadSettings (const char * name, bool restore_ports, bool ignore_iosup, vector<vector <FTprocI *> > & procvec, bool uselast);
 
 	list<string> getSettingsNames();
 

@@ -294,16 +294,18 @@ bool FTapp::OnInit()
 		
 	}
 	else {
-		// default input ports
-		const char ** ports = iosup->getPhysicalInputPorts();
-		if (ports) {
-			// default input ports
-			for (int id=0; id < pcnt && ports[id]; ++id, ++icnt) {
-				inputports[id] = ports[id];
-			}
+		// Do not use default input ports anymore
+		icnt = 0;
+		
+// 		const char ** ports = iosup->getPhysicalInputPorts();
+// 		if (ports) {
+// 			// default input ports
+// 			for (int id=0; id < pcnt && ports[id]; ++id, ++icnt) {
+// 				inputports[id] = ports[id];
+// 			}
 
-			free (ports);
-		}
+// 			free (ports);
+// 		}
 	}
 
 	// OUTPUT PORTS
@@ -361,6 +363,9 @@ bool FTapp::OnInit()
 			{
 				iosup->connectPathOutput(id, outputports[id]);
 			}
+
+			// load last settings
+			_mainwin->loadPreset("", true);
 		}
 		else {
 			_mainwin->loadPreset(preset);

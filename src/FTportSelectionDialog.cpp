@@ -58,7 +58,7 @@ void FTportSelectionDialog::init()
 	
 	wxBoxSizer * mainsizer = new wxBoxSizer(wxVERTICAL);
 	_listBox = new wxListBox(this, wxNewId(), wxDefaultPosition, wxDefaultSize,
-					    0, NULL, wxLB_MULTIPLE);
+					    0, NULL, wxLB_EXTENDED);
 
 
 	

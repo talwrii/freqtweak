@@ -96,11 +96,16 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	, _mainwin(win)
 	, _gridFlag(false), _gridSnapFlag(false)
 	, _mouseCaptured(false), _bypassed(false)
-	, _boundsFont(6, wxDEFAULT, wxNORMAL, wxNORMAL, false, "Helvetica"), _textColor("white")
+	//, _boundsFont(8, wxDEFAULT, wxNORMAL, wxNORMAL, false, "Helvetica")
+	  , _boundsFont(8, wxDEFAULT, wxNORMAL, wxNORMAL)	
+	, _textColor("white")
 	, _tempo(120)
 {
 	SetBackgroundColour(*wxBLACK);
+	
+	_mainwin->normalizeFontSize(_boundsFont, 12, "999");
 
+	
 	_barBrush0.SetColour(_barColor0);
 	_barBrush0.SetStyle(wxSOLID);
 	_barBrush1.SetColour(_barColor1);
@@ -146,6 +151,9 @@ FTactiveBarGraph::~FTactiveBarGraph()
 
 	if (_backingMap) delete _backingMap;
 	delete _xscaleMenu;
+
+	if (_specMod) _specMod->unregisterListener(this);
+	if (_topSpecMod) _topSpecMod->unregisterListener(this);
 }
 
 
@@ -450,20 +458,39 @@ void FTactiveBarGraph::makeGridChoices (bool setdefault)
 
 }
 
-void FTactiveBarGraph::setGridChoice (unsigned int index)
+void FTactiveBarGraph::setGridChoice (unsigned int index, bool writeextra)
 {
 	if ( index < _gridValues.size()) {
 		_gridFactor = _gridValues[index];
 		_gridChoiceIndex = index;
 
+		if (writeextra) {
+			writeExtra (_specMod != 0 ? _specMod : _topSpecMod);
+		}
+		
 		recalculate();
 	}
 }
 
-
-void FTactiveBarGraph::setXscale(XScaleType sc)
+void FTactiveBarGraph::setGridLines (bool flag, bool writeextra)
 {
-	_xScaleType = sc; 
+	_gridFlag = flag;
+
+	if (writeextra) {
+		writeExtra (_specMod != 0 ? _specMod : _topSpecMod);
+	}
+
+	recalculate();
+}
+
+void FTactiveBarGraph::setXscale(XScaleType sc, bool writeextra)
+{
+	_xScaleType = sc;
+
+	if (writeextra) {
+		writeExtra (_specMod != 0 ? _specMod : _topSpecMod);
+	}
+	
 	Refresh(FALSE);
 }
 
@@ -500,6 +527,14 @@ bool FTactiveBarGraph::setMinMax(float min, float max)
 	return false;
 }
 
+void FTactiveBarGraph::setGridSnap (bool flag, bool writeextra)
+{
+	_gridSnapFlag = flag;
+
+	if (writeextra) {
+		writeExtra (_specMod != 0 ? _specMod : _topSpecMod);
+	}
+}
 
 void FTactiveBarGraph::xToFreqRange(int x, float &fromfreq, float &tofreq, int &frombin, int &tobin)
 {
@@ -1264,9 +1299,61 @@ void FTactiveBarGraph::OnSize(wxSizeEvent & event)
 	Clear();
 
 	recalculate();
-	
+
 	event.Skip();
 }
+
+void FTactiveBarGraph::writeExtra (FTspectrumModifier * specmod)
+{
+	XMLNode * extra = specmod->getExtraNode();
+
+	extra->add_property ("xscale", wxString::Format("%d", _xScaleType).c_str());
+
+	extra->add_property ("gridsnap", wxString::Format("%d", (int) _gridSnapFlag).c_str());
+
+	extra->add_property ("grid", wxString::Format("%d", (int) _gridChoiceIndex).c_str());
+
+	extra->add_property ("gridlines", wxString::Format("%d", (int) _gridFlag).c_str());
+	
+}
+
+void FTactiveBarGraph::readExtra (FTspectrumModifier * specmod)
+{
+	XMLNode * extra = specmod->getExtraNode();
+	XMLProperty * prop;
+	long val;
+	wxString strval;
+	
+	if ((prop = extra->property ("xscale"))) {
+		strval = prop->value().c_str();
+		if (strval.ToLong (&val)) {
+			setXscale ((XScaleType) val, false);
+		}
+	}	
+
+	if ((prop = extra->property ("grid"))) {
+		strval = prop->value().c_str();
+		if (strval.ToLong (&val)) {
+			setGridChoice ((unsigned int) val, false);
+		}
+	}	
+	
+	if ((prop = extra->property ("gridsnap"))) {
+		strval = prop->value().c_str();
+		if (strval.ToLong (&val)) {
+			setGridSnap ( val != 0 ? true : false, false);
+		}
+	}	
+
+	if ((prop = extra->property ("gridlines"))) {
+		strval = prop->value().c_str();
+		if (strval.ToLong (&val)) {
+			setGridLines ( val != 0 ? true : false, false);
+		}
+	}	
+	
+}
+
 
 void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 {

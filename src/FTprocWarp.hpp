@@ -17,30 +17,31 @@
 **  
 */
 
-#ifndef __FTPROCTRANSPOSE_HPP__
-#define __FTPROCTRANSPOSE_HPP__
+#ifndef __FTPROCWARP_HPP__
+#define __FTPROCWARP_HPP__
 
 #include "FTprocI.hpp"
 
-class FTprocTranspose
+class FTprocWarp
 	: public FTprocI
 {
   public:
 
-	FTprocTranspose(nframes_t samprate, unsigned int fftn);
-	FTprocTranspose (const FTprocTranspose & other);
+	FTprocWarp(nframes_t samprate, unsigned int fftn);
+	FTprocWarp (const FTprocWarp & other);
 
-	virtual ~FTprocTranspose();
+	virtual ~FTprocWarp();
 
-	FTprocI * clone() { return new FTprocTranspose(*this); }
+	FTprocI * clone() { return new FTprocWarp(*this); }
 	void initialize();
 	
 	void process (fftw_real *data,  unsigned int fftn);
 
 	void setFFTsize (unsigned int fftn);
 	
-	
-  protected:
+	virtual bool useAsDefault() { return false; }
+
+ protected:
 
 	FTspectrumModifier * _filter;
 

@@ -26,7 +26,7 @@
 #include "FTprocDelay.hpp"
 #include "FTprocPitch.hpp"
 #include "FTprocLimit.hpp"
-#include "FTprocTranspose.hpp"
+#include "FTprocWarp.hpp"
 
 
 FTdspManager * FTdspManager::_instance = 0;
@@ -36,7 +36,7 @@ FTdspManager::FTdspManager()
 	unsigned int fftn = 512;
 	nframes_t samprate = FTioSupport::instance()->getSampleRate();
 
-	// TODO: load this dynamically
+	// TODO: load initial dynamically
 	
 	FTprocI * procmod = new FTprocEQ (samprate, fftn);
 	_prototypes.push_back (procmod);
@@ -53,7 +53,7 @@ FTdspManager::FTdspManager()
 	procmod = new FTprocLimit (samprate, fftn);
  	_prototypes.push_back (procmod);
 
-	procmod = new FTprocTranspose (samprate, fftn);
+	procmod = new FTprocWarp (samprate, fftn);
  	_prototypes.push_back (procmod);
 	
 }

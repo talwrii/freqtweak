@@ -37,6 +37,7 @@ class FTprocLimit
 	
 	void process (fftw_real *data,  unsigned int fftn);
 
+	virtual bool useAsDefault() { return false; }
 	
   protected:
 

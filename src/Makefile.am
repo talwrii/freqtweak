@@ -69,8 +69,8 @@ freqtweak_SOURCES = \
 	FTdspManager.hpp \
 	FTprocLimit.cpp \
 	FTprocLimit.hpp \
-	FTprocTranspose.cpp \
-	FTprocTranspose.hpp \
+	FTprocWarp.cpp \
+	FTprocWarp.hpp \
 	FTpresetBlendDialog.cpp \
 	FTpresetBlendDialog.hpp \
 	FTpresetBlender.cpp \

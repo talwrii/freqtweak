@@ -57,10 +57,8 @@
 	    displays in the form of scrolling-raster spectrograms and
 	    energy vs frequency plots displaying both pre- and post-processed spectra.
 	    <p>
-	      It is an extremely addictive audio toy, I have to pry
-	      myself away from playing with it so I can <i>work</i>
-	      on it!
-	      I hope it has value for serious audio work too
+	      It is an extremely addictive audio toy, 
+	      but I hope it has value for serious audio work too
 	      (sound design, etc).  The spectrum analysis is
 	      pretty useful in its own right.
 
@@ -142,6 +140,23 @@
 		possible with this cool effect.
 
 		  </font>
+
+	      <li> <b>Limit</b> -- <font size=-1>
+		This is very harsh brick wall limiter on a per-bin
+		basis.  It is not very pleasant, but can be interesting.
+		</font>
+		
+	      <li> <b>Warp</b> -- <font size=-1>
+		  This one is a little different, both axes represent
+		  frequency, and the identity matrix is unaltered
+		  audio.  Changing the value (height) of a bin,
+		  reallocates the energy at that frequency to the new
+		  frequency bin represented by the height of the bar.
+		  For instance, if all bins are the same height, all
+		  the frequency energy is added to a single bin.  This
+		  is a sensitive filter, the Log frequency scale is helpful here
+		  (it affects both axes).
+		  </font>
 	    </ul>
 	    
 	    <h3>Requirements</h3>
@@ -214,11 +229,9 @@
 	      and output going to speakers (alsa_pcm:out_?) without using a JACK patchbay:
 	      <br>
 	      Start freqtweak first with this command line: <p>
-              &nbsp;&nbsp;freqtweak -i none,none -n ft  &amp; 
+              &nbsp;&nbsp;freqtweak -n ft  &amp; 
 		<p>
-              [ you will see some jack errors, ignore them.. they are intentional ]
-		<p>
-             Start alsaplayer like so: <p>
+             Then start alsaplayer like so: <p>
 
                    &nbsp;&nbsp; alsaplayer -o jack -d ft:in_1,ft:in_2  &amp; 
                   
@@ -229,8 +242,6 @@
 	    <h3> TODO </h3>
 	    <font size=-1>
 	    <ul>
-	    <li> Fix known bugs
-	    <li> Support reordering of processing modules
 	      <li> Automated filter modulation (via plugins?)
 	      <li> Plot performance optimizations (OpenGL?)
 	      <li> Whatever else the users want :)
@@ -249,7 +260,7 @@
 	      <font size=-1>
 	    <!-- Created: Wed Oct  9 17:02:31 EDT 2002 -->
 	    <!-- hhmts start -->
-Last modified: Sat Feb 22 11:32:18 EST 2003
+Last modified: Wed Jul 16 01:55:52 EDT 2003
 <!-- hhmts end -->
 </font>
 	    <p>

@@ -3,7 +3,14 @@ freqtweak -- History of visible changes.
 Copyright (C) 2002-2003, Jesse Chappell <jesse@essej.net>
 See the end for copying conditions.
 
-Please send freqtweak bug reports to freqtweak-user@lists.sourceforge.net .
+Please send freqtweak bug reports to freqtweak-user@lists.sourceforge.net
+
+Version 0.5.0
+ * arbitrarily selectable and reorderable modules
+ * preset blending feature
+ * two new modules: limiter and warp
+ * new preset format (conversion script available)
+ * internal design cleanup
 
 Version 0.4.8
  * fixed preset loading crashing

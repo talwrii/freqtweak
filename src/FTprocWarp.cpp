@@ -17,25 +17,25 @@
 **  
 */
 
-#include "FTprocTranspose.hpp"
+#include "FTprocWarp.hpp"
 
 
-FTprocTranspose::FTprocTranspose (nframes_t samprate, unsigned int fftn)
-	: FTprocI("Transpose", samprate, fftn)
+FTprocWarp::FTprocWarp (nframes_t samprate, unsigned int fftn)
+	: FTprocI("Warp", samprate, fftn)
 {
 }
 
-FTprocTranspose::FTprocTranspose (const FTprocTranspose & other)
+FTprocWarp::FTprocWarp (const FTprocWarp & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)	
 {
 	
 }
 
-void FTprocTranspose::initialize()
+void FTprocWarp::initialize()
 {
 	// create filter
 
-	_filter = new FTspectrumModifier("Transpose", "transpose", 0, FTspectrumModifier::FREQ_MODIFIER, TRANSPOSE_SPECMOD, _fftN/2, 0.0);
+	_filter = new FTspectrumModifier("Warp", "warp", 0, FTspectrumModifier::FREQ_MODIFIER, WARP_SPECMOD, _fftN/2, 0.0);
 	_filter->setRange(0.0, _fftN/2.0);
 	_filter->reset();
 	
@@ -46,7 +46,7 @@ void FTprocTranspose::initialize()
 	_inited = true;
 }
 
-FTprocTranspose::~FTprocTranspose()
+FTprocWarp::~FTprocWarp()
 {
 	if (!_inited) return;
 
@@ -56,7 +56,7 @@ FTprocTranspose::~FTprocTranspose()
 	delete [] _tmpdata;
 }
 
-void FTprocTranspose::process (fftw_real *data, unsigned int fftn)
+void FTprocWarp::process (fftw_real *data, unsigned int fftn)
 {
 	if (!_inited || _filter->getBypassed()) {
 		return;
@@ -88,7 +88,7 @@ void FTprocTranspose::process (fftw_real *data, unsigned int fftn)
 }
 
 
-void FTprocTranspose::setFFTsize (unsigned int fftn)
+void FTprocWarp::setFFTsize (unsigned int fftn)
 {
 	FTprocI::setFFTsize (fftn);
 

@@ -57,5 +57,3 @@ void FTprocI::setId (int id)
 	
 
 
-
-

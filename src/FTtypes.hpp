@@ -46,13 +46,13 @@ enum SpecModType {
 	GATE_SPECMOD,
 	SQUELCH_SPECMOD,
 	MASH_SPECMOD,
-	TRANSPOSE_SPECMOD
+	WARP_SPECMOD
 };
 
 
 enum XScaleType
 {
-	XSCALE_1X, // 1:1 plot bin to filter bin
+	XSCALE_1X = 0, // 1:1 plot bin to filter bin
 	XSCALE_2X, // ~ 2:1 "  with last bin representing the entire upper half
 	XSCALE_3X, // ~ 3:1 "  with last 2 bins representing to upper thirds
 	XSCALE_4X, // ~ 4:1 "  with last 3 bins representing each upper 1/4 

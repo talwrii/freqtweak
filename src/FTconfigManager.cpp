@@ -97,21 +97,32 @@ FTconfigManager::~FTconfigManager()
 }
 
 
-bool FTconfigManager::storeSettings (const char * name)
+bool FTconfigManager::storeSettings (const char * name, bool uselast)
 {
-	if (strcmp (name, "") == 0) {
+	if (!uselast && strcmp (name, "") == 0) {
 		return false;
 	}
-		
-	// directory to store settings
-	wxString dirname(wxString::Format("%s/presets/%s", _basedir.c_str(), name));
 
+	wxString dirname;
+
+	// directory to store settings
+	if (uselast)
+	{
+		dirname = wxString::Format("%s%clast_setting", _basedir.c_str(), wxFileName::GetPathSeparator());
+	}
+	else
+	{
+		dirname = wxString::Format("%s%cpresets%c%s", _basedir.c_str(), wxFileName::GetPathSeparator(),
+					   wxFileName::GetPathSeparator(), name);
+	}
+	
 	if ( ! wxDir::Exists(dirname) ) {
 		if (mkdir ( dirname, 0755 )) {
 			printf ("Error creating %s\n", dirname.c_str()); 
 			return false;
 		}
 	}
+	
 
 	FTioSupport * iosup = FTioSupport::instance();
 
@@ -215,6 +226,11 @@ bool FTconfigManager::storeSettings (const char * name)
 				writeFilter (filts[m], filtfile);
 				filtfile.Write();
 				filtfile.Close();
+
+				// write Extra node
+				XMLNode * extran = filts[m]->getExtraNode();
+				filtNode->add_child_copy (*extran);
+
 			}
 
 		}
@@ -260,20 +276,26 @@ bool FTconfigManager::storeSettings (const char * name)
 	}
 }
 
-bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
+bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool uselast)
 {
 	vector<vector <FTprocI *> > tmpvec;
-	return loadSettings(name, restore_ports, false, tmpvec);
+	return loadSettings(name, restore_ports, false, tmpvec, uselast);
 }
 
-bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool ignore_iosup, vector< vector<FTprocI *> > & procvec)
+bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool ignore_iosup, vector< vector<FTprocI *> > & procvec, bool uselast)
 {
-	if (strcmp (name, "") == 0) {
+	if (!uselast && strcmp (name, "") == 0) {
 		return false;
 	}
-	
-	wxString dirname(wxString::Format("%s%cpresets/%s", _basedir.c_str(), wxFileName::GetPathSeparator(), name));
 
+	wxString dirname;
+	if (uselast) {
+		dirname = wxString::Format("%s%clast_setting", _basedir.c_str(), wxFileName::GetPathSeparator());
+	}
+	else {
+		dirname = wxString::Format("%s%cpresets/%s", _basedir.c_str(), wxFileName::GetPathSeparator(), name);
+	}
+	
 	if ( ! wxDir::Exists(dirname) ) {
 		printf ("Settings %s does not exist!\n", dirname.c_str()); 
 		return false;
@@ -467,6 +489,8 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 		{
 			pmNode = *pmiter;
 
+			if (pmNode->name() != "ProcMod") continue;
+			
 			if (!(prop = pmNode->property ("pos"))) {
 				fprintf (stderr, "pos missing in procmod!\n"); 
 				continue;
@@ -512,6 +536,11 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 			for (filtiter=filtlist.begin(); filtiter != filtlist.end(); ++filtiter)
 			{
 				filtNode = *filtiter;
+
+			        if (filtNode->name() != "Filter")
+				{
+					continue;
+				}
 				
 				if (!(prop =filtNode->property ("pos"))) {
 					fprintf (stderr, "pos missing in filter!\n"); 
@@ -566,8 +595,13 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 						specmod->unlink(false);
 					}
 				}
+
+				// extra node
+				XMLNode * extraNode = find_named_node (filtNode, "Extra");
 				
-				
+				if (extraNode) {
+					specmod->setExtraNode (extraNode);
+				}
 			}
 
 			// insert procmod

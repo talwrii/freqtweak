@@ -271,7 +271,7 @@ LIBS="$LIBS `$WX_CONFIG --libs`"
 #CPPFLAGS="$CPPFLAGS `$WX_CONFIG --cxxflags`"
 
 if $WX_CONFIG --cxxflags > /dev/null 2>&1 ; then
-    CPPFLAGS="$CPPFLAGS `$WX_CONFIG --cxxflags` -DNEWWX"
+    CPPFLAGS="$CPPFLAGS `$WX_CONFIG --cxxflags`"
 else
     CPPFLAGS="$CPPFLAGS `$WX_CONFIG --cflags`"
 fi
@@ -283,8 +283,8 @@ fi
 #           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
 
 
-UNAME_MACHINE=`uname -m`
-CXXFLAGS="$JACK_CFLAGS  -g -Wall -O3 -fomit-frame-pointer -fstrength-reduce -funroll-loops -fmove-all-movables -ffast-math -mcpu=${UNAME_MACHINE} -march=${UNAME_MACHINE}"
+#UNAME_MACHINE=`uname -m`
+#CXXFLAGS="$JACK_CFLAGS  -g -Wall -O3 -fomit-frame-pointer -fstrength-reduce -funroll-loops -fmove-all-movables -ffast-math -mcpu=${UNAME_MACHINE} -march=${UNAME_MACHINE}"
 
 
 AC_SUBST(FREQTWEAK_MAJOR_VERSION)

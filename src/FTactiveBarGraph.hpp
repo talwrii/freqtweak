@@ -54,7 +54,7 @@ class FTactiveBarGraph
 	FTspectrumModifier * getTopSpectrumModifier() { return _topSpecMod; }
 	
 	
-	void setXscale(XScaleType sc);
+	void setXscale(XScaleType sc, bool writeextra=true);
 	XScaleType getXscale() { return _xScaleType; }
 
 	bool setMinMax(float min, float max);
@@ -63,10 +63,10 @@ class FTactiveBarGraph
 	void setFixMin (bool flag);
 	bool getFixMin () { return _fixMin; }
 
-	void setGridLines (bool flag) { _gridFlag = flag; recalculate(); }
+	void setGridLines (bool flag, bool writeextra=true);
 	bool getGridLines() { return _gridFlag; }
 
-	void setGridSnap (bool flag) { _gridSnapFlag = flag; }
+	void setGridSnap (bool flag, bool writeextra=true);
 	bool getGridSnap () { return _gridSnapFlag; }
 	
 	void OnPaint ( wxPaintEvent &event);
@@ -78,7 +78,7 @@ class FTactiveBarGraph
 	bool getBypassed () { return _bypassed; }
 
 	const vector<string> & getGridChoiceStrings() { return _gridChoices; }
-	void setGridChoice (unsigned int );
+	void setGridChoice (unsigned int , bool writeextra=true);
 	unsigned int getGridChoice () { return _gridChoiceIndex; }
 
 	void setTempo(int bpm);
@@ -89,6 +89,9 @@ class FTactiveBarGraph
 
 	void refreshBounds();
 	void recalculate();
+
+	void writeExtra(FTspectrumModifier * sp);
+	void readExtra(FTspectrumModifier * sp);
 	
   protected:
 
@@ -118,6 +121,7 @@ class FTactiveBarGraph
 	float snapValue(float val);
 
 	void makeGridChoices(bool setdefault=false);
+
 	
 	int _width, _height;
 

@@ -48,6 +48,63 @@ class FTlinkMenu;
 class FTprocOrderDialog;
 class FTpresetBlendDialog;
 
+BEGIN_DECLARE_EVENT_TYPES()
+   DECLARE_EVENT_TYPE( FT_EVT_TITLEMENU_COMMAND, 9000)
+END_DECLARE_EVENT_TYPES()
+
+   
+#define EVT_TITLEMENU_COMMAND(id, fn) \
+    DECLARE_EVENT_TABLE_ENTRY( \
+        FT_EVT_TITLEMENU_COMMAND, id, -1, \
+        (wxObjectEventFunction)(wxEventFunction)(wxCommandEventFunction)&fn, \
+        (wxObject *) NULL \
+    ),
+
+   
+class FTtitleMenuEvent
+   : public wxCommandEvent
+{
+public:
+	enum CmdType
+	{
+		ExpandEvt = 1,
+		MinimizeEvt,
+		RemoveEvt
+	};
+	
+	FTtitleMenuEvent(int id=0, CmdType ctype=ExpandEvt,  wxWindow * targ=0)
+		: wxCommandEvent(FT_EVT_TITLEMENU_COMMAND, id), 
+		  cmdType(ctype), target(targ), ready(false)
+		{
+		}
+	
+	FTtitleMenuEvent(const FTtitleMenuEvent & ev)
+		: wxCommandEvent(ev),
+		  cmdType (ev.cmdType),
+		  target (ev.target), ready(ev.ready)
+		{
+		}
+	
+	virtual ~FTtitleMenuEvent() {}
+	
+	wxEvent *Clone(void) const { return new FTtitleMenuEvent(*this); }
+	
+	
+	CmdType cmdType;
+	wxWindow * target;
+
+	bool ready;
+	
+  private:
+    DECLARE_DYNAMIC_CLASS(FTtitleMenuEvent)
+};
+
+
+/**
+ *  FTmainWin
+ *
+ */
+
 class FTmainwin : public wxFrame
 {
   public:
@@ -69,18 +126,23 @@ class FTmainwin : public wxFrame
 
 	void updatePosition(const wxString &freqstr, const wxString &valstr); 
 
-	void loadPreset (const wxString & name);
+	void loadPreset (const wxString & name, bool uselast=false);
 
 	void cleanup ();
 
 	void handleGridButtonMouse (wxMouseEvent &event);
-
+	void handleTitleButtonMouse (wxMouseEvent &event, bool minimized);
+	void doMinimizeExpand (wxWindow * source);
+	void doRemoveRow (wxWindow * source);
+	
 	void suspendProcessing();
 	void restoreProcessing();
 
 	void rebuildDisplay(bool dolink=true);
 
 	FTconfigManager & getConfigManager() { return _configManager; }
+
+	void normalizeFontSize(wxFont & fnt, int height, wxString fitstr);
 	
   protected:
 
@@ -89,6 +151,7 @@ class FTmainwin : public wxFrame
 	void updatePlot(int plotnum);
 	void checkEvents();
 
+	
 	// per path handlers
 	
 	void handleInputButton (wxCommandEvent &event);
@@ -118,6 +181,7 @@ class FTmainwin : public wxFrame
 	void OnProcMod (wxCommandEvent &event);
 	void OnPresetBlend (wxCommandEvent &event);
 
+	void handleTitleMenuCmd (FTtitleMenuEvent & ev);
 	
 	void rowpanelScrollSize();
 
@@ -127,7 +191,10 @@ class FTmainwin : public wxFrame
 
 	void pushProcRow(FTspectrumModifier *specmod);
 	void popProcRow();
-    
+
+	void updateAllExtra();
+	void minimizeRow (wxWindow * shown, wxWindow * hidden, int rownum, bool layout=true);
+	
 	FTprocessPath * _processPath[FT_MAXPATHS];
 
 	int _startpaths;
@@ -369,7 +436,8 @@ class FTmainwin : public wxFrame
 	wxFont _titleFont;
 	wxFont _titleAltFont;
 	wxFont _buttFont;
-
+	
+	vector<FTtitleMenuEvent *> _pendingTitleEvents;
 	
 	friend class FTupdateTimer;
 	friend class FTlinkMenu;
@@ -459,5 +527,45 @@ class FTgridButton
 	DECLARE_EVENT_TABLE()
 
 };
+
+
+class FTtitleMenu
+	: public wxMenu
+{
+  public:
+	FTtitleMenu (wxWindow *parent, FTmainwin *win, bool minimized);
+
+	void OnSelectItem(wxCommandEvent &event);
+
+	FTmainwin *_mwin;
+	wxWindow * _parent;
+		
+  private:
+	// any class wishing to process wxWindows events must use this macro
+	DECLARE_EVENT_TABLE()
+};
+
+class FTtitleButton
+	: public wxButton
+{
+   public:
+	FTtitleButton(FTmainwin *mwin, bool minimized, wxWindow * parent, wxWindowID id,
+		     const wxString& label,
+		     const wxPoint& pos,
+		     const wxSize& size = wxDefaultSize,
+		     long style = 0, const wxValidator& validator=wxDefaultValidator, const wxString& name = wxButtonNameStr);
+
+	void handleMouse (wxMouseEvent &event);
+
+	FTmainwin * _mainwin;
+	bool _minimized;
+  private:
+	// any class wishing to process wxWindows events must use this macro
+	DECLARE_EVENT_TABLE()
+
+};
+
+
+
 
 #endif

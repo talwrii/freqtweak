@@ -58,6 +58,8 @@ void FTprocessPath::initSpectralEngine()
 	
 	for (; mod != mlist.end(); ++mod)
 	{
+		if (!(*mod)->useAsDefault())
+			continue;
 	        FTprocI * newmod = (*mod)->clone();
 
 		newmod->initialize();

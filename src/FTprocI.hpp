@@ -34,6 +34,8 @@
 
 #include "FTtypes.hpp"
 
+#include "xml++.hpp"
+
 #include <map>
 #include <list>
 #include <vector>
@@ -103,7 +105,7 @@ class FTprocI
 	
 	virtual void reset() {}
 
-	
+	virtual bool useAsDefault() { return true; }
  protected:
 
 	FTprocI (const string & name, nframes_t samprate, unsigned int fftn);
@@ -119,6 +121,7 @@ class FTprocI
 
 	int _id;
 	string _name;
+
 };
 
 

@@ -56,6 +56,8 @@ using namespace std;
 
 #include "version.h"
 
+#include "ftlogo.xpm"
+
 //#include "images/bypass.xpm"
 //#include "images/bypass_active.xpm"
 //#include "images/link.xpm"
@@ -126,6 +128,10 @@ enum WindowIds
 };
 
 
+DEFINE_LOCAL_EVENT_TYPE (FT_EVT_TITLEMENU_COMMAND);
+
+IMPLEMENT_DYNAMIC_CLASS(FTtitleMenuEvent, wxCommandEvent);
+
 
 // the event tables connect the wxWindows events with the functions (event
 // handlers) which process them. It can be also done at run-time, but for the
@@ -186,9 +192,12 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 	EVT_BUTTON(FT_GridSnapBase, FTmainwin::handleGridButtons)
 
 	EVT_SPINCTRL(FT_TempoSpinId, FTmainwin::handleChoices)
-	
+
+	EVT_TITLEMENU_COMMAND (0, FTmainwin::handleTitleMenuCmd)
 END_EVENT_TABLE()
 
+
+	
 
 // ----------------------------------------------------------------------------
 // main frame
@@ -219,12 +228,35 @@ FTmainwin::FTmainwin(int startpath, const wxString& title, const wxString& rcdir
 
 }
 
+void FTmainwin::normalizeFontSize(wxFont & fnt, int height, wxString fitstr)
+{
+	int fontw, fonth, desch, lead, lasth=0;
+	
+	GetTextExtent(fitstr, &fontw, &fonth, &desch, &lead, &fnt);
+	//printf ("Text extent for %s: %d %d %d %d   sz: %d\n", fitstr.c_str(), fontw, desch, lead, fonth, fnt.GetPointSize());
+	while (fonth > height ) {
+		fnt.SetPointSize(fnt.GetPointSize() - 1);
+		GetTextExtent(fitstr, &fontw, &fonth, &desch, &lead, &fnt);
+		//printf ("Text extent for buttfont: %d %d %d %d sz: %d\n", fontw, fonth, desch, lead, fnt.GetPointSize());
+
+		if (lasth == fonth) break; // safety
+		lasth = fonth;
+	}
+
+}
+
+
 void FTmainwin::buildGui()
 {
 	_bwidth = 20;
 	_labwidth = 74;
-	_bheight = 16;
+	_bheight = 18;
 	_rowh = 68;
+
+
+	normalizeFontSize(_buttFont, _bheight-4, "BA");
+	normalizeFontSize(_titleFont, _bheight-4, "EQ");
+	normalizeFontSize(_titleAltFont, _bheight-4, "EQ");
 	
 	// set the frame icon
 	//SetIcon(wxICON(mondrian));
@@ -280,11 +312,9 @@ void FTmainwin::buildGui()
 
 	
 	wxButton *storeButt = new wxButton(configpanel, FT_StoreButton, "Store");
-	storeButt->SetFont(_buttFont);
 	configSizer->Add( storeButt, 0, wxALL|wxALIGN_CENTER, 2);
 
 	wxButton *loadButt = new wxButton(configpanel, FT_LoadButton, "Load");
-	loadButt->SetFont(_buttFont);
 	configSizer->Add( loadButt, 0, wxALL|wxALIGN_CENTER, 2);
 
 	_restorePortsCheck = new wxCheckBox(configpanel, FT_RestorePortCheckId, "Restore Ports");
@@ -428,9 +458,18 @@ void FTmainwin::buildGui()
 
 	ctrlbook->AddPage ( (wxNotebookPage *) timepanel, "Time" , false);
 
+	wxBoxSizer *booksizer = new wxBoxSizer (wxHORIZONTAL);
+	
+	booksizer->Add (ctrlbook, 1, wxALL, 0);
+
+	wxStaticBitmap * logobit = new wxStaticBitmap(this, -1, wxBitmap(ftlogo_xpm));
+	//wxStaticBitmap * logobit = new wxStaticBitmap(this, -1, wxBitmap(ftlogo1_xpm));
+	//wxStaticBitmap * logobit = new wxStaticBitmap(this, -1, wxBitmap(ftlogo2_xpm));
+
+	booksizer->Add (logobit, 0, wxALIGN_BOTTOM);
 	
 	
-	mainsizer->Add ( ctrlbook, 0, wxALL|wxEXPAND, 2 );
+	mainsizer->Add ( booksizer, 0, wxALL|wxEXPAND, 2 );
 
 
 
@@ -774,17 +813,17 @@ void FTmainwin::pushProcRow(FTspectrumModifier *specmod)
 	string name = specmod->getName();
 
 	// main label button
-	wxButton *labbutt = new wxButton(rpanel, FT_LabelBase, name.c_str(),
+	wxButton *labbutt = new FTtitleButton(this, false, rpanel, FT_LabelBase, name.c_str(),
 					 wxDefaultPosition, wxSize(_labwidth,_bheight));
 	labbutt->SetFont(_titleFont);
-	labbutt->SetToolTip(wxString::Format("Hide %s", name.c_str()));
+	labbutt->SetToolTip(wxString::Format("Hide %s\nRight-click for menu", name.c_str()));
 	_labelButtons.push_back (labbutt);
 			
 	// alt label button
-	wxButton * altlab  = new wxButton(_rowPanel, FT_LabelBase, name.c_str(),
+	wxButton * altlab  = new FTtitleButton(this, true, _rowPanel, FT_LabelBase, name.c_str(),
 					  wxDefaultPosition, wxSize(_labwidth,_bheight));
 	altlab->SetFont(_titleAltFont);
-	altlab->SetToolTip(wxString::Format("Show %s", name.c_str()));
+	altlab->SetToolTip(wxString::Format("Show %s\nRight-click for menu", name.c_str()));
 	altlab->Show(false);
 	wxLayoutConstraints * constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -1120,15 +1159,11 @@ void FTmainwin::createPathStuff(int i)
 	// I/O buttons
 	
 	_inputButton[i] = new wxButton(_upperPanels[i], (int) FT_InputButtonId, "No Input", wxDefaultPosition, wxSize(-1,-1));
-	_inputButton[i]->SetFont(_buttFont);
 	
 	_outputButton[i] = new wxButton(_lowerPanels[i], (int) FT_OutputButtonId, "No Output", wxDefaultPosition, wxSize(-1,-1));
-	_outputButton[i]->SetFont(_buttFont);
 	
 	_bypassButton[i] = new wxButton(_upperPanels[i], (int) FT_BypassId, "Bypass", wxDefaultPosition, wxSize(-1,-1));
-	_bypassButton[i]->SetFont(_buttFont);
 	_muteButton[i] = new wxButton(_lowerPanels[i], (int) FT_MuteId, "Mute", wxDefaultPosition, wxSize(-1,-1));
-	_muteButton[i]->SetFont(_buttFont);
 	
 	// input area
 	{
@@ -1140,7 +1175,6 @@ void FTmainwin::createPathStuff(int i)
 		tmpsizer2->Add (_bypassButton[i], 1, wxRIGHT, 3);
 		
 		stattext = new wxStaticText(_upperPanels[i], -1, "Gain (dB)", wxDefaultPosition, wxDefaultSize);
-		stattext->SetFont(_buttFont);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 0);
 		//_gainSlider[i] = new wxSlider(this, FT_GainSlider, 0, -70, 10);
 		//tmpsizer2->Add (_gainSlider[i], 1, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
@@ -1228,12 +1262,10 @@ void FTmainwin::createPathStuff(int i)
 		tmpsizer2 = new wxBoxSizer (wxHORIZONTAL);
 		tmpsizer2->Add (_muteButton[i], 1, wxRIGHT, 5);
 		stattext = new wxStaticText(_lowerPanels[i], -1, "Dry", wxDefaultPosition, wxDefaultSize);
-		stattext->SetFont(_buttFont);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 		_mixSlider[i] = new wxSlider(_lowerPanels[i], FT_MixSlider, 1000, 0, 1000);
 		tmpsizer2->Add (_mixSlider[i], 2, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 		stattext = new wxStaticText(_lowerPanels[i], -1, "Wet", wxDefaultPosition, wxDefaultSize);
-		stattext->SetFont(_buttFont);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 
 		tmpsizer->Add (tmpsizer2, 0, wxBOTTOM|wxEXPAND, 1);
@@ -1788,10 +1820,107 @@ void FTmainwin::handleLinkButtons (wxCommandEvent &event)
    
 }
 
+void FTmainwin::handleTitleMenuCmd (FTtitleMenuEvent & ev)
+{
+
+	if (ev.ready)
+	{
+		// recieved from title menu selections
+		
+		if (ev.cmdType == FTtitleMenuEvent::RemoveEvt)
+		{
+			doRemoveRow(ev.target);
+		}
+		else if (ev.cmdType == FTtitleMenuEvent::ExpandEvt
+			 || ev.cmdType == FTtitleMenuEvent::MinimizeEvt)
+		{
+			
+			doMinimizeExpand(ev.target);
+		}
+	}
+	else {
+
+		_pendingTitleEvents.push_back ((FTtitleMenuEvent *) ev.Clone());
+	}
+	
+}
+
+
+void FTmainwin::doRemoveRow (wxWindow * source)
+{
+	if (source == _inspecLabelButton || source == _inspecLabelButtonAlt
+	    || source == _outspecLabelButton || source == _outspecLabelButtonAlt)
+	{
+		
+		return;
+	}
+
+
+	FTspectralEngine *engine =  _processPath[0]->getSpectralEngine();
+	vector<FTprocI *> procmods;
+	engine->getProcessorModules (procmods);
+	
+	
+	unsigned int rowcnt=0;
+	int itemi = -1;
+	bool done = false;
+	for (unsigned int n=0; n < procmods.size(); ++n)
+	{
+		FTprocI *pm = procmods[n];
+		vector<FTspectrumModifier *> filts;
+		pm->getFilters (filts);
+		int lastgroup = -1;
+		
+		for (unsigned int m=0; m < filts.size(); ++m)
+		{
+			if (filts[m]->getGroup() == lastgroup) {
+				continue; // first fill do
+			}
+			lastgroup = filts[m]->getGroup();
+			   
+			if (source == _labelButtons[rowcnt] || source == _altLabelButtons[rowcnt]) {
+				itemi = (int) n;
+				done = true;
+			}
+			   
+			rowcnt++;
+		}
+		   
+		if (done) break;
+	}
+	   
+	if (itemi >= 0)
+	{
+		suspendProcessing();
+		
+		FTioSupport * iosup = FTioSupport::instance();
+		// do this for every active process path
+		
+		FTprocessPath * procpath;
+		for (int i=0; i < iosup->getActivePathCount(); ++i)
+		{
+			procpath = iosup->getProcessPath(i);
+			if (!procpath) break;
+			
+			engine = procpath->getSpectralEngine();
+
+			engine->removeProcessorModule ((unsigned int) itemi); 
+		}
+
+		rebuildDisplay(false);
+		restoreProcessing();
+	}
+}
+
 void FTmainwin::handleLabelButtons (wxCommandEvent &event)
 {
-	wxObject *source = event.GetEventObject();
-	
+	wxWindow *source = (wxWindow *) event.GetEventObject();
+
+	doMinimizeExpand (source);
+}
+
+void FTmainwin::doMinimizeExpand (wxWindow * source)
+{
 	// remove sash from rowsizer and replace with button
 	int itemi=-1;
 	wxWindow * hidewin=0, *showwin=0;
@@ -1842,7 +1971,13 @@ void FTmainwin::handleLabelButtons (wxCommandEvent &event)
 
 	}
 
+	minimizeRow (showwin, hidewin, itemi, true);
 
+	updateAllExtra();
+}
+
+void FTmainwin::minimizeRow (wxWindow * showwin, wxWindow * hidewin, int itemi, bool layout)
+{
 	
 	if (hidewin && showwin) {
 		hidewin->Show(false);
@@ -1858,12 +1993,13 @@ void FTmainwin::handleLabelButtons (wxCommandEvent &event)
 		}
 		
 		showwin->Show(true);
-		_rowPanel->Layout();
-		rowpanelScrollSize();
 
+		if (layout) {
+			_rowPanel->Layout();
+			rowpanelScrollSize();
+		}
 	}
 
-	
 }
 
 
@@ -2115,7 +2251,32 @@ void FTmainwin::handleGridButtonMouse (wxMouseEvent &event)
 	event.Skip();
 }
 
+void FTmainwin::handleTitleButtonMouse (wxMouseEvent &event, bool minimized)
+{
 
+	wxWindow *source = (wxWindow *) event.GetEventObject();
+
+	
+	FTtitleMenu *menu = new FTtitleMenu (source, this, minimized);
+	source->PopupMenu (menu, 0, source->GetSize().GetHeight());
+	delete menu;
+
+	// now repost pending title events
+	// XXX: we do this because one of the actions
+	// actually deletes the source of this event,
+	// and the first pending event was posted in the popupmenu's idle
+	// context.  what a pain.
+	for (vector<FTtitleMenuEvent *>::iterator evt = _pendingTitleEvents.begin();
+	     evt != _pendingTitleEvents.end() ; ++evt)
+	{
+		(*evt)->ready = true;
+		AddPendingEvent (*(*evt));
+		delete (*evt);
+	}
+	_pendingTitleEvents.clear();
+	
+	event.Skip();
+}
 
 void FTmainwin::handleIOButtons (wxCommandEvent &event)
 {
@@ -2258,7 +2419,7 @@ void FTmainwin::rebuildDisplay(bool dolink)
 				wxPanel ** rowpanels = 0;
 				FTactiveBarGraph **bargraphs = 0;
 				bool newrow = false;
-				
+
 				if (filts[m]->getGroup() != lastgroup)
 				{				
 					rowcnt++;
@@ -2277,8 +2438,41 @@ void FTmainwin::rebuildDisplay(bool dolink)
 					bargraphs[i]->setTopSpectrumModifier (0);
 					bargraphs[i]->setBypassed (filts[m]->getBypassed());
 					bargraphs[i]->setTempo(_tempoSpinCtrl->GetValue());
+					bargraphs[i]->readExtra(filts[m]);
 					bargraphs[i]->refreshBounds();
 
+					
+					XMLNode * extra = filts[m]->getExtraNode();
+					XMLProperty * prop;
+
+					// get stuff from extra node
+					if ((prop = extra->property ("height"))) {
+						wxString val(prop->value().c_str());
+						unsigned long newh;
+						if (val.ToULong (&newh)) {
+							wxLayoutConstraints *cnst = _rowSashes[rowcnt]->GetConstraints();
+							if (newh < 36) newh = 36;
+							
+							cnst->height.Absolute (newh);
+						}
+					}
+
+					if ((prop = extra->property ("minimized"))) {
+						wxString val(prop->value().c_str());
+						unsigned long newh;
+						if (val.ToULong (&newh)) {
+							if (newh) {
+								// minimize
+								minimizeRow (_altLabelButtons[rowcnt], _rowSashes[rowcnt], rowcnt+1, false);
+							}
+							else {
+								// un-minimize
+								minimizeRow (_rowSashes[rowcnt], _altLabelButtons[rowcnt], rowcnt+1, false);
+							}
+						}
+					}
+
+					
 					if (dolink) {
 						// link it to first
 						filts[m]->link (pmods[n]->getFilter(m));
@@ -2293,6 +2487,7 @@ void FTmainwin::rebuildDisplay(bool dolink)
 					rowpanels = _subrowPanels[rowcnt];
 					bargraphs = _barGraphs[rowcnt];
 					bargraphs[i]->setTopSpectrumModifier (filts[m]);
+					bargraphs[i]->readExtra(filts[m]);
 					bargraphs[i]->refreshBounds();
 
 					if (dolink) {
@@ -2336,6 +2531,9 @@ void FTmainwin::rebuildDisplay(bool dolink)
 
 		
 	}
+
+	//_rowPanel->Layout();
+	//rowpanelScrollSize();
 	
 	updateGraphs(0, ALL_SPECMOD);
 
@@ -2398,6 +2596,65 @@ void FTmainwin::changePathCount (int newcnt, bool rebuild, bool ignorelink)
 	}
 }
 
+void FTmainwin::updateAllExtra ()
+{
+	FTspectralEngine * engine;
+
+	// go through each specfilt and get its sash constraint height
+	for (int i=0; i < _pathCount; i++)
+	{
+		if (!_processPath[i]) continue; // shouldnt happen
+
+		engine = _processPath[i]->getSpectralEngine();
+		vector<FTprocI *> procmods;
+		engine->getProcessorModules (procmods);
+	
+		int rowcnt=-1; // preincremented below
+	
+		for (unsigned int n=0; n < procmods.size(); ++n)
+		{
+			FTprocI *pm = procmods[n];
+			vector<FTspectrumModifier *> filts;
+			pm->getFilters (filts);
+			int lastgroup = -1;
+		
+			for (unsigned int m=0; m < filts.size(); ++m)
+			{
+				wxPanel ** rowpanels = 0;
+				FTactiveBarGraph **bargraphs = 0;
+			
+				if (filts[m]->getGroup() != lastgroup)
+				{				
+					rowcnt++;
+
+					rowpanels = _subrowPanels[rowcnt];
+					bargraphs = _barGraphs[rowcnt];
+					FTactiveBarGraph * graph = bargraphs[i];				
+					wxSashLayoutWindow * sash = _rowSashes[rowcnt];
+
+					wxLayoutConstraints *cnst = sash->GetConstraints();
+
+					XMLNode * extra = filts[m]->getExtraNode();
+				
+					extra->add_property ("height", wxString::Format("%d", cnst->height.GetValue()).c_str());
+					extra->add_property ("minimized", wxString::Format("%d", (int) !sash->IsShown()).c_str());
+
+					//printf ("updating extra for %s : shown %d\n", filts[m]->getName().c_str(), (int) sash->IsShown());
+					
+					
+					graph->writeExtra (filts[m]);
+
+					lastgroup = filts[m]->getGroup();
+					
+				}
+				else {
+					continue;
+				}
+			}
+		}
+	}
+}
+
 void FTmainwin::handleSashDragged (wxSashEvent &event)
 {
 	wxObject *source = event.GetEventObject();
@@ -2415,6 +2672,9 @@ void FTmainwin::handleSashDragged (wxSashEvent &event)
 		cnst->height.Absolute (newh);
 		_rowPanel->Layout();
 		rowpanelScrollSize();
+
+		// update all extra settings
+		updateAllExtra();
 	}
 
 }
@@ -2499,7 +2759,6 @@ void FTmainwin::OnPresetBlend (wxCommandEvent &event)
 
 void FTmainwin::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
-	cleanup();
 	// TRUE is to force the frame to close
 	Close(TRUE);
 }
@@ -2529,6 +2788,9 @@ void FTmainwin::OnClose(wxCloseEvent &event)
 
 void FTmainwin::cleanup ()
 {
+	// save default preset
+	_configManager.storeSettings ("", true);
+	
 	//printf ("cleaning up\n");
 	FTioSupport::instance()->close();
 }
@@ -2632,6 +2894,8 @@ void FTmainwin::updatePosition(const wxString &freqstr, const wxString &valstr)
 
 void FTmainwin::handleStoreButton (wxCommandEvent &event)
 {
+	updateAllExtra();
+	
 	_configManager.storeSettings ( _presetCombo->GetValue().c_str());
 
 	if (_blendDialog && _blendDialog->IsShown()) {
@@ -2648,11 +2912,11 @@ void FTmainwin::handleLoadButton (wxCommandEvent &event)
 }
 
 
-void FTmainwin::loadPreset (const wxString &name)
+void FTmainwin::loadPreset (const wxString &name, bool uselast)
 {
 	suspendProcessing();
 	
-	bool success = _configManager.loadSettings ( name, _restorePortsCheck->GetValue());
+	bool success = _configManager.loadSettings ( name, _restorePortsCheck->GetValue(), uselast);
 
 	if (success) {
 		_presetCombo->SetValue(name);
@@ -2684,6 +2948,7 @@ void FTmainwin::rebuildPresetCombo()
 	wxString selected = _presetCombo->GetValue();
 	
 	_presetCombo->Clear();
+	_presetCombo->Append("");
 
 	for (list<string>::iterator name=namelist.begin(); name != namelist.end(); ++name)
 	{
@@ -2792,7 +3057,7 @@ void FTlinkMenu::OnLinkItem(wxCommandEvent &event)
 	// this is disaster waiting to happen :)
 	// we need to link all the filters in the same group to their corresponding ones
 
-	int group = _specengine->getProcessorModule(_procmodnum)->getFilter(_filtnum)->getGroup();
+	//int group = _specengine->getProcessorModule(_procmodnum)->getFilter(_filtnum)->getGroup();
 	vector<FTspectrumModifier*> sfilts, dfilts;
 
 	_specengine->getProcessorModule(_procmodnum)->getFilters (sfilts);
@@ -2896,6 +3161,87 @@ void FTgridButton::handleMouse(wxMouseEvent &event)
 {
 	if (event.RightDown()) {
 		_mainwin->handleGridButtonMouse(event);
+	}
+
+	event.Skip();
+}
+
+
+
+BEGIN_EVENT_TABLE(FTtitleMenu, wxMenu)
+	EVT_MENU_RANGE (0, 20, FTtitleMenu::OnSelectItem)
+END_EVENT_TABLE()
+
+enum {
+	ID_TitleExpand = 0,
+	ID_TitleMinimize,
+	ID_TitleRemove
+};
+	
+FTtitleMenu::FTtitleMenu (wxWindow * parent, FTmainwin *win, bool minimized)
+	: wxMenu(),  _mwin(win), _parent(parent)
+{
+	wxMenuItem * item = 0;
+
+	if (minimized) {
+		item = new wxMenuItem(this, ID_TitleExpand, "Expand");
+	}
+	else {
+		item = new wxMenuItem(this, ID_TitleMinimize, "Minimize");
+	}
+	Append (item);
+
+	Append (new wxMenuItem(this, ID_TitleRemove, "Remove"));
+	
+}
+
+void FTtitleMenu::OnSelectItem(wxCommandEvent &event)
+{
+	int id = event.GetId();
+	
+	if (id == ID_TitleRemove)
+	{
+		FTtitleMenuEvent tev (0, FTtitleMenuEvent::RemoveEvt, _parent);
+		_mwin->AddPendingEvent (tev);
+		//_mwin->doRemoveRow(_parent);
+	}
+	else if (id == ID_TitleMinimize)
+	{
+		FTtitleMenuEvent tev (0, FTtitleMenuEvent::MinimizeEvt, _parent);
+		_mwin->AddPendingEvent (tev);
+
+		//_mwin->doMinimizeExpand(_parent);		
+	}
+	else if (id == ID_TitleExpand)
+	{
+		FTtitleMenuEvent tev (0, FTtitleMenuEvent::ExpandEvt, _parent);
+		_mwin->AddPendingEvent (tev);
+		
+		//_mwin->doMinimizeExpand(_parent);
+	}
+}
+
+
+
+
+BEGIN_EVENT_TABLE(FTtitleButton, wxButton)
+	EVT_RIGHT_DOWN (FTtitleButton::handleMouse)
+END_EVENT_TABLE()
+
+FTtitleButton::FTtitleButton(FTmainwin * mwin, bool minimized, wxWindow *parent, wxWindowID id,
+			   const wxString& label,
+			   const wxPoint& pos,
+			   const wxSize& size,
+			   long style, const wxValidator& validator, const wxString& name)
+
+	: wxButton(parent, id, label, pos, size, style, validator, name), _mainwin(mwin), _minimized(minimized)
+{
+}
+
+void FTtitleButton::handleMouse(wxMouseEvent &event)
+{
+	if (event.RightDown()) {
+		_mainwin->handleTitleButtonMouse(event, _minimized);
 	}
 
 	event.Skip();

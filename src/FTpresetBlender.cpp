@@ -67,7 +67,7 @@ bool FTpresetBlender::setPreset(const string & name, int index)
 	
 	vector<vector <FTprocI *> > * procvec = new vector<vector<FTprocI*> > ();
 		
-	bool succ =  _configMan->loadSettings (name.c_str(), false, true, *procvec);
+	bool succ =  _configMan->loadSettings (name.c_str(), false, true, *procvec, false);
 
 	if (!succ) {
 		delete procvec;

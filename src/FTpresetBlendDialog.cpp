@@ -70,7 +70,7 @@ FTpresetBlendDialog::FTpresetBlendDialog(FTmainwin * parent, FTconfigManager *co
 					 const wxString& name )
 
 	: wxDialog(parent, id, title, pos, size, style, name),
-	  _mainwin(parent), _justResized(false), _namewidth(75),
+	  _mainwin(parent), _justResized(false), _namewidth(85),
 	  _configMan(confman)
 {
 	_presetBlender = new FTpresetBlender(_configMan);
@@ -106,8 +106,6 @@ void FTpresetBlendDialog::init()
 {
 	wxBoxSizer * mainsizer = new wxBoxSizer(wxVERTICAL);
 
-	wxFont titleFont(12, wxDEFAULT, wxNORMAL, wxBOLD);
-
 	
 	wxBoxSizer *tmpsizer, *tmpsizer2;
 	wxStaticText * stattext;
@@ -117,7 +115,7 @@ void FTpresetBlendDialog::init()
 	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
 	
 	stattext = new wxStaticText(this, -1, "Preset 1: ", wxDefaultPosition, wxSize(-1, -1));
-	stattext->SetFont(titleFont);
+	//stattext->SetFont(titleFont);
 	tmpsizer2->Add(stattext, 0, wxALL|wxEXPAND, 1);
 
 	_priStatus = new wxStaticText(this, -1, "not set", wxDefaultPosition, wxSize(-1, -1));
@@ -135,7 +133,7 @@ void FTpresetBlendDialog::init()
 	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
 	
 	stattext = new wxStaticText(this, -1, "Preset 2: ", wxDefaultPosition, wxSize(-1, -1));
-	stattext->SetFont(titleFont);
+	//stattext->SetFont(titleFont);
 	tmpsizer2->Add(stattext, 0, wxALL|wxEXPAND, 1);
 
 	_secStatus = new wxStaticText(this, -1, "not set", wxDefaultPosition, wxSize(-1, -1));
@@ -152,7 +150,7 @@ void FTpresetBlendDialog::init()
 
 	tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 	stattext = new wxStaticText(this, -1, "Master", wxDefaultPosition, wxSize(_namewidth, -1));
-	stattext->SetFont(titleFont);
+	//stattext->SetFont(titleFont);
 	stattext->SetSize(_namewidth, -1);
 	
 	tmpsizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
@@ -193,7 +191,7 @@ void FTpresetBlendDialog::init()
 
 void FTpresetBlendDialog::refreshState(const string & defname, bool usefirst, const string & defsec, bool usesec)
 {
-	wxFont titleFont(12, wxDEFAULT, wxNORMAL, wxBOLD);
+	//wxFont titleFont(12, wxDEFAULT, wxNORMAL, wxBOLD);
 
 	// not compatible with old wx
 	_procSizer->Clear (true);
@@ -250,7 +248,7 @@ void FTpresetBlendDialog::refreshState(const string & defname, bool usefirst, co
 				wxBoxSizer * tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 				
 				wxStaticText * stattext = new wxStaticText(_procPanel, -1, filts[m]->getName().c_str(), wxDefaultPosition, wxSize(_namewidth, -1));
-				stattext->SetFont(titleFont);
+				//stattext->SetFont(titleFont);
 				stattext->SetSize(_namewidth, -1);
 				tmpsizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 				
