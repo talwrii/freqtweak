@@ -21,7 +21,13 @@
 		    <a href="http://sourceforge.net/project/showfiles.php?group_id=64313">[download]</a>
 		  </td>
 	    </tr>
-	    </table>
+		<tr>
+		  <td align=right>
+		    <a href="https://lists.sourceforge.net/lists/listinfo/freqtweak-user">[mailing-list]</a>
+		  </td>
+	    </tr>
+
+	  </table>
 	  </td>
 	  
 	</tr>
@@ -30,7 +36,7 @@
 	<tr>
 	  <td colspan=2>
 	    
-	    FreqTweak is a tool for realtime audio spectral manipulation and
+	    FreqTweak is a tool for FFT-based realtime audio spectral manipulation and
 	    display.  It provides several algorithms for processing audio data in
 	    the frequency domain and a highly interactive GUI to manipulate the
 	    associated filters for each. It also provides high-resolution spectral
@@ -46,7 +52,7 @@
 	    
 	    <h3>Features</h3>
 
-	    Freqtweak supports manipulating the spectral filters at several frequency resolutions
+	    FreqTweak supports manipulating the spectral filters at several frequency resolutions
 	    (64,128,256,512,1024, or 2048 bands) depending on your
 	    needs/resources.   Overlap and windowing are also selectable.
 	    <p>
@@ -54,6 +60,8 @@
 	    have selectable frequency scale types: 1x and 2x linear, and two log
 	    scales to help with modulating the musical frequencies.
 	      Filters can be linked across multiple channels.
+	    The plots are resizable and  zoomable (y-axis) to allow precise 
+            editing of filter values.
 
 	    <p>
 	    The current processing filters are described below in the
@@ -118,13 +126,16 @@
 		delivery.  JACK requires the <a
 					    href="http://www.alsa-project.org">
 		  ALSA</a> Linux sound drivers so you'll
-		  need those too.
+		  need those too.   If you haven't used JACK before
+		please study the <a href="http://www.djcj.org">Linux
+		  Audio User Guide</a> and make sure to read the
+		section on JACK.
 		  </font>
 	      <li> <a href="http://www.fftw.org">FFTW</a> --
 		<font size=-1>for speedy FFT processing  (compiled as
 		single-precision)</font>
 
-	      <li> <a href="http://www.wxwindow.org">wxWindows</a>
+	      <li> <a href="http://www.wxwindows.org">wxWindows</a>
 		<font size=-1>
 		(wxGTK) -- the GUI toolkit I've chosen to use.
 		It should work with the most recent 2.2.x and 2.3.x series.
@@ -184,21 +195,24 @@
 	    </font>
 	    
 	    <hr>
-	      
+	  Please address questions, bugfixes, etc to the mailing list
+	  at <a
+	    href="mailto:freqtweak-user@lists.sourceforge.net">freqtweak-user@lists.sourceforge.net</a>
+	  <p>
 	    <address><a href="mailto:jesse@essej.net">Jesse Chappell</a></address>
 	    <font size=-1>
 	    <!-- Created: Wed Oct  9 17:02:31 EDT 2002 -->
 	    <!-- hhmts start -->
-Last modified: Sun Oct 13 02:48:18 EDT 2002
+Last modified: Sun Oct 13 16:00:27 EDT 2002
 <!-- hhmts end -->
 </font>
-	    <!--
+	    <p>
 	    <A href="http://sourceforge.net">
 	      <IMG
 		   src="http://sourceforge.net/sflogo.php?group_id=64313&amp;type=5"
 		   width="210" height="62" border="0" alt="SourceForge Logo"></ A>
-	    -->
-	  <td>
+	    
+	  </td>
     </tr>
   </table>
     

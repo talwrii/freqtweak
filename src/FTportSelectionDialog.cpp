@@ -114,13 +114,10 @@ void FTportSelectionDialog::update()
 			}
 		}
 		free (availports);
-#ifdef NEWWX
-		_listBox->DeselectAll();
-#else
+
 		for (int i=0; i < _listBox->Number(); i++) {
 			_listBox->Deselect(i);
 		}
-#endif
 		if (connports) {
 			for (int i=0; connports[i]; i++) {
 				int n = _listBox->FindString(connports[i]);
@@ -152,13 +149,9 @@ const char ** FTportSelectionDialog::getSelectedPorts()
 
 void FTportSelectionDialog::OnDeselectAll(wxCommandEvent &event)
 {
-#ifdef NEWWX
-	_listBox->DeselectAll();
-#else
 	for (int i=0; i < _listBox->Number(); i++) {
 		_listBox->Deselect(i);
 	}
-#endif
 }
 
 
