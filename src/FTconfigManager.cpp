@@ -148,6 +148,8 @@ bool FTconfigManager::storeSettings (const char * name)
 		conffile.AddLine (wxString::Format("mix_ratio=%.10g", manip->getMixRatio()));
 		conffile.AddLine (wxString::Format("bypassed=%d", manip->getBypassed() ? 1: 0 ));
 		conffile.AddLine (wxString::Format("muted=%d", manip->getMuted() ? 1 : 0 ));
+		conffile.AddLine (wxString::Format("tempo=%d", manip->getTempo()));
+		conffile.AddLine (wxString::Format("max_delay=%.10g", manip->getMaxDelay()));
 
 		conffile.AddLine("");
 
@@ -725,7 +727,16 @@ void FTconfigManager::modifySetting (FTspectralManip *manip, int id, wxString &k
 		}
 		
 	}
-
+	else if (key == "tempo") {
+		if (value.ToULong(&ival)) {
+			manip->setTempo ((int) ival);
+		}
+	}
+	else if (key == "max_delay") {
+		if (value.ToDouble(&fval)) {
+			manip->setMaxDelay ((float) fval);
+		}
+	}
 	else {
 		printf ("none of the above\n");
 	}

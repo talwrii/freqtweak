@@ -67,7 +67,9 @@ const int FTspectralManip::_fftSizes[] = {
 
 FTspectralManip::FTspectralManip()
 	: _fftN (512), _windowing(FTspectralManip::WINDOW_HANNING)
-	, _oversamp(4), _averages(8), _fftnChanged(false)
+	, _oversamp(4), _maxDelaySamples(FT_MAX_DELAYSAMPLES), _maxDelay(2.5), _averages(8), _fftnChanged(false)
+	, _frameFifo(0)
+	, _delayFilter(0)
 	, _bypassFreq(false), _bypassDelay(false), _bypassFeedb(false)
 	  , _bypassGate(true), _bypassScale(false), _bypassMashLimit(true), _bypassMashPush(true)
 	, _inputGain(1.0), _mixRatio(1.0), _bypassFlag(false), _mutedFlag(false), _updateSpeed(SPEED_MED)
@@ -105,11 +107,13 @@ FTspectralManip::FTspectralManip()
 
 	_sampleRate = FTioSupport::instance()->getSampleRate();
 
+	setMaxDelay(_maxDelay);
+	
 	// in seconds
-	_maxDelay = ((FT_MAX_DELAYSAMPLES) / ((float)_sampleRate*sizeof(sample_t))) ; 
+	//_maxDelay = (_maxDelaySamples) / ((float)_sampleRate * sizeof(sample_t)) ; 
 	
 	// this is a big boy containing the frequency data frames over time
-	_frameFifo = new RingBuffer( (FT_MAX_DELAYSAMPLES) * sizeof(fftw_real) );
+	//_frameFifo = new RingBuffer( _maxDelaySamples * sizeof(fftw_real) );
 	
 	// window init
 	createWindowVectors();
@@ -234,6 +238,37 @@ void FTspectralManip::setFFTsize (FTspectralManip::FFT_Size sz)
 		reinitPlan(0);
 	}
 
+}
+
+void FTspectralManip::setMaxDelay(float secs)
+{
+	// THIS MUST NOT BE CALLED WHILE WE ARE ACTIVATED!
+	if (secs <= 0.0) return;
+	
+	unsigned long maxsamples = 1;
+
+	_maxDelay = secs;
+	_maxDelaySamples = (unsigned long) (_maxDelay * _sampleRate) * sizeof(sample_t);
+
+	// we need to force this to the next bigger power of 2 for the memory allocation
+	while (maxsamples < _maxDelaySamples) {
+		maxsamples <<= 1;
+	}
+	       
+	if (_frameFifo)
+		delete _frameFifo;
+
+	//printf ("using %lu for maxsamples\n", maxsamples);
+
+	// this is a big boy containing the frequency data frames over time
+	_frameFifo = new RingBuffer( maxsamples * sizeof(fftw_real) );
+
+	// adjust time filter
+	if (_delayFilter) {
+		_delayFilter->setRange (0.0, _maxDelay);
+		_delayFilter->reset();
+	}
+	
 }
 
 void FTspectralManip::setOversamp (int osamp)

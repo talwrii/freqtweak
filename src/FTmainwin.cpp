@@ -134,7 +134,9 @@ enum WindowIds
 	FT_ScaleGridSnapId,
 	FT_MashGridSnapId,
 	FT_GateGridSnapId,
-	
+
+	FT_MaxDelayChoiceId,
+	FT_TempoSpinId,
 };
 
 
@@ -171,7 +173,9 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 	EVT_CHOICE(FT_WindowingChoiceId, FTmainwin::handleChoices)
 	EVT_CHOICE(FT_PlotSpeedChoiceId, FTmainwin::handleChoices)
 	EVT_CHECKBOX(FT_PlotSuperSmoothId, FTmainwin::handleChoices)
-
+	EVT_CHOICE(FT_MaxDelayChoiceId, FTmainwin::handleChoices)
+	
+	
 	EVT_CHOICE(FT_PathCountChoice, FTmainwin::handlePathCount)
 
 	
@@ -215,7 +219,8 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 	EVT_BUTTON(FT_ScaleGridSnapId, FTmainwin::handleGridButtons)
 	EVT_BUTTON(FT_MashGridSnapId, FTmainwin::handleGridButtons)
 	EVT_BUTTON(FT_GateGridSnapId, FTmainwin::handleGridButtons)
-	
+
+	EVT_SPINCTRL(FT_TempoSpinId, FTmainwin::handleChoices)
 	
 END_EVENT_TABLE()
 
@@ -410,6 +415,42 @@ void FTmainwin::buildGui()
 	
 	ctrlbook->AddPage ( (wxNotebookPage *) iopanel, "I/O" , false);
 	
+
+	// time/memory page
+	wxPanel * timepanel = new wxPanel (ctrlbook, -1);
+	wxBoxSizer *timeSizer = new wxBoxSizer(wxHORIZONTAL);
+
+	stattext =  new wxStaticText(timepanel, -1, "Max Delay Time");
+	timeSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
+	_maxDelayChoice = new wxChoice(timepanel, FT_MaxDelayChoiceId, wxDefaultPosition, wxSize(100,-1));
+	_maxDelayChoice->Append("0.5 sec");
+	_delayList.push_back (0.5);
+	_maxDelayChoice->Append("1 sec");
+	_delayList.push_back (1.0);
+	_maxDelayChoice->Append("2.5 sec");
+	_delayList.push_back (2.5);
+	_maxDelayChoice->Append("5 sec");
+	_delayList.push_back (5.0);
+	_maxDelayChoice->Append("10 sec");
+	_delayList.push_back (10.0);
+	_maxDelayChoice->Append("20 sec");
+	_delayList.push_back (20.0);
+	timeSizer->Add(_maxDelayChoice, 0, wxALL|wxALIGN_CENTER, 2);
+
+	stattext =  new wxStaticText(timepanel, -1, "Tempo");
+	timeSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
+	
+	_tempoSpinCtrl = new wxSpinCtrl(timepanel, FT_TempoSpinId, "120", wxDefaultPosition, wxSize(65,-1),
+						  wxSP_ARROW_KEYS, 0, 300, 120);
+	timeSizer->Add(_tempoSpinCtrl, 0, wxALL|wxALIGN_CENTER, 2);
+	
+	
+	timepanel->SetAutoLayout(TRUE);
+	timeSizer->Fit( timepanel );  
+	timepanel->SetSizer(timeSizer);
+
+	ctrlbook->AddPage ( (wxNotebookPage *) timepanel, "Time" , false);
+
 	
 	
 	mainsizer->Add ( ctrlbook, 0, wxALL|wxEXPAND, 2 );
@@ -493,18 +534,22 @@ void FTmainwin::buildGui()
 	_inspecLabelButton = new wxButton(_inspecPanel, FT_InSpecLabelId, "In Spectra",
  					  wxDefaultPosition, wxSize(labwidth,bheight));
 	_inspecLabelButton->SetFont(titleFont);
+	_inspecLabelButton->SetToolTip("Hide In Spectra");
 	
  	_freqLabelButton = new wxButton(_freqPanel, FT_FreqLabelId, "EQ",
  					  wxDefaultPosition, wxSize(labwidth,bheight));
 	_freqLabelButton->SetFont(titleFont);
-
+	_freqLabelButton->SetToolTip("Hide EQ");
+	
  	_delayLabelButton = new wxButton(_delayPanel, FT_DelayLabelId, "Delay",
  					   wxDefaultPosition, wxSize(labwidth,bheight));
 	_delayLabelButton->SetFont(titleFont);
+	_delayLabelButton->SetToolTip("Hide Delay");
 
  	_scaleLabelButton = new wxButton(_scalePanel, FT_ScaleLabelId, "Pitch",
 					   wxDefaultPosition, wxSize(labwidth,bheight));
 	_scaleLabelButton->SetFont(titleFont);
+	_scaleLabelButton->SetToolTip("Hide Pitch");
 
 //  	_mashLabelButton = new wxButton(_mashPanel, FT_MashLabelId, "Mash",
 // 					   wxDefaultPosition, wxSize(labwidth,bheight));
@@ -513,15 +558,18 @@ void FTmainwin::buildGui()
  	_gateLabelButton = new wxButton(_gatePanel, FT_GateLabelId, "Gate",
 					   wxDefaultPosition, wxSize(labwidth,bheight));
 	_gateLabelButton->SetFont(titleFont);
+	_gateLabelButton->SetToolTip("Hide Gate");
 
 	
 	_feedbLabelButton = new wxButton(_feedbPanel, FT_FeedbackLabelId, "Feedback",
 					   wxDefaultPosition, wxSize(labwidth,bheight));
 	_feedbLabelButton->SetFont(titleFont);
+	_feedbLabelButton->SetToolTip("Hide Feedback");
 
 	_outspecLabelButton = new wxButton(_outspecPanel, FT_OutSpecLabelId, "Out Spectra",
 						  wxDefaultPosition, wxSize(labwidth,bheight));
 	_outspecLabelButton->SetFont(titleFont);
+	_outspecLabelButton->SetToolTip("Hide Out Spectra");
 
 	wxLayoutConstraints * constr;
 	
@@ -529,6 +577,7 @@ void FTmainwin::buildGui()
 	_inspecLabelButtonAlt = new wxButton(_rowPanel, FT_InSpecLabelId, "In Spectra",
  					  wxDefaultPosition, wxSize(labwidth,bheight));
 	_inspecLabelButtonAlt->SetFont(titleAltFont);
+	_inspecLabelButton->SetToolTip("Show In Spectra");
 	_inspecLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -540,6 +589,7 @@ void FTmainwin::buildGui()
  	_freqLabelButtonAlt = new wxButton(_rowPanel, FT_FreqLabelId, "EQ",
  					  wxDefaultPosition, wxSize(labwidth,bheight));
 	_freqLabelButtonAlt->SetFont(titleAltFont);
+	_freqLabelButtonAlt->SetToolTip("Show EQ");
 	_freqLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -553,6 +603,7 @@ void FTmainwin::buildGui()
 					   wxDefaultPosition, wxSize(labwidth,bheight));
 	_scaleLabelButtonAlt->SetFont(titleAltFont);
 	_scaleLabelButtonAlt->Show(false);
+	_scaleLabelButtonAlt->SetToolTip("Show Pitch");
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
 	constr->width.Absolute (labwidth);
@@ -575,6 +626,7 @@ void FTmainwin::buildGui()
  	_gateLabelButtonAlt = new wxButton(_rowPanel, FT_GateLabelId, "Gate",
 					   wxDefaultPosition, wxSize(labwidth,bheight));
 	_gateLabelButtonAlt->SetFont(titleAltFont);
+	_gateLabelButtonAlt->SetToolTip("Show Gate");
 	_gateLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -586,6 +638,7 @@ void FTmainwin::buildGui()
  	_delayLabelButtonAlt = new wxButton(_rowPanel, FT_DelayLabelId, "Delay",
  					   wxDefaultPosition, wxSize(labwidth,bheight));
 	_delayLabelButtonAlt->SetFont(titleAltFont);
+	_delayLabelButtonAlt->SetToolTip("Show Delay");
 	_delayLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -598,6 +651,7 @@ void FTmainwin::buildGui()
 	_feedbLabelButtonAlt = new wxButton(_rowPanel, FT_FeedbackLabelId, "Feedback",
 					   wxDefaultPosition, wxSize(labwidth,bheight));
 	_feedbLabelButtonAlt->SetFont(titleAltFont);
+	_feedbLabelButtonAlt->SetToolTip("Show Feedback");
 	_feedbLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -610,6 +664,7 @@ void FTmainwin::buildGui()
 	_outspecLabelButtonAlt = new wxButton(_rowPanel, FT_OutSpecLabelId, "Out Spectra",
 						  wxDefaultPosition, wxSize(labwidth,bheight));
 	_outspecLabelButtonAlt->SetFont(titleAltFont);
+	_outspecLabelButtonAlt->SetToolTip("Show Out Spectra");
 	_outspecLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -624,14 +679,17 @@ void FTmainwin::buildGui()
 	_freqLinkAllButton = new wxButton(_freqPanel, FT_FreqLinkId, "LA",
  					  wxDefaultPosition, wxSize(bwidth,bheight));
 	_freqLinkAllButton->SetFont(buttFont);
+	_freqLinkAllButton->SetToolTip ("Link All");
 	
  	_delayLinkAllButton = new wxButton(_delayPanel, FT_DelayLinkId, "LA",
  					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_delayLinkAllButton->SetFont(buttFont);
-
+	_delayLinkAllButton->SetToolTip ("Link All");
+	
  	_scaleLinkAllButton = new wxButton(_scalePanel, FT_ScaleLinkId, "LA",
 					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_scaleLinkAllButton->SetFont(buttFont);
+	_scaleLinkAllButton->SetToolTip ("Link All");
 
 //  	_mashLinkAllButton = new wxButton(_mashPanel, FT_MashLinkId, "LA",
 // 					   wxDefaultPosition, wxSize(bwidth,bheight));
@@ -640,22 +698,27 @@ void FTmainwin::buildGui()
  	_gateLinkAllButton = new wxButton(_gatePanel, FT_GateLinkId, "LA",
 					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_gateLinkAllButton->SetFont(buttFont);
+	_gateLinkAllButton->SetToolTip ("Link All");
 
 	_feedbLinkAllButton = new wxButton(_feedbPanel, FT_FeedbackLinkId, "LA",
 					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_feedbLinkAllButton->SetFont(buttFont);
+	_feedbLinkAllButton->SetToolTip ("Link All");
 	
 	_freqBypassAllButton = new wxButton(_freqPanel, FT_FreqBypassId, "BA",
 					    wxDefaultPosition, wxSize(bwidth,bheight));
 	_freqBypassAllButton->SetFont(buttFont);
+	_freqBypassAllButton->SetToolTip ("Bypass All");
 
 	_delayBypassAllButton = new wxButton(_delayPanel, FT_DelayBypassId, "BA",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_delayBypassAllButton->SetFont(buttFont);
+	_delayBypassAllButton->SetToolTip ("Bypass All");
 
 	_scaleBypassAllButton = new wxButton(_scalePanel, FT_ScaleBypassId, "BA",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_scaleBypassAllButton->SetFont(buttFont);
+	_scaleBypassAllButton->SetToolTip ("Bypass All");
 
 // 	_mashBypassAllButton = new wxButton(_mashPanel, FT_MashBypassId, "BA",
 // 					     wxDefaultPosition, wxSize(bwidth,bheight));
@@ -664,33 +727,40 @@ void FTmainwin::buildGui()
 	_gateBypassAllButton = new wxButton(_gatePanel, FT_GateBypassId, "BA",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_gateBypassAllButton->SetFont(buttFont);
+	_gateBypassAllButton->SetToolTip ("Bypass All");
 	
 	_feedbBypassAllButton = new wxButton(_feedbPanel, FT_FeedbackBypassId, "BA",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_feedbBypassAllButton->SetFont(buttFont);
+	_feedbBypassAllButton->SetToolTip ("Bypass All");
 
 	// @@@@@@@@@@@@@@@@@@@@@@@@
 	// Grid buttons
-	
-	_freqGridButton = new wxButton(_freqPanel, FT_FreqGridId, "G",
+
+	_freqGridButton = new FTgridButton(this, _freqPanel, FT_FreqGridId, "G",
  					  wxDefaultPosition, wxSize(bwidth,bheight));
 	_freqGridButton->SetFont(buttFont);
+	_freqGridButton->SetToolTip ("Toggle Grid\nRight-click to Adjust");
 	
- 	_delayGridButton = new wxButton(_delayPanel, FT_DelayGridId, "G",
- 					   wxDefaultPosition, wxSize(bwidth,bheight));
+ 	_delayGridButton = new FTgridButton(this,_delayPanel, FT_DelayGridId, "G",
+					    wxDefaultPosition, wxSize(bwidth,bheight));
 	_delayGridButton->SetFont(buttFont);
+	_delayGridButton->SetToolTip ("Toggle Grid\nRight-click to Adjust");
 
- 	_scaleGridButton = new wxButton(_scalePanel, FT_ScaleGridId, "G",
+ 	_scaleGridButton = new FTgridButton(this, _scalePanel, FT_ScaleGridId, "G",
 					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_scaleGridButton->SetFont(buttFont);
+	_scaleGridButton->SetToolTip ("Toggle Grid\nRight-click to Adjust");
 
- 	_gateGridButton = new wxButton(_gatePanel, FT_GateGridId, "G",
+ 	_gateGridButton = new FTgridButton(this, _gatePanel, FT_GateGridId, "G",
 					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_gateGridButton->SetFont(buttFont);
+	_gateGridButton->SetToolTip ("Toggle Grid\nRight-click to Adjust");
 
-	_feedbGridButton = new wxButton(_feedbPanel, FT_FeedbackGridId, "G",
+	_feedbGridButton = new FTgridButton(this, _feedbPanel, FT_FeedbackGridId, "G",
 					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_feedbGridButton->SetFont(buttFont);
+	_feedbGridButton->SetToolTip ("Toggle Grid\nRight-click to Adjust");
 
 
 	// @@@@@@@@@@@@@@@@@@@@@@@@
@@ -699,22 +769,27 @@ void FTmainwin::buildGui()
 	_freqGridSnapButton = new wxButton(_freqPanel, FT_FreqGridSnapId, "GS",
  					  wxDefaultPosition, wxSize(bwidth,bheight));
 	_freqGridSnapButton->SetFont(buttFont);
+	_freqGridSnapButton->SetToolTip ("Toggle Grid Snap");
 	
  	_delayGridSnapButton = new wxButton(_delayPanel, FT_DelayGridSnapId, "GS",
  					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_delayGridSnapButton->SetFont(buttFont);
+	_delayGridSnapButton->SetToolTip ("Toggle Grid Snap");
 
  	_scaleGridSnapButton = new wxButton(_scalePanel, FT_ScaleGridSnapId, "GS",
 					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_scaleGridSnapButton->SetFont(buttFont);
+	_scaleGridSnapButton->SetToolTip ("Toggle Grid Snap");
 
  	_gateGridSnapButton = new wxButton(_gatePanel, FT_GateGridSnapId, "GS",
 					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_gateGridSnapButton->SetFont(buttFont);
+	_gateGridSnapButton->SetToolTip ("Toggle Grid Snap");
 
 	_feedbGridSnapButton = new wxButton(_feedbPanel, FT_FeedbackGridSnapId, "GS",
 					   wxDefaultPosition, wxSize(bwidth,bheight));
 	_feedbGridSnapButton->SetFont(buttFont);
+	_feedbGridSnapButton->SetToolTip ("Toggle Grid Snap");
 
 	// @@@@@@@
 	// spec types buttons
@@ -722,23 +797,30 @@ void FTmainwin::buildGui()
 	_inspecSpecTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, "SP",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_inspecSpecTypeAllButton->SetFont(buttFont);
+	_inspecSpecTypeAllButton->SetToolTip ("Spectrogram Plot");
+
 	_inspecPlotSolidTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, "FP",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_inspecPlotSolidTypeAllButton->SetFont(buttFont);
+	_inspecPlotSolidTypeAllButton->SetToolTip ("Filled Plot");
 	_inspecPlotLineTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, "LP",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_inspecPlotLineTypeAllButton->SetFont(buttFont);
+	_inspecPlotLineTypeAllButton->SetToolTip ("Line Plot");
 
 	
 	_outspecSpecTypeAllButton = new  wxButton(_outspecPanel, FT_OutSpecTypeId, "SP",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_outspecSpecTypeAllButton->SetFont(buttFont);
+	_outspecSpecTypeAllButton->SetToolTip ("Spectrogram Plot");
 	_outspecPlotSolidTypeAllButton = new  wxButton(_outspecPanel, FT_OutSpecTypeId, "FP",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_outspecPlotSolidTypeAllButton->SetFont(buttFont);
+	_outspecPlotSolidTypeAllButton->SetToolTip ("Filled Plot");
 	_outspecPlotLineTypeAllButton = new  wxButton(_outspecPanel, FT_OutSpecTypeId, "LP",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_outspecPlotLineTypeAllButton->SetFont(buttFont);
+	_outspecPlotLineTypeAllButton->SetToolTip ("Line Plot");
 
 
 	_bypassAllButton  = new  wxButton(this, FT_BypassId, "Bypass All",
@@ -993,6 +1075,8 @@ void FTmainwin::buildGui()
 		
 		createPathStuff (i);
 
+		manip->setTempo (_tempoSpinCtrl->GetValue()); // purely for saving
+		
 		if (i > 0) {
 			// link everything to first
 			manip->getFreqFilter()->link (_processPath[0]->getSpectralManip()->getFreqFilter());
@@ -1021,6 +1105,8 @@ void FTmainwin::buildGui()
 
 	rowpanelScrollSize();
 
+	//wxToolTip::Enable(true);
+	
 	// force a nice minimum size
 	this->SetSizeHints(453,281);
 	
@@ -1120,13 +1206,15 @@ void FTmainwin::createPathStuff(int i)
 	_scaleGraph[i] = new FTactiveBarGraph(this, _scalePanels[i], -1);
 	_scaleGraph[i]->setSpectrumModifier(manip->getScaleFilter());
 	manip->setBypassScaleFilter ( true );
+	_scaleGraph[i]->setBypassed (true);
 	
 	_gateGraph[i] = new FTactiveBarGraph(this, _gatePanels[i], -1);
 	_gateGraph[i]->setSpectrumModifier(manip->getInverseGateFilter());
 	_gateGraph[i]->setTopSpectrumModifier(manip->getGateFilter());
 	manip->setBypassGateFilter ( true );
 	manip->setBypassInverseGateFilter ( true );
-
+	_gateGraph[i]->setBypassed (true);
+	
 // 	_mashGraph[i] = new FTactiveBarGraph(this, _mashPanels[i], -1);
 // 	_mashGraph[i]->setSpectrumModifier(manip->getMashLimitFilter());
 // 	_mashGraph[i]->setTopSpectrumModifier(manip->getMashPushFilter());
@@ -1136,6 +1224,7 @@ void FTmainwin::createPathStuff(int i)
 	
 	_delayGraph[i] = new FTactiveBarGraph(this, _delayPanels[i], -1);
 	_delayGraph[i]->setSpectrumModifier(manip->getDelayFilter());
+	_delayGraph[i]->setTempo(_tempoSpinCtrl->GetValue());
 	
 	_feedbackGraph[i] = new FTactiveBarGraph(this, _feedbPanels[i], -1);
 	_feedbackGraph[i]->setSpectrumModifier(manip->getFeedbackFilter());
@@ -1185,16 +1274,19 @@ void FTmainwin::createPathStuff(int i)
 		buttsizer = new wxBoxSizer(wxVERTICAL);
 	        _inspecSpecTypeButton[i] = new wxButton(_inspecPanels[i], FT_InSpecTypeId, "SP", wxDefaultPosition, wxSize(bwidth,-1));
 		_inspecSpecTypeButton[i]->SetFont(buttFont);
+		_inspecSpecTypeButton[i]->SetToolTip("Spectrogram Plot");
 		buttsizer->Add ( _inspecSpecTypeButton[i], 1, 0,0);
 
 	        _inspecPlotLineTypeButton[i] = new wxButton(_inspecPanels[i], FT_InSpecTypeId, "LP",
 							    wxDefaultPosition, wxSize(bwidth,-1));
 		_inspecPlotLineTypeButton[i]->SetFont(buttFont);
+		_inspecPlotLineTypeButton[i]->SetToolTip("Line Plot");
 		buttsizer->Add ( _inspecPlotLineTypeButton[i], 1, 0,0);
 
 	        _inspecPlotSolidTypeButton[i] = new wxButton(_inspecPanels[i], FT_InSpecTypeId, "FP",
 							     wxDefaultPosition, wxSize(bwidth,-1));
 		_inspecPlotSolidTypeButton[i]->SetFont(buttFont);
+		_inspecPlotSolidTypeButton[i]->SetToolTip("Filled Plot");
 		buttsizer->Add ( _inspecPlotSolidTypeButton[i], 1, 0,0);
 
 		tmpsizer = new wxBoxSizer(wxHORIZONTAL);
@@ -1215,9 +1307,11 @@ void FTmainwin::createPathStuff(int i)
 		buttsizer->Add ( _freqBypassButton[i] = new wxButton(_freqPanels[i], FT_FreqBypassId, "B",
 								     wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_freqBypassButton[i]->SetFont(buttFont);
+		_freqBypassButton[i]->SetToolTip("Toggle Bypass");		
 		buttsizer->Add ( _freqLinkButton[i] = new wxButton(_freqPanels[i], FT_FreqLinkId, "L",
 								   wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_freqLinkButton[i]->SetFont(buttFont);
+		_freqLinkButton[i]->SetToolTip("Link");		
 
 		tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 		tmpsizer->Add ( buttsizer, 0, wxALL|wxEXPAND, 0);
@@ -1238,9 +1332,11 @@ void FTmainwin::createPathStuff(int i)
 		buttsizer->Add ( _scaleBypassButton[i] = new wxButton(_scalePanels[i], FT_ScaleBypassId, "B",
 								     wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_scaleBypassButton[i]->SetFont(buttFont);
+		_scaleBypassButton[i]->SetToolTip("Toggle Bypass");		
 		buttsizer->Add ( _scaleLinkButton[i] = new wxButton(_scalePanels[i], FT_ScaleLinkId, "L",
 								   wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_scaleLinkButton[i]->SetFont(buttFont);
+		_scaleLinkButton[i]->SetToolTip("Link");		
 
 		tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 		tmpsizer->Add ( buttsizer, 0, wxALL|wxEXPAND, 0);
@@ -1282,9 +1378,11 @@ void FTmainwin::createPathStuff(int i)
 		buttsizer->Add ( _gateBypassButton[i] = new wxButton(_gatePanels[i], FT_GateBypassId, "B",
 								     wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_gateBypassButton[i]->SetFont(buttFont);
+		_gateBypassButton[i]->SetToolTip("Toggle Bypass");		
 		buttsizer->Add ( _gateLinkButton[i] = new wxButton(_gatePanels[i], FT_GateLinkId, "L",
 								   wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_gateLinkButton[i]->SetFont(buttFont);
+		_gateLinkButton[i]->SetToolTip("Link");		
 
 		tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 		tmpsizer->Add ( buttsizer, 0, wxALL|wxEXPAND, 0);
@@ -1306,9 +1404,11 @@ void FTmainwin::createPathStuff(int i)
 		buttsizer->Add ( _delayBypassButton[i] = new wxButton(_delayPanels[i], FT_DelayBypassId, "B",
 								      wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_delayBypassButton[i]->SetFont (buttFont);
+		_delayBypassButton[i]->SetToolTip("Toggle Bypass");		
 		buttsizer->Add ( _delayLinkButton[i] = new wxButton(_delayPanels[i], FT_DelayLinkId, "L",
 					      wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_delayLinkButton[i]->SetFont (buttFont);
+		_delayLinkButton[i]->SetToolTip("Link");		
 
 		tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 		tmpsizer->Add ( buttsizer, 0, wxALL|wxEXPAND, 0);
@@ -1328,9 +1428,11 @@ void FTmainwin::createPathStuff(int i)
 		buttsizer->Add ( _feedbBypassButton[i] = new wxButton(_feedbPanels[i], FT_FeedbackBypassId, "B",
 								   wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_feedbBypassButton[i]->SetFont(buttFont);
+		_feedbBypassButton[i]->SetToolTip("Toggle Bypass");
 		buttsizer->Add ( _feedbLinkButton[i] = new wxButton(_feedbPanels[i], FT_FeedbackLinkId, "L",
 								    wxDefaultPosition, wxSize(bwidth,-1)), 1, 0,0);
 		_feedbLinkButton[i]->SetFont(buttFont);
+		_feedbLinkButton[i]->SetToolTip("Link");
 
 		tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 		tmpsizer->Add ( buttsizer, 0, wxALL|wxEXPAND, 0);
@@ -1348,14 +1450,17 @@ void FTmainwin::createPathStuff(int i)
 		buttsizer = new wxBoxSizer(wxVERTICAL);
 		_outspecSpecTypeButton[i] = new wxButton(_outspecPanels[i], FT_OutSpecTypeId, "SP", wxDefaultPosition, wxSize(bwidth,-1));
 		_outspecSpecTypeButton[i]->SetFont(buttFont);
+		_outspecSpecTypeButton[i]->SetToolTip("Spectrogram Plot");
 		buttsizer->Add ( _outspecSpecTypeButton[i], 1, 0,0);
 		_outspecPlotLineTypeButton[i] = new wxButton(_outspecPanels[i], FT_OutSpecTypeId, "LP",
 							 wxDefaultPosition, wxSize(bwidth,-1));
 		_outspecPlotLineTypeButton[i]->SetFont(buttFont);
+		_outspecPlotLineTypeButton[i]->SetToolTip("Line Plot");
 		buttsizer->Add ( _outspecPlotLineTypeButton[i], 1, 0,0);
 		_outspecPlotSolidTypeButton[i] = new wxButton(_outspecPanels[i], FT_OutSpecTypeId, "FP",
 							      wxDefaultPosition, wxSize(bwidth,-1));
 		_outspecPlotSolidTypeButton[i]->SetFont(buttFont);
+		_outspecPlotSolidTypeButton[i]->SetToolTip("Filled Plot");
 		buttsizer->Add ( _outspecPlotSolidTypeButton[i], 1, 0,0);
 
 		tmpsizer = new wxBoxSizer(wxHORIZONTAL);
@@ -1569,7 +1674,11 @@ void FTmainwin::updateDisplay()
 		if (scalegridsnap && !_scaleGraph[i]->getGridSnap()) scalegridsnap = false;
 
 		if (gategridsnap && !_gateGraph[i]->getGridSnap()) gategridsnap = false;
-		
+
+		// update tempo in delay graphs
+		if (_delayGraph[i]->getTempo() != manip->getTempo()) {
+			_delayGraph[i]->setTempo(manip->getTempo());
+		}
 		
 	}
 
@@ -1616,21 +1725,23 @@ void FTmainwin::updateDisplay()
 	_pathCountChoice->SetSelection(_pathCount - 1);
 
 	if (_processPath[0]) {
-	
-		if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_TURTLE)
-			_plotSpeedChoice->SetSelection(0);
-		else if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_SLOW)
-			_plotSpeedChoice->SetSelection(1);
-		else if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_MED)
-			_plotSpeedChoice->SetSelection(2);
-		else if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_FAST)
-			_plotSpeedChoice->SetSelection(3);
+
+		FTspectralManip * manip = _processPath[0]->getSpectralManip();
 		
-		_windowingChoice->SetSelection(_processPath[0]->getSpectralManip()->getWindowing());
+		if (manip->getUpdateSpeed() == FTspectralManip::SPEED_TURTLE)
+			_plotSpeedChoice->SetSelection(0);
+		else if (manip->getUpdateSpeed() == FTspectralManip::SPEED_SLOW)
+			_plotSpeedChoice->SetSelection(1);
+		else if (manip->getUpdateSpeed() == FTspectralManip::SPEED_MED)
+			_plotSpeedChoice->SetSelection(2);
+		else if (manip->getUpdateSpeed() == FTspectralManip::SPEED_FAST)
+			_plotSpeedChoice->SetSelection(3);
+
+		_windowingChoice->SetSelection(manip->getWindowing());
 		
 		const int * fftbins = FTspectralManip::getFFTSizes();
 		for (int i=0; i < FTspectralManip::getFFTSizeCount(); i++) {
-			if (fftbins[i] == _processPath[0]->getSpectralManip()->getFFTsize()) {
+			if (fftbins[i] == manip->getFFTsize()) {
 				_freqBinsChoice->SetSelection(i);
 				break;
 			}
@@ -1638,11 +1749,21 @@ void FTmainwin::updateDisplay()
 		
 		// hack
 		for (int i=0; i < 5; i++) {
-			if (_processPath[0]->getSpectralManip()->getOversamp() == 1<<i) {
+			if (manip->getOversamp() == 1<<i) {
 				_overlapChoice->SetSelection(i);
 				break;
 			}
 		}
+
+ 		for (unsigned int i=0; i < _delayList.size(); ++i) {
+  			if (manip->getMaxDelay() == _delayList[i]) {
+ 				_maxDelayChoice->SetSelection(i);
+ 				break;
+ 			}
+ 		}
+
+		_tempoSpinCtrl->SetValue(manip->getTempo());
+		
 	}
 	
 	_ioNameText->SetValue (iosup->getName());
@@ -1739,18 +1860,22 @@ void FTmainwin::handleBypassButtons (wxCommandEvent &event)
 
 	   if (source == _freqBypassButton[i]) {
 		   manip->setBypassFreqFilter ( ! manip->getBypassFreqFilter());
+		   _freqGraph[i]->setBypassed (manip->getBypassFreqFilter());
 		   break;
 	   }
 	   else if (source == _delayBypassButton[i]) {
 		   manip->setBypassDelayFilter ( ! manip->getBypassDelayFilter());
+		   _delayGraph[i]->setBypassed (manip->getBypassDelayFilter());
 		   break;
 	   }
 	   else if (source == _feedbBypassButton[i]) {
 		   manip->setBypassFeedbackFilter ( ! manip->getBypassFeedbackFilter());
+		   _feedbackGraph[i]->setBypassed (manip->getBypassFeedbackFilter());
 		   break;
 	   }
 	   else if (source == _scaleBypassButton[i]) {
 		   manip->setBypassScaleFilter ( ! manip->getBypassScaleFilter());
+		   _scaleGraph[i]->setBypassed (manip->getBypassScaleFilter());
 		   break;
 	   }
 // 	   else if (source == _mashBypassButton[i]) {
@@ -1761,6 +1886,7 @@ void FTmainwin::handleBypassButtons (wxCommandEvent &event)
 	   else if (source == _gateBypassButton[i]) {
 		   manip->setBypassInverseGateFilter ( ! manip->getBypassInverseGateFilter());
 		   manip->setBypassGateFilter ( ! manip->getBypassGateFilter());
+		   _gateGraph[i]->setBypassed (manip->getBypassGateFilter());
 		   break;
 	   }
 
@@ -1768,6 +1894,8 @@ void FTmainwin::handleBypassButtons (wxCommandEvent &event)
 	   // master bypass buttons
 	   else if (source == _scaleBypassAllButton) {
 		   manip->setBypassScaleFilter ( _scaleBypassAllButton->GetBackgroundColour() != _activeBg);
+		   _scaleGraph[i]->setBypassed (manip->getBypassScaleFilter());
+
 	   }
 // 	   else if (source == _mashBypassAllButton) {
 // 		   manip->setBypassMashLimitFilter ( _mashBypassAllButton->GetBackgroundColour() != _activeBg);
@@ -1776,15 +1904,19 @@ void FTmainwin::handleBypassButtons (wxCommandEvent &event)
 	   else if (source == _gateBypassAllButton) {
 		   manip->setBypassInverseGateFilter ( _gateBypassAllButton->GetBackgroundColour() != _activeBg);
 		   manip->setBypassGateFilter ( _gateBypassAllButton->GetBackgroundColour() != _activeBg);
+		   _gateGraph[i]->setBypassed (manip->getBypassGateFilter());
 	   }
 	   else if (source == _freqBypassAllButton) {
 		   manip->setBypassFreqFilter ( _freqBypassAllButton->GetBackgroundColour() != _activeBg);
+		   _freqGraph[i]->setBypassed (manip->getBypassFreqFilter());
 	   }
 	   else if (source == _delayBypassAllButton) {
 		   manip->setBypassDelayFilter ( _delayBypassAllButton->GetBackgroundColour() != _activeBg);
+		   _delayGraph[i]->setBypassed (manip->getBypassDelayFilter());
 	   }
 	   else if (source == _feedbBypassAllButton) {
 		   manip->setBypassFeedbackFilter ( _feedbBypassAllButton->GetBackgroundColour() != _activeBg);
+		   _feedbackGraph[i]->setBypassed (manip->getBypassFeedbackFilter());
 	   }
 
 	   // path bypass
@@ -2172,14 +2304,29 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 {
 	wxObject *source = event.GetEventObject();
 
-	FTioSupport * iosup = FTioSupport::instance();
-	
-	if (source == _freqBinsChoice) {
+	if (source == _tempoSpinCtrl)
+	{
+		int tval = _tempoSpinCtrl->GetValue();
+		for (int i=0; i < _pathCount; i++) {
+			if (!_processPath[i]) continue;
+			_delayGraph[i]->setTempo (tval);
+			_processPath[i]->getSpectralManip()->setTempo (tval); // purely for saving
+		}
+
+	}
+	else if (source == _freqBinsChoice) {
 		int sel = _freqBinsChoice->GetSelection();
 
-		iosup->close();
+		bool bypArray[FT_MAXPATHS];
+		
+		for (int i=0; i < _pathCount; i++) {
+			if (!_processPath[i]) continue;
 
-		wxThread::Sleep(200);
+			bypArray[i] = _processPath[i]->getSpectralManip()->getBypassed();
+			_processPath[i]->getSpectralManip()->setBypassed(true);
+		}
+
+		wxThread::Sleep(200); // sleep to let the process callback get around to the beginning
 		
 		for (int i=0; i < _pathCount; i++) {
 			if (!_processPath[i]) continue;
@@ -2187,19 +2334,11 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			_processPath[i]->getSpectralManip()->setFFTsize( (FTspectralManip::FFT_Size) (unsigned)_freqBinsChoice->GetClientData(sel) );
 		}
 
-		if (iosup->init()) {
-			if (iosup->startProcessing()) {
-				iosup->reinit();
-			}
+		for (int i=0; i < _pathCount; i++) {
+			if (!_processPath[i]) continue;
+
+			_processPath[i]->getSpectralManip()->setBypassed(bypArray[i]);
 		}
-		else {
-			fprintf(stderr, "Error initing jack client\n");
-		}
-		
-		//iosup->init();
-		//iosup->startProcessing();
-		//iosup->reinit(false);
-		//updateDisplay();
 
 		updateGraphs(0, ALL_SPECMOD);
 	}
@@ -2243,6 +2382,44 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			_eventTimer->Stop();
 			_eventTimer->Start(_updateMS, FALSE);
 		}
+	}
+	else if (source == _maxDelayChoice) {
+	        int sel = _maxDelayChoice->GetSelection();
+
+		if (sel >= (int) _delayList.size()) return;
+
+		float maxdelay = _delayList[sel];
+
+		// MUST bypass and wait until not working
+
+		bool bypArray[FT_MAXPATHS];
+		
+		for (int i=0; i < _pathCount; i++) {
+			if (!_processPath[i]) continue;
+
+			bypArray[i] = _processPath[i]->getSpectralManip()->getBypassed();
+			_processPath[i]->getSpectralManip()->setBypassed(true);
+		}
+
+		wxThread::Sleep(200); // sleep to let the process callback get around to the beginning
+
+		// set the max delay
+		for (int i=0; i < _pathCount; i++) {
+			if (!_processPath[i]) continue;
+
+			_processPath[i]->getSpectralManip()->setMaxDelay (maxdelay);
+			_delayGraph[i]->setSpectrumModifier(_processPath[i]->getSpectralManip()->getDelayFilter());
+		}
+
+		// resotre bypass state
+		for (int i=0; i < _pathCount; i++) {
+			if (!_processPath[i]) continue;
+
+			_processPath[i]->getSpectralManip()->setBypassed(bypArray[i]);
+		}
+
+		updateGraphs(0, DELAY_SPECMOD);
+		
 	}
 	
 }
@@ -2292,6 +2469,49 @@ void FTmainwin::handleGridButtons (wxCommandEvent &event)
 
    updateDisplay();
 }
+
+void FTmainwin::handleGridButtonMouse (wxMouseEvent &event)
+{
+
+	wxWindow *source = (wxWindow *) event.GetEventObject();
+	vector<FTactiveBarGraph*> graphs;
+	FTspectrumModifier::ModifierType mtype = FTspectrumModifier::NULL_MODIFIER;
+	
+	for (int i=0; i < _pathCount; i++) {
+		if (!_processPath[i]) continue;
+
+		FTspectralManip * manip = _processPath[i]->getSpectralManip();
+		
+		// master gridlines buttons
+		if (source == _scaleGridButton) {
+			mtype = manip->getScaleFilter()->getModifierType();
+			graphs.push_back (_scaleGraph[i]);
+		}
+		else if (source == _gateGridButton) {
+			mtype = manip->getGateFilter()->getModifierType();
+			graphs.push_back (_gateGraph[i]);
+		}
+		else if (source == _freqGridButton) {
+			mtype = manip->getFreqFilter()->getModifierType();
+			graphs.push_back (_freqGraph[i]);
+		}
+		else if (source == _delayGridButton) {
+			mtype = manip->getDelayFilter()->getModifierType();
+			graphs.push_back (_delayGraph[i]);
+		}
+		else if (source == _feedbGridButton) {
+			mtype = manip->getFeedbackFilter()->getModifierType();
+			graphs.push_back (_feedbackGraph[i]);
+		}	   
+	}
+	
+	if (graphs.size() > 0) {
+		FTgridMenu *menu = new FTgridMenu (source, this, graphs, mtype);
+		source->PopupMenu (menu, 0, source->GetSize().GetHeight());
+	}
+	event.Skip();
+}
+
 
 
 void FTmainwin::handleIOButtons (wxCommandEvent &event)
@@ -2472,7 +2692,7 @@ void FTmainwin::OnClose(wxCloseEvent &event)
 
 void FTmainwin::cleanup ()
 {
-	printf ("cleaning up\n");
+	//printf ("cleaning up\n");
 	FTioSupport::instance()->close();
 }
 
@@ -2580,6 +2800,67 @@ void FTmainwin::updatePosition(const wxString &freqstr, const wxString &valstr)
 		statBar->SetStatusText(freqstr, 1);
 		statBar->SetStatusText(valstr, 2);
 	}
+}
+
+
+void FTmainwin::handleStoreButton (wxCommandEvent &event)
+{
+	_configManager.storeSettings ( _presetCombo->GetValue().c_str());
+
+	rebuildPresetCombo();
+}
+
+void FTmainwin::handleLoadButton (wxCommandEvent &event)
+{
+	loadPreset (_presetCombo->GetValue().c_str());
+}
+
+
+void FTmainwin::loadPreset (const wxString &name)
+{
+	_configManager.loadSettings ( name);
+
+	changePathCount ( FTioSupport::instance()->getActivePathCount() );
+
+	_presetCombo->SetValue(name);
+	rebuildPresetCombo();
+
+	// reset delay plots
+	for (int i=0; i < _pathCount; i++)
+	{
+		if (!_processPath[i]) continue; 
+		_delayGraph[i]->setSpectrumModifier(_processPath[i]->getSpectralManip()->getDelayFilter());
+	}
+	
+	updateGraphs(0, ALL_SPECMOD);
+	
+	updateDisplay();	
+}
+
+
+void FTmainwin::rebuildPresetCombo()
+{
+	FTstringList * namelist =  _configManager.getSettingsNames();
+
+	wxString selected = _presetCombo->GetValue();
+	
+	_presetCombo->Clear();
+	
+	wxNode * node = (wxNode *) namelist->GetFirst();
+	while (node)
+	{
+		wxString *name = (wxString *) node->GetData();
+
+		_presetCombo->Append(*name);
+		
+		node = node->GetNext();
+	}
+
+	if ( _presetCombo->FindString(selected) >= 0) {
+		_presetCombo->SetValue(selected);
+	}
+	
+	delete namelist;
 }
 
 
@@ -2829,56 +3110,67 @@ void FTlinkMenu::OnUnlinkItem(wxCommandEvent &event)
 	
 }
 
+BEGIN_EVENT_TABLE(FTgridMenu, wxMenu)
+	EVT_MENU_RANGE (0, 20, FTgridMenu::OnSelectItem)
+END_EVENT_TABLE()
 
-void FTmainwin::handleStoreButton (wxCommandEvent &event)
+FTgridMenu::FTgridMenu (wxWindow * parent, FTmainwin *win, vector<FTactiveBarGraph *> & graphlist, FTspectrumModifier::ModifierType mtype)
+	: wxMenu(), _mwin(win), _graphlist(graphlist), _mtype(mtype)
 {
-	_configManager.storeSettings ( _presetCombo->GetValue().c_str());
+	wxMenuItem * item = 0;
 
-	rebuildPresetCombo();
-}
-
-void FTmainwin::handleLoadButton (wxCommandEvent &event)
-{
-	loadPreset (_presetCombo->GetValue().c_str());
-}
-
-
-void FTmainwin::loadPreset (const wxString &name)
-{
-	_configManager.loadSettings ( name);
-
-	changePathCount ( FTioSupport::instance()->getActivePathCount() );
-
-	_presetCombo->SetValue(name);
-	rebuildPresetCombo();
+	vector<string> gridunits = graphlist[0]->getGridChoiceStrings();
+	unsigned int gindex = graphlist[0]->getGridChoice();
 	
-	updateGraphs(0, ALL_SPECMOD);
-	
-	updateDisplay();	
-}
-
-
-void FTmainwin::rebuildPresetCombo()
-{
-	FTstringList * namelist =  _configManager.getSettingsNames();
-
-	wxString selected = _presetCombo->GetValue();
-	
-	_presetCombo->Clear();
-	
-	wxNode * node = (wxNode *) namelist->GetFirst();
-	while (node)
-	{
-		wxString *name = (wxString *) node->GetData();
-
-		_presetCombo->Append(*name);
-		
-		node = node->GetNext();
+	int itemid = 0;
+	for (vector<string>::iterator gridi = gridunits.begin(); gridi != gridunits.end(); ++gridi) {
+		if ( (*gridi).empty()) {
+			// add separator
+			AppendSeparator();
+			itemid++;
+		}
+		else if ((int)gindex == itemid) {
+			item = new wxMenuItem(this, itemid++, wxString::Format("%s *", (*gridi).c_str()));
+			Append (item);
+		}
+		else {
+			item = new wxMenuItem(this, itemid++, (*gridi).c_str() );
+			Append (item);
+		}
 	}
 
-	if ( _presetCombo->FindString(selected) >= 0) {
-		_presetCombo->SetValue(selected);
+}
+
+void FTgridMenu::OnSelectItem(wxCommandEvent &event)
+{
+	wxMenuItem *item = (wxMenuItem *) event.GetEventObject();
+	if (item) {
+		for (vector<FTactiveBarGraph*>::iterator gr = _graphlist.begin(); gr != _graphlist.end(); ++gr) {
+			(*gr)->setGridChoice (event.GetId());
+		}
 	}
-	
-	delete namelist;
+}
+
+
+BEGIN_EVENT_TABLE(FTgridButton, wxButton)
+	EVT_RIGHT_DOWN (FTgridButton::handleMouse)
+END_EVENT_TABLE()
+
+FTgridButton::FTgridButton(FTmainwin * mwin, wxWindow *parent, wxWindowID id,
+			   const wxString& label,
+			   const wxPoint& pos,
+			   const wxSize& size,
+			   long style, const wxValidator& validator, const wxString& name)
+
+	: wxButton(parent, id, label, pos, size, style, validator, name), _mainwin(mwin)
+{
+}
+
+void FTgridButton::handleMouse(wxMouseEvent &event)
+{
+	if (event.RightDown()) {
+		_mainwin->handleGridButtonMouse(event);
+	}
+
+	event.Skip();
 }

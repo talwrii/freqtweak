@@ -40,6 +40,8 @@ class FTspectrumModifier
 		FREQ_MODIFIER,
 		DB_MODIFIER,
 		SEMITONE_MODIFIER,
+		// must be last!
+		NULL_MODIFIER, 
 	};
 
 	FTspectrumModifier(ModifierType mtype, SpecModType smtype, int length=512, float initval=0.0);

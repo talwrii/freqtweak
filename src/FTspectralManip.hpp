@@ -118,8 +118,12 @@ class FTspectralManip
 	bool getMuted () { return _mutedFlag; }
 	
 	
-	unsigned long getMaxDelaySamples() { return _maxDelaySamples; }
-
+	float getMaxDelay () { return _maxDelay; }
+	void setMaxDelay (float secs); // ONLY call when not processing
+	
+	void setTempo (int tempo) { _tempo = tempo; }
+        int getTempo() { return _tempo; }
+	
 	const float * getRunningInputPower() { return _runningInputPower; }
 	const float * getRunningOutputPower() { return _runningOutputPower; }
 
@@ -202,6 +206,7 @@ protected:
 	Windowing _windowing;
 	int _oversamp;
 	unsigned long _maxDelaySamples;
+	float _maxDelay;
 	int _maxAverages;
 	int _averages;
 	
@@ -232,8 +237,6 @@ protected:
 	float *gLastPhase, *gSumPhase, *gAnaFreq, *gSynFreq, *gAnaMagn, *gSynMagn;
 	
 	nframes_t _sampleRate;
-
-	float _maxDelay;
 	
 	// filters
 	FTspectrumModifier * _freqFilter;
@@ -263,7 +266,9 @@ protected:
 	UpdateSpeed _updateSpeed;
 	int _id;
 	FTupdateToken * _updateToken;
-  private:
+
+	int _tempo;
+private:
 	
 	fftw_real *_inwork, *_outwork;
 	fftw_real *_winwork;

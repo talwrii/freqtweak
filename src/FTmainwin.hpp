@@ -21,6 +21,9 @@
 #define __FTMAINWIN_HPP__
 
 
+#include <vector>
+using namespace std;
+
 #include <wx/wx.h>
 
 //#include <wx/sashwin.h>
@@ -29,6 +32,7 @@
 #include "FTtypes.hpp"
 #include "FTspectragram.hpp"
 #include "FTconfigManager.hpp"
+#include "FTspectrumModifier.hpp"
 
 #include "LockFreeFifo.hpp"
 
@@ -69,6 +73,8 @@ class FTmainwin : public wxFrame
 	void loadPreset (const wxString & name);
 
 	void cleanup ();
+
+	void handleGridButtonMouse (wxMouseEvent &event);
 	
   protected:
 
@@ -292,13 +298,19 @@ class FTmainwin : public wxFrame
 	wxComboBox * _presetCombo;
 	wxChoice * _plotSpeedChoice;
 	wxCheckBox *_superSmoothCheck;
+
+	wxChoice * _maxDelayChoice;
+	vector<float> _delayList;
+
+	wxSpinCtrl * _tempoSpinCtrl;
+
 	
 	FTupdateToken * _updateTokens[FT_MAXPATHS];
 
 
 	friend class FTupdateTimer;
 	friend class FTlinkMenu;
-
+	friend class FTgridMenu;
 	
   private:
 	// any class wishing to process wxWindows events must use this macro
@@ -345,6 +357,41 @@ class FTlinkMenu
 //	DECLARE_EVENT_TABLE()
 };
 
+class FTgridMenu
+	: public wxMenu
+{
+  public:
+	FTgridMenu (wxWindow *parent, FTmainwin *win, vector<FTactiveBarGraph*> & graph, FTspectrumModifier::ModifierType mtype);
 
+	void OnSelectItem(wxCommandEvent &event);
+
+	FTmainwin *_mwin;
+	vector<FTactiveBarGraph *> _graphlist;
+	FTspectrumModifier::ModifierType _mtype;
+		
+  private:
+	// any class wishing to process wxWindows events must use this macro
+	DECLARE_EVENT_TABLE()
+};
+
+class FTgridButton
+	: public wxButton
+{
+   public:
+	FTgridButton(FTmainwin *mwin, wxWindow * parent, wxWindowID id,
+		     const wxString& label,
+		     const wxPoint& pos,
+		     const wxSize& size = wxDefaultSize,
+		     long style = 0, const wxValidator& validator=wxDefaultValidator, const wxString& name = wxButtonNameStr);
+
+	void handleMouse (wxMouseEvent &event);
+
+	FTmainwin * _mainwin;
+	
+  private:
+	// any class wishing to process wxWindows events must use this macro
+	DECLARE_EVENT_TABLE()
+
+};
 
 #endif

@@ -123,20 +123,21 @@ static void* watchdog_thread(void* arg)
 
 	  if (signalno == SIGHUP) {
 		  // reinit iosupport
-		  cerr << "freqtweak got SIGHUP... reiniting" << endl;
-		  wxThread::Sleep(200);
+// 		  cerr << "freqtweak got SIGHUP... reiniting" << endl;
+// 		  wxThread::Sleep(200);
 
-		  FTioSupport * iosup = FTioSupport::instance();
-		  if (!iosup->isInited()) {
-			  iosup->init();
-			  if (iosup->startProcessing()) {
-				  iosup->reinit();
-			  }
-		  }
+// 		  FTioSupport * iosup = FTioSupport::instance();
+// 		  if (!iosup->isInited()) {
+// 			  iosup->init();
+// 			  if (iosup->startProcessing()) {
+// 				  iosup->reinit();
+// 			  }
+// 		  }
 
-		  if (::wxGetApp().getMainwin()) {
-			  ::wxGetApp().getMainwin()->updateDisplay();
-		  }
+// 		  if (::wxGetApp().getMainwin()) {
+// 			  ::wxGetApp().getMainwin()->updateDisplay();
+// 		  }
+		  exiting = true;
 	  }
 	  else {
 		  exiting = true;

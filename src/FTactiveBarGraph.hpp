@@ -21,14 +21,16 @@
 #define __FTACTIVEBARGRAPH_HPP__
 
 #include <list>
+#include <vector>
+#include <string>
 using namespace std;
 
 #include <wx/wx.h>
 
 #include "FTtypes.hpp"
 #include "FTutils.hpp"
+#include "FTspectrumModifier.hpp"
 
-class FTspectrumModifier;
 class FTmainwin;
 
 
@@ -72,6 +74,16 @@ class FTactiveBarGraph
 	void OnMouseActivity ( wxMouseEvent &event );
 	void OnXscaleMenu (wxMenuEvent &event);
 
+	void setBypassed (bool flag) { _bypassed = flag; Refresh(FALSE);}
+	bool getBypassed () { return _bypassed; }
+
+	const vector<string> & getGridChoiceStrings() { return _gridChoices; }
+	void setGridChoice (unsigned int );
+	unsigned int getGridChoice () { return _gridChoiceIndex; }
+
+	void setTempo(int bpm);
+	int getTempo() { return _tempo; }
+	
 	void recalculate();
 	
   protected:
@@ -100,6 +112,8 @@ class FTactiveBarGraph
 	void paintGridlines(wxDC & dc);
 
 	float snapValue(float val);
+
+	void makeGridChoices(bool setdefault=false);
 	
 	int _width, _height;
 
@@ -128,6 +142,7 @@ class FTactiveBarGraph
 	wxColour _barColor0,_barColor1;
 	wxColour _barColor2,_barColor3, _barColorDead, _tipColor;
 	wxBrush  _barBrush0, _barBrush1, _barBrush2, _barBrush3, _barBrushDead ,_tipBrush;
+	wxBrush _bypassBrush;
 	wxBrush _bgBrush;
 	wxColour _penColor;
 	wxPen  _barPen;
@@ -163,7 +178,23 @@ class FTactiveBarGraph
 	bool _gridSnapFlag;
 	
 	bool _mouseCaptured;
-  private:
+	bool _bypassed;
+
+	vector<string> _gridChoices;
+	vector<float> _gridValues;
+	float _gridFactor;
+	unsigned int _gridChoiceIndex;
+
+	wxFont _boundsFont;
+	wxColour _textColor;
+	FTspectrumModifier::ModifierType _mtype;
+	wxString _maxstr, _minstr;
+
+	// tempo for time only
+	int _tempo;
+	unsigned int _beatscutoff;
+	
+private:
 	// any class wishing to process wxWindows events must use this macro
 	DECLARE_EVENT_TABLE()	
 
