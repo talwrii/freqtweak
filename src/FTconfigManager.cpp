@@ -33,14 +33,17 @@
 #include <wx/dir.h>
 #include <wx/textfile.h>
 #include <wx/listimpl.cpp>
-
+#include <wx/filename.h>
 
 #include "FTconfigManager.hpp"
 #include "FTspectrumModifier.hpp"
-#include "FTspectralManip.hpp"
+#include "FTspectralEngine.hpp"
 #include "FTioSupport.hpp"
 #include "FTprocessPath.hpp"
+#include "FTdspManager.hpp"
+#include "version.h"
 
+#include "xml++.hpp"
 
 WX_DEFINE_LIST(FTstringList);
 
@@ -50,7 +53,14 @@ FTconfigManager::FTconfigManager(const char * basedir)
 {
 
 	if (_basedir.IsEmpty()) {
-		_basedir = wxString::Format("%s/.freqtweak", getenv("HOME"));
+		char * homestr = getenv("HOME");
+
+		if (homestr) {
+			_basedir = wxString::Format("%s%c.freqtweak", homestr, wxFileName::GetPathSeparator());
+		}
+		else {
+			_basedir = ".freqtweak";
+		}
 	}
 
 	// try to create basedir if it doesn't exist
@@ -69,12 +79,13 @@ FTconfigManager::FTconfigManager(const char * basedir)
 	}
 
 	// make basedir/presets dir
-	if ( ! wxDir::Exists(_basedir + "/presets") ) {
-		if (mkdir ( _basedir + "/presets" , 0755 )) {
-			fprintf (stderr, "Error creating %s/presets\n", _basedir.c_str()); 
+	if ( ! wxDir::Exists(_basedir + wxFileName::GetPathSeparator() + "presets") ) {
+		wxString predir =  wxString::Format("%s%cpresets", _basedir.c_str(), wxFileName::GetPathSeparator());
+		if (mkdir (predir.c_str(), 0755 )) {
+			fprintf (stderr, "Error creating %s\n", predir.c_str()); 
 		}
 		else {
-			fprintf(stderr, "Created presets directory: %s/presets\n", _basedir.c_str());
+			fprintf(stderr, "Created presets directory: %s\n", predir.c_str());
 		}
 	}
 	else {
@@ -124,110 +135,132 @@ bool FTconfigManager::storeSettings (const char * name)
 	}
 
 
+	// make xmltree
+	XMLTree configdoc;
+	XMLNode * rootNode = new XMLNode("Preset");
+	rootNode->add_property("version", freqtweak_version);
+	configdoc.set_root (rootNode);
+	
+	// Params node has global dsp settings
+	XMLNode * paramsNode = rootNode->add_child ("Params");
+
+	XMLNode * channelsNode = rootNode->add_child ("Channels");
+	
 	for (int i=0; i < iosup->getActivePathCount(); i++)
 	{
 		FTprocessPath * procpath = iosup->getProcessPath(i);
 		if (!procpath) continue; // shouldnt happen
 
-		FTspectralManip *manip = procpath->getSpectralManip();
+		FTspectralEngine *engine = procpath->getSpectralEngine();
 
-		
-		// make config file for class settings
-		wxTextFile conffile (wxString::Format("%s/config.%d", dirname.c_str(), i));
-
-		if (! conffile.Create ()) {
-			printf ("Error cannot create %s\n", conffile.GetName());
-			return false;
+		if (i==0)
+		{
+			// pull global params from first procpath
+			paramsNode->add_property ("fft_size", wxString::Format("%d", engine->getFFTsize()).c_str());
+			paramsNode->add_property ("windowing", wxString::Format("%d", engine->getWindowing()).c_str());			
+			paramsNode->add_property ("update_speed", wxString::Format("%d", engine->getUpdateSpeed()).c_str());			
+			paramsNode->add_property ("oversamp", wxString::Format("%d", engine->getOversamp()).c_str());			
+			paramsNode->add_property ("tempo", wxString::Format("%d", engine->getTempo()).c_str());			
+			paramsNode->add_property ("max_delay", wxString::Format("%.10g", engine->getMaxDelay()).c_str());			
 		}
 
-		conffile.AddLine (wxString::Format("fft_size=%d", manip->getFFTsize()));
-		conffile.AddLine (wxString::Format("windowing=%d", (int) manip->getWindowing()));
-		conffile.AddLine (wxString::Format("update_speed=%d", (int) manip->getUpdateSpeed()));
-		conffile.AddLine (wxString::Format("oversamp=%d", manip->getOversamp()));
-		conffile.AddLine (wxString::Format("input_gain=%.10g", manip->getInputGain()));
-		conffile.AddLine (wxString::Format("mix_ratio=%.10g", manip->getMixRatio()));
-		conffile.AddLine (wxString::Format("bypassed=%d", manip->getBypassed() ? 1: 0 ));
-		conffile.AddLine (wxString::Format("muted=%d", manip->getMuted() ? 1 : 0 ));
-		conffile.AddLine (wxString::Format("tempo=%d", manip->getTempo()));
-		conffile.AddLine (wxString::Format("max_delay=%.10g", manip->getMaxDelay()));
 
-		conffile.AddLine("");
+		vector<FTprocI *> procmods;
+		engine->getProcessorModules (procmods);
 
-	// now for the filter sections
-	
-		conffile.AddLine (wxString::Format("freq_bypassed=%d", manip->getBypassFreqFilter() ? 1: 0 ));
-		conffile.AddLine (wxString::Format("scale_bypassed=%d", manip->getBypassScaleFilter() ? 1: 0 ));
-		conffile.AddLine (wxString::Format("delay_bypassed=%d", manip->getBypassDelayFilter() ? 1: 0 ));
-		conffile.AddLine (wxString::Format("feedback_bypassed=%d", manip->getBypassFeedbackFilter() ? 1: 0 ));	
-		conffile.AddLine (wxString::Format("gate_bypassed=%d", manip->getBypassGateFilter() ? 1: 0 ));
-		conffile.AddLine (wxString::Format("inverse_gate_bypassed=%d", manip->getBypassInverseGateFilter() ? 1: 0 ));
+		XMLNode * chanNode = channelsNode->add_child ("Channel");
 
-		conffile.AddLine("");
+		chanNode->add_property ("pos", wxString::Format("%d", i).c_str());
+		chanNode->add_property ("input_gain", wxString::Format("%.10g", engine->getInputGain()).c_str());
+		chanNode->add_property ("mix_ratio", wxString::Format("%.10g", engine->getMixRatio()).c_str());
+		chanNode->add_property ("bypassed", wxString::Format("%d", engine->getBypassed() ? 1: 0).c_str());
+		chanNode->add_property ("muted", wxString::Format("%d", engine->getMuted() ? 1 : 0).c_str());
 		
-		conffile.AddLine (wxString::Format("freq_linked=%d",
-						   (manip->getFreqFilter()->getLink()
-						    ? manip->getFreqFilter()->getLink()->getId() : -1 )));
-		conffile.AddLine (wxString::Format("scale_linked=%d",
-						   (manip->getScaleFilter()->getLink()
-						    ? manip->getScaleFilter()->getLink()->getId(): -1 )));
-		conffile.AddLine (wxString::Format("delay_linked=%d",
-						   (manip->getDelayFilter()->getLink()
-						    ? manip->getDelayFilter()->getLink()->getId(): -1 )));
-		conffile.AddLine (wxString::Format("feedback_linked=%d",
-						   (manip->getFeedbackFilter()->getLink()
-						    ? manip->getFeedbackFilter()->getLink()->getId(): -1 )));
-		conffile.AddLine (wxString::Format("gate_linked=%d",
-						   ( manip->getGateFilter()->getLink()
-						     ? manip->getGateFilter()->getLink()->getId(): -1 )));
-		conffile.AddLine (wxString::Format("inverse_gate_linked=%d",
-						   (manip->getInverseGateFilter()->getLink()
-						    ? manip->getInverseGateFilter()->getLink()->getId(): -1 )));
+		
+		// now for the filter sections
+
+		XMLNode * procmodsNode = chanNode->add_child ("ProcMods");
+		
+		for (unsigned int n=0; n < procmods.size(); ++n)
+		{
+			FTprocI *pm = procmods[n];
+			vector<FTspectrumModifier *> filts;
+			pm->getFilters (filts);
+
+			XMLNode * pmNode = procmodsNode->add_child ("ProcMod");
+			pmNode->add_property ("pos", wxString::Format("%d", n).c_str());
+			pmNode->add_property ("name", pm->getName());
+			
+			for (unsigned int m=0; m < filts.size(); ++m)
+			{
+				XMLNode * filtNode = pmNode->add_child ("Filter");
+
+				filtNode->add_property ("pos", wxString::Format("%d", m).c_str());
+				filtNode->add_property ("name", filts[m]->getConfigName().c_str());
+				filtNode->add_property ("linked", wxString::Format("%d",
+										   filts[m]->getLink() ?
+										   filts[m]->getLink()->getId() : -1).c_str());
+					
+				filtNode->add_property ("bypassed", wxString::Format("%d",
+										     filts[m]->getBypassed() ? 1 : 0).c_str());
+
+				string filtfname = wxString::Format("%d_%d_%s.filter", i, n, filts[m]->getConfigName().c_str()).c_str();
+				filtNode->add_property ("file", filtfname);
+
+				// write out filter file
+				wxTextFile filtfile (wxString::Format("%s%c%s", dirname.c_str(), wxFileName::GetPathSeparator(),
+								      filtfname.c_str()));
+				if (filtfile.Exists()) {
+					// remove it
+					unlink (filtfile.GetName());
+				}
+				filtfile.Create ();
+				writeFilter (filts[m], filtfile);
+				filtfile.Write();
+				filtfile.Close();
+			}
+
+		}
 
 
-		conffile.AddLine("");
-		// port connections
+		// port connections		
+		XMLNode * inputsNode = chanNode->add_child ("Inputs");
+
 		const char ** inports = iosup->getConnectedInputPorts(i);
-		wxString instr("input_ports=");
 		if (inports) {
 			for (int n=0; inports[n]; n++) {
-				if (n == 0) {
-					instr += wxString(inports[n]);
-				}
-				else {
-					instr += wxString::Format(",%s", inports[n]);
-				}
+
+				XMLNode * portNode = inputsNode->add_child ("Port");
+				portNode->add_property ("name", inports[n]);
 			}
 			free(inports);
 		}
-		conffile.AddLine (instr);
 
+		XMLNode * outputsNode = chanNode->add_child ("Outputs");
+		
 		const char ** outports = iosup->getConnectedOutputPorts(i);
-		wxString outstr("output_ports=");
 		if (outports) {
 			for (int n=0; outports[n]; n++) {
-				if (n == 0) {
-					outstr += wxString(outports[n]);
-				}
-				else {
-					outstr += wxString::Format(",%s", outports[n]);
-				}
+
+				XMLNode * portNode = outputsNode->add_child ("Port");
+				portNode->add_property ("name", outports[n]);
 			}
 			free(outports);
 		}
-		conffile.AddLine (outstr);
-		
-		
-		
-		conffile.Write();
-	
-		// now create the filter files
-		createFilterFiles (manip, dirname, i);
+
 	}
 
+	// write doc to file
 	
-	printf ("Stored settings into %s\n", dirname.c_str());
-	
-	return true;
+	if (configdoc.write (wxString::Format("%s%c%s", dirname.c_str(), wxFileName::GetPathSeparator(), "config.xml").c_str()))
+	{	    
+		fprintf (stderr, "Stored settings into %s\n", dirname.c_str());
+		return true;
+	}
+	else {
+		fprintf (stderr, "Failed to store settings into %s\n", dirname.c_str());
+		return false;
+	}
 }
 
 bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
@@ -236,7 +269,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 		return false;
 	}
 	
-	wxString dirname(wxString::Format("%s/presets/%s", _basedir.c_str(), name));
+	wxString dirname(wxString::Format("%s%cpresets/%s", _basedir.c_str(), wxFileName::GetPathSeparator(), name));
 
 	if ( ! wxDir::Exists(dirname) ) {
 		printf ("Settings %s does not exist!\n", dirname.c_str()); 
@@ -245,17 +278,39 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 
 	FTioSupport * iosup = FTioSupport::instance();
 
-	int i;	
-	for (i=0; i < FT_MAXPATHS; i++)
-	{
-		// get config file for class settings
-		wxTextFile conffile (wxString::Format("%s/config.%d", dirname.c_str(), i) );
-		if (!conffile.Exists()) {
-			//printf ("%d path found!\n", i);
-			// enforce 0-n ordering for configs
-			break;
-		}
+	
+	// open file
+	string configfname(wxString::Format("%s%c%s", dirname.c_str(), wxFileName::GetPathSeparator(), "config.xml").c_str());
+	XMLTree configdoc (configfname);
 
+	if (!configdoc.initialized()) {
+		fprintf (stderr, "Error loading config at %s!\n", configfname.c_str()); 
+		return false;
+	}
+
+	XMLNode * rootNode = configdoc.root();
+	if (!rootNode || rootNode->name() != "Preset") {
+		fprintf (stderr, "Preset root node not found in %s!\n", configfname.c_str()); 
+		return false;
+	}
+
+	// get channels
+
+	XMLNode * channelsNode = find_named_node (rootNode, "Channels");
+	if (!channelsNode ) {
+		fprintf (stderr, "Preset Channels node not found in %s!\n", configfname.c_str()); 
+		return false;
+	}
+
+	XMLNodeList chanlist = channelsNode->children();
+	if (chanlist.size() < 1) {
+		fprintf (stderr, "No channels found in %s!\n", configfname.c_str()); 
+		return false;
+	}
+
+	unsigned int i;
+	for (i=0; i < chanlist.size() && i < FT_MAXPATHS; i++)
+	{
 	        iosup->setProcessPathActive(i, true);
 	}
 	// set all remaining paths inactive
@@ -263,102 +318,320 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 		iosup->setProcessPathActive(i, false);
 	}
 
-	for (i=0; i < iosup->getActivePathCount(); i++)
-	{
-		wxTextFile conffile (wxString::Format("%s/config.%d", dirname.c_str(), i) );
 
-		FTprocessPath * procpath = iosup->getProcessPath(i);
+	// get global params
+	unsigned long fft_size = 1024;
+	unsigned long windowing = 0;
+	unsigned long update_speed = 2;
+	unsigned long oversamp = 4;
+	unsigned long tempo = 120;
+	double        max_delay = 2.5;
+
+	XMLNode * paramsNode = find_named_node (rootNode, "Params");
+	if (paramsNode)
+	{
+		XMLPropertyConstIterator propiter;
+		XMLPropertyList proplist = paramsNode->properties();
+		
+		for (propiter=proplist.begin(); propiter != proplist.end(); ++propiter)
+		{
+			string key = (*propiter)->name();
+			wxString value = (*propiter)->value().c_str();
+
+			if (key == "fft_size") {
+				value.ToULong(&fft_size);
+			}
+			else if (key == "windowing") {
+				value.ToULong(&windowing);
+			}
+			else if (key == "update_speed") {
+				value.ToULong(&update_speed);
+			}
+			else if (key == "oversamp") {
+				value.ToULong(&oversamp);
+			}
+			else if (key == "tempo") {
+				value.ToULong(&tempo);
+			}
+			else if (key == "max_delay") {
+				value.ToDouble(&max_delay);
+			}
+		}
+	}
+
+
+	_linkCache.clear();
+	
+	// clear all procpaths
+	XMLNodeConstIterator chaniter;
+	XMLNode * chanNode;
+	double fval;
+	unsigned long uval;
+	
+	for (chaniter=chanlist.begin(); chaniter != chanlist.end(); ++chaniter)
+	{
+		chanNode = *chaniter;
+
+		XMLProperty * prop;
+
+		if (!(prop = chanNode->property ("pos"))) {
+			fprintf (stderr, "pos missing in channel!\n"); 
+			continue;
+		}
+		
+		unsigned long chan_pos;
+		wxString tmpstr (prop->value().c_str());
+		if (!tmpstr.ToULong (&chan_pos) || chan_pos >= FT_MAXPATHS) {
+			fprintf (stderr, "invalid pos in channel!\n"); 
+			continue;
+		}
+
+		FTprocessPath * procpath = iosup->getProcessPath((int) chan_pos);
 		if (!procpath) continue; // shouldnt happen
 
-		FTspectralManip * manip = procpath->getSpectralManip();
+		FTspectralEngine * engine = procpath->getSpectralEngine();
 
-		if (conffile.Open())
+		// apply some of the global settings now
+		engine->setOversamp ((int) oversamp);
+		engine->setTempo ((int) tempo);
+		engine->setMaxDelay ((float) max_delay);
+
+		
+		// get channel settings
+		XMLPropertyConstIterator propiter;
+		XMLPropertyList proplist = chanNode->properties();
+
+		for (propiter=proplist.begin(); propiter != proplist.end(); ++propiter)
 		{
-			// parse lines from it
-			wxString line;
-		
-			line = conffile.GetFirstLine();	
-			for ( unsigned int n =0;  n < conffile.GetLineCount(); n++ )
-			{
-				line = conffile[n];
-				line.Trim(true);
-				line.Trim(false);
-			
-				if (line.IsEmpty() || line.GetChar(0) == '#')
-				{
-					continue; // ignore
-				}
-			
-				// look for = separating key and value
-				wxString key;
-				wxString value;
-			
-				int pos = line.find ('=');
-				if (pos >= 0) {
-					key = line.substr(0, pos);
-					value = line.Mid(pos+1).Strip(wxString::both);
-					//printf ("key is %s, value is %s\n", key.c_str(), value.c_str());
+			string key = (*propiter)->name();
+			wxString value = (*propiter)->value().c_str();
 
-					modifySetting (manip, i, key, value, restore_ports);
+			if (key == "input_gain") {
+				if (value.ToDouble(&fval)) {
+					engine->setInputGain ((float) fval);
 				}
-			
 			}
+			else if (key == "mix_ratio") {
+				if (value.ToDouble(&fval)) {
+					engine->setMixRatio ((float) fval);
+				}
+			}
+			else if (key == "bypassed") {
+				if (value.ToULong(&uval)) {
+					engine->setBypassed (uval==1 ? true: false);
+				}
+			}
+			else if (key == "muted") {
+				if (value.ToULong(&uval)) {
+					engine->setMuted (uval==1 ? true: false);
+				}
+			}	
+		}
+
+
+		// clear existing procmods
+		engine->clearProcessorModules();
 		
+		// get procmods node
+		XMLNode * procmodsNode = find_named_node (chanNode, "ProcMods");
+		
+		if ( !procmodsNode ) {
+			fprintf (stderr, "Preset ProcMods node not found in %s!\n", configfname.c_str()); 
+			return false;
+		}
+
+		XMLNodeList pmlist = procmodsNode->children();
+		XMLNodeConstIterator pmiter;
+		XMLNode * pmNode;
+
+		for (pmiter=pmlist.begin(); pmiter != pmlist.end(); ++pmiter)
+		{
+			pmNode = *pmiter;
+
+			if (!(prop = pmNode->property ("pos"))) {
+				fprintf (stderr, "pos missing in procmod!\n"); 
+				continue;
+			}
+			unsigned long ppos;
+			tmpstr = prop->value().c_str();
+			if (!tmpstr.ToULong (&ppos)) {
+				fprintf (stderr, "invalid pos in procmod!\n"); 
+				continue;
+			}
+
+			if (!(prop = pmNode->property ("name"))) {
+				fprintf (stderr, "name missing in procmod!\n"); 
+				continue;
+			}
+			string pmname = prop->value();
+
+			// construct new procmod
+			FTprocI * procmod = FTdspManager::instance()->getModuleByName(pmname);
+			if (!procmod) {
+				fprintf (stderr, "no proc module '%s' supported\n", pmname.c_str()); 
+				continue;
+			}
+			procmod = procmod->clone();
+
+			// must call this before initialization
+			procmod->setMaxDelay ((float)max_delay);
+
+			procmod->initialize();
+
+			procmod->setSampleRate (iosup->getSampleRate());
+			procmod->setOversamp ((int)oversamp);
+
+			// load up the filters in the procmod
+			
+			XMLNodeList filtlist = pmNode->children();
+			XMLNodeConstIterator filtiter;
+			XMLNode * filtNode;
+
+			for (filtiter=filtlist.begin(); filtiter != filtlist.end(); ++filtiter)
+			{
+				filtNode = *filtiter;
+				
+				if (!(prop =filtNode->property ("pos"))) {
+					fprintf (stderr, "pos missing in filter!\n"); 
+					continue;
+				}
+				unsigned long fpos;
+				tmpstr = prop->value().c_str();
+				if (!tmpstr.ToULong (&fpos)) {
+					fprintf (stderr, "invalid filter pos in channel!\n"); 
+					continue;
+				}
+
+				if (!(prop = filtNode->property ("file"))) {
+					fprintf (stderr, "filter filename missing in procmod!\n"); 
+					continue;
+				}
+				string filtfname = prop->value();
+
+				FTspectrumModifier * specmod = procmod->getFilter (fpos);
+				if (!specmod) {
+					fprintf (stderr, "no filter at index %lu in procmod!\n", fpos); 
+					continue;
+				}
+
+				// load filter
+				wxTextFile filtfile (wxString::Format("%s%c%d_%d_%s.filter", dirname.c_str(), wxFileName::GetPathSeparator(),
+								      (int) chan_pos, (int) ppos,
+								      specmod->getConfigName().c_str()));
+				if (filtfile.Open()) {
+
+					loadFilter (specmod, filtfile);
+					filtfile.Close();
+				}
+
+				// set bypassed
+				if ((prop = filtNode->property ("bypassed"))) {
+					wxString value (prop->value().c_str());
+					if (value.ToULong(&uval)) {
+						specmod->setBypassed (uval==1 ? true: false);
+					}
+				}
+
+				// actual linkage must wait for later
+				long linked = -1;
+				if ((prop = filtNode->property ("linked"))) {
+					wxString value (prop->value().c_str());
+					if (value.ToLong(&linked) && linked >= 0) {
+						
+						_linkCache.push_back (LinkCache(chan_pos, linked, ppos, fpos));
+					}
+				}
+				
+				
+			}
+
+			// insert procmod
+
+			engine->insertProcessorModule (procmod, ppos);
+			
+		}
+
+
+		// apply global settings
+		engine->setFFTsize ((FTspectralEngine::FFT_Size) fft_size);
+		engine->setWindowing ((FTspectralEngine::Windowing) windowing);
+		engine->setUpdateSpeed ((FTspectralEngine::UpdateSpeed)(int) update_speed);
+		
+
+		// input ports
+		
+		XMLNode * inputsNode = find_named_node (chanNode, "Inputs");
+		if (inputsNode )
+		{
+			XMLNodeList portlist = inputsNode->children();
+			XMLNodeConstIterator portiter;
+
+			iosup->disconnectPathInput(chan_pos, NULL); // disconnect all
+			
+			for (portiter = portlist.begin(); portiter != portlist.end(); ++portiter)
+			{
+				XMLNode * port = *portiter;
+				if (port->name() == "Port") {
+					XMLProperty * prop = port->property("name");
+					if (prop) {
+						iosup->connectPathInput(chan_pos, prop->value().c_str());
+					}
+				}
+			}
+			
 		}
 		else {
-			printf ("Warning: %s could not be opened!\n", conffile.GetName());
+			fprintf (stderr, "channel inputs node not found in %s!\n", configfname.c_str()); 
 		}
 
+		// output ports
+		XMLNode * outputsNode = find_named_node (chanNode, "Outputs");
+		if (inputsNode )
+		{
+			XMLNodeList portlist = outputsNode->children();
+			XMLNodeConstIterator portiter;
 
-		loadFilterFiles (manip, dirname, i);
+			iosup->disconnectPathOutput(chan_pos, NULL); // disconnect all
+			
+			for (portiter = portlist.begin(); portiter != portlist.end(); ++portiter)
+			{
+				XMLNode * port = *portiter;
+				if (port->name() == "Port") {
+					XMLProperty * prop = port->property("name");
+					if (prop) {
+						iosup->connectPathOutput(chan_pos, prop->value().c_str());
+					}
+				}
+			}
+			
+		}
+		else {
+			fprintf (stderr, "channel outputs node not found in %s!\n", configfname.c_str()); 
+		}
+		
 		
 	}
 
+	// now we can apply linkages
+	list<LinkCache>::iterator liter;
+	for (liter = _linkCache.begin(); liter != _linkCache.end(); ++liter)
+	{
+		LinkCache & lc = *liter;
+
+		FTspectrumModifier *source = iosup->getProcessPath(lc.source_chan)->getSpectralEngine()
+			->getProcessorModule(lc.mod_n)->getFilter(lc.filt_n);
+
+		FTspectrumModifier *dest = iosup->getProcessPath(lc.dest_chan)->getSpectralEngine()
+			->getProcessorModule(lc.mod_n)->getFilter(lc.filt_n);
+
+		source->link (dest);
+		
+	}
 	
 	
 	return true;
 }
 
-
-void FTconfigManager::loadFilterFiles(FTspectralManip *manip, wxString & dirname, int i)
-{
-	// freq filter
-	wxTextFile freqfile (wxString::Format("%s/freq.%d.filter", dirname.c_str(), i));
-	if (freqfile.Open()) {
-		loadFilter (manip->getFreqFilter(), freqfile);
-	}
-
-	// scale filter
-	wxTextFile scalefile  (wxString::Format("%s/scale.%d.filter", dirname.c_str(), i));
-	if (scalefile.Open()) {
-		loadFilter (manip->getScaleFilter(), scalefile);
-	}
-	
-	// inverse filter
-	wxTextFile invgatefile  (wxString::Format("%s/inverse_gate.%d.filter", dirname.c_str(), i));
-	if (invgatefile.Open()) {
-		loadFilter (manip->getInverseGateFilter(), invgatefile);
-	}
-	
-	// gate filter
-	wxTextFile gatefile  (wxString::Format("%s/gate.%d.filter", dirname.c_str(), i));
-	if (gatefile.Open()) {
-		loadFilter (manip->getGateFilter(), gatefile);		
-	}
-
-	// delay filter
-	wxTextFile delayfile  (wxString::Format("%s/delay.%d.filter", dirname.c_str(), i));
-	if (delayfile.Open()) {
-		loadFilter (manip->getDelayFilter(), delayfile);
-	}
-
-	// feedback filter
-	wxTextFile feedbackfile  (wxString::Format("%s/feedback.%d.filter", dirname.c_str(), i));
-	if (feedbackfile.Open()) {
-		loadFilter (manip->getFeedbackFilter(), feedbackfile);
-	}
-
-}
 
 void FTconfigManager::loadFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 {
@@ -436,71 +709,6 @@ void FTconfigManager::loadFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 
 
 
-void FTconfigManager::createFilterFiles(FTspectralManip *manip, wxString &dirname, int i)
-{
-
-	// freq filter
-	wxTextFile freqfile (wxString::Format("%s/freq.%d.filter", dirname.c_str(), i));
-	if (freqfile.Exists()) {
-		// remove it
-		unlink (freqfile.GetName());
-	}
-	freqfile.Create ();
-	writeFilter (manip->getFreqFilter(), freqfile);
-	freqfile.Write();
-
-	// scale filter
-	wxTextFile scalefile (wxString::Format("%s/scale.%d.filter", dirname.c_str(), i));
-	if (scalefile.Exists()) {
-		// remove it
-		unlink (scalefile.GetName());
-	}
-	scalefile.Create ();
-	writeFilter (manip->getScaleFilter(), scalefile);
-	scalefile.Write();
-
-	
-	// squelch filter
-	wxTextFile invgatefile (wxString::Format("%s/inverse_gate.%d.filter", dirname.c_str(), i));
-	if (invgatefile.Exists()) {
-		// remove it
-		unlink (invgatefile.GetName());
-	}
-	invgatefile.Create ();
-	writeFilter (manip->getInverseGateFilter(), invgatefile);
-	invgatefile.Write();
-	
-	// gate filter
-	wxTextFile gatefile  (wxString::Format("%s/gate.%d.filter", dirname.c_str(), i));
-	if (gatefile.Exists()) {
-		// remove it
-		unlink (gatefile.GetName());
-	}
-	gatefile.Create ();
-	writeFilter (manip->getGateFilter(), gatefile);
-	gatefile.Write();
-
-	// delay filter
-	wxTextFile delayfile (wxString::Format("%s/delay.%d.filter", dirname.c_str(), i));
-	if (delayfile.Exists()) {
-		// remove it
-		unlink (delayfile.GetName());
-	}
-	delayfile.Create ();
-	writeFilter (manip->getDelayFilter(), delayfile);
-	delayfile.Write();
-
-	// feedback filter
-	wxTextFile feedbackfile  (wxString::Format("%s/feedback.%d.filter", dirname.c_str(), i));
-	if (feedbackfile.Exists()) {
-		// remove it
-		unlink (feedbackfile.GetName());
-	}
-	feedbackfile.Create ();
-	writeFilter (manip->getFeedbackFilter(), feedbackfile);
-	feedbackfile.Write();
-	
-}
 
 
 void FTconfigManager::writeFilter (FTspectrumModifier *specmod, wxTextFile & tf)
@@ -552,195 +760,236 @@ void FTconfigManager::writeFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 }
 
 
-void FTconfigManager::modifySetting (FTspectralManip *manip, int id, wxString &key, wxString &value, bool restoreports)
-{
+// void FTconfigManager::modifySetting (FTspectralEngine *engine, int id, string &key, string &val, bool restoreports)
+// {
 
-	double fval;
-	unsigned long ival;
-	FTioSupport * iosup = FTioSupport::instance();
+// 	double fval;
+// 	unsigned long ival;
+// 	FTioSupport * iosup = FTioSupport::instance();
+// 	wxString value(val);
 	
-	if (key == "fft_size") {
-		if (value.ToULong(&ival)) {
-			manip->setFFTsize ((FTspectralManip::FFT_Size) ival);
-		}
-	}
-	else if (key == "windowing") {
-		if (value.ToULong(&ival)) {
-			manip->setWindowing ((FTspectralManip::Windowing) ival);
-		}
-	}
-	else if (key == "update_speed") {
-		if (value.ToULong(&ival)) {
-			manip->setUpdateSpeed ((FTspectralManip::UpdateSpeed)(int)ival);
-		}
-	}
-	else if (key == "oversamp") {
-		if (value.ToULong(&ival)) {
-			manip->setOversamp ((int)ival);
-		}
-	}
-	else if (key == "input_gain") {
-		if (value.ToDouble(&fval)) {
-			manip->setInputGain ((float) fval);
-		}
-	}
-	else if (key == "mix_ratio") {
-		if (value.ToDouble(&fval)) {
-			manip->setMixRatio ((float) fval);
-		}
-	}
-	else if (key == "bypassed") {
-		if (value.ToULong(&ival)) {
-			manip->setBypassed (ival==1 ? true: false);
-		}
-	}
-	else if (key == "muted") {
-		if (value.ToULong(&ival)) {
-			manip->setMuted (ival==1 ? true: false);
-		}
-	}
-	else if (key == "freq_bypassed") {
-		if (value.ToULong(&ival)) {
-			manip->setBypassFreqFilter (ival==1 ? true: false);
-		}
-	}
-	else if (key == "scale_bypassed") {
-		if (value.ToULong(&ival)) {
-			manip->setBypassScaleFilter (ival==1 ? true: false);
-		}
-	}
-	else if (key == "delay_bypassed") {
-		if (value.ToULong(&ival)) {
-			manip->setBypassDelayFilter (ival==1 ? true: false);
-		}
-	}
-	else if (key == "gate_bypassed") {
-		if (value.ToULong(&ival)) {
-			manip->setBypassGateFilter (ival==1 ? true: false);
-		}
-	}
-	else if (key == "inverse_gate_bypassed") {
-		if (value.ToULong(&ival)) {
-			manip->setBypassInverseGateFilter (ival==1 ? true: false);
-		}
-	}
-	else if (key == "feedback_bypassed") {
-		if (value.ToULong(&ival)) {
-			manip->setBypassFeedbackFilter (ival==1 ? true: false);
-		}
-	}
+// 	if (key == "fft_size") {
+// 		if (value.ToULong(&ival)) {
+// 			engine->setFFTsize ((FTspectralEngine::FFT_Size) ival);
+// 		}
+// 	}
+// 	else if (key == "windowing") {
+// 		if (value.ToULong(&ival)) {
+// 			engine->setWindowing ((FTspectralEngine::Windowing) ival);
+// 		}
+// 	}
+// 	else if (key == "update_speed") {
+// 		if (value.ToULong(&ival)) {
+// 			engine->setUpdateSpeed ((FTspectralEngine::UpdateSpeed)(int)ival);
+// 		}
+// 	}
+// 	else if (key == "oversamp") {
+// 		if (value.ToULong(&ival)) {
+// 			engine->setOversamp ((int)ival);
+// 		}
+// 	}
+// 	else if (key == "input_gain") {
+// 		if (value.ToDouble(&fval)) {
+// 			engine->setInputGain ((float) fval);
+// 		}
+// 	}
+// 	else if (key == "mix_ratio") {
+// 		if (value.ToDouble(&fval)) {
+// 			engine->setMixRatio ((float) fval);
+// 		}
+// 	}
+// 	else if (key == "bypassed") {
+// 		if (value.ToULong(&ival)) {
+// 			engine->setBypassed (ival==1 ? true: false);
+// 		}
+// 	}
+// 	else if (key == "muted") {
+// 		if (value.ToULong(&ival)) {
+// 			engine->setMuted (ival==1 ? true: false);
+// 		}
+// 	}
+// 	// io stuff
+// 	else if (key == "input_ports" && restoreports) {
+// 		// value is comma separated list of port names
+// 		iosup->disconnectPathInput(id, NULL); // disconnect all
 
-	// link stuff
-	else if (key == "freq_linked") {
-		if (value.ToULong(&ival)) {
-			if (ival >= 0 && iosup->getProcessPath(ival))
-			{
-				manip->getFreqFilter()->link (iosup->getProcessPath(ival)->getSpectralManip()->getFreqFilter());
-			}
-			else {
-				manip->getFreqFilter()->unlink(false);
-			}
-		}
-	}
-	else if (key == "scale_linked") {
-		if (value.ToULong(&ival)) {
-			if (ival >= 0 && iosup->getProcessPath(ival))
-			{
-				manip->getScaleFilter()->link (iosup->getProcessPath(ival)->getSpectralManip()->getScaleFilter());
-			}
-			else {
-				manip->getScaleFilter()->unlink(false);
-			}
-		}
-	}
-	else if (key == "delay_linked") {
-		if (value.ToULong(&ival)) {
-			if (ival >= 0 && iosup->getProcessPath(ival))
-			{
-				manip->getDelayFilter()->link (iosup->getProcessPath(ival)->getSpectralManip()->getDelayFilter());
-			}
-			else {
-				manip->getDelayFilter()->unlink(false);
-			}
-		}
-	}
-	else if (key == "gate_linked") {
-		if (value.ToULong(&ival)) {
-			if (ival >= 0 && iosup->getProcessPath(ival))
-			{
-				manip->getGateFilter()->link (iosup->getProcessPath(ival)->getSpectralManip()->getGateFilter());
-			}
-			else {
-				manip->getGateFilter()->unlink(false);
-			}
-		}
-	}
-	else if (key == "inverse_gate_linked") {
-		if (value.ToULong(&ival)) {
-			if (ival >= 0 && iosup->getProcessPath(ival))
-			{
-				manip->getInverseGateFilter()->link (iosup->getProcessPath(ival)->getSpectralManip()->getInverseGateFilter());
-			}
-			else {
-				manip->getInverseGateFilter()->unlink(false);
-			}
-		}
-	}
-	else if (key == "feedback_linked") {
-		if (value.ToULong(&ival)) {
-			if (ival >= 0 && iosup->getProcessPath(ival))
-			{
-				manip->getFeedbackFilter()->link (iosup->getProcessPath(ival)->getSpectralManip()->getFeedbackFilter());
-			}
-			else {
-				manip->getFeedbackFilter()->unlink(false);
-			}
-		}
-	}
+// 		wxString port = value.BeforeFirst(',');
+// 		wxString remain = value.AfterFirst(',');
+// 		while (!port.IsEmpty()) {
+// 			iosup->connectPathInput(id, port.c_str());
 
-	// io stuff
-	else if (key == "input_ports" && restoreports) {
-		// value is comma separated list of port names
-		iosup->disconnectPathInput(id, NULL); // disconnect all
-
-		wxString port = value.BeforeFirst(',');
-		wxString remain = value.AfterFirst(',');
-		while (!port.IsEmpty()) {
-			iosup->connectPathInput(id, port.c_str());
-
-			port = remain.BeforeFirst(',');
-			remain = remain.AfterFirst(',');
-		}
+// 			port = remain.BeforeFirst(',');
+// 			remain = remain.AfterFirst(',');
+// 		}
 		
-	}
-	else if (key == "output_ports"  && restoreports) {
-		// value is comma separated list of port names
-		iosup->disconnectPathOutput(id, NULL); // disconnect all
+// 	}
+// 	else if (key == "output_ports"  && restoreports) {
+// 		// value is comma separated list of port names
+// 		iosup->disconnectPathOutput(id, NULL); // disconnect all
 
-		wxString port = value.BeforeFirst(',');
-		wxString remain = value.AfterFirst(',');
-		while (!port.IsEmpty()) {
-			iosup->connectPathOutput(id, port.c_str());
+// 		wxString port = value.BeforeFirst(',');
+// 		wxString remain = value.AfterFirst(',');
+// 		while (!port.IsEmpty()) {
+// 			iosup->connectPathOutput(id, port.c_str());
 
-			port = remain.BeforeFirst(',');
-			remain = remain.AfterFirst(',');
-		}
+// 			port = remain.BeforeFirst(',');
+// 			remain = remain.AfterFirst(',');
+// 		}
 		
-	}
-	else if (key == "tempo") {
-		if (value.ToULong(&ival)) {
-			manip->setTempo ((int) ival);
-		}
-	}
-	else if (key == "max_delay") {
-		if (value.ToDouble(&fval)) {
-			manip->setMaxDelay ((float) fval);
-		}
-	}
-	else {
-		printf ("none of the above\n");
-	}
-}
+// 	}
+// 	else if (key == "tempo") {
+// 		if (value.ToULong(&ival)) {
+// 			engine->setTempo ((int) ival);
+// 		}
+// 	}
+// 	else if (key == "max_delay") {
+// 		if (value.ToDouble(&fval)) {
+// 			engine->setMaxDelay ((float) fval);
+// 		}
+// 	}
+// 	else {
+// 		vector<FTprocI *> procmods;
+// 		engine->getProcessorModules (procmods);
+
+// 		bool done = false;
+// 		for (unsigned int n=0; n < procmods.size(); ++n)
+// 		{
+// 			FTprocI *pm = procmods[n];
+// 			vector<FTspectrumModifier *> filts;
+// 			pm->getFilters (filts);
+			
+// 			for (unsigned int m=0; m < filts.size(); ++m)
+// 			{
+// 				if (key == wxString::Format("%s_bypassed", filts[m]->getConfigName().c_str())) {
+// 					if (value.ToULong(&ival)) {
+// 						filts[m]->setBypassed (ival==1 ? true: false);
+// 					}
+// 					done = true;
+// 					break;
+// 				}
+// 				else if ( key == wxString::Format("%s_linked", filts[m]->getConfigName().c_str())) {
+// 					if (value.ToULong(&ival)) {
+// 						if (ival >= 0 && iosup->getProcessPath(ival))
+// 						{
+// 							filts[m]->link (iosup->getProcessPath(ival)->getSpectralEngine()->
+// 									getProcessorModule(n)->getFilter(m));
+// 						}
+// 						else {
+// 							filts[m]->unlink(false);
+// 						}
+// 					}
+// 					done = true;
+// 					break;
+// 				}
+// 			}
+// 			if (done) break;
+// 		}
+
+// 	}
+	
+// // 	else if (key == "freq_bypassed") {
+// // 		if (value.ToULong(&ival)) {
+// // 			engine->setBypassFreqFilter (ival==1 ? true: false);
+// // 		}
+// // 	}
+// // 	else if (key == "scale_bypassed") {
+// // 		if (value.ToULong(&ival)) {
+// // 			engine->setBypassScaleFilter (ival==1 ? true: false);
+// // 		}
+// // 	}
+// // 	else if (key == "delay_bypassed") {
+// // 		if (value.ToULong(&ival)) {
+// // 			engine->setBypassDelayFilter (ival==1 ? true: false);
+// // 		}
+// // 	}
+// // 	else if (key == "gate_bypassed") {
+// // 		if (value.ToULong(&ival)) {
+// // 			engine->setBypassGateFilter (ival==1 ? true: false);
+// // 		}
+// // 	}
+// // 	else if (key == "inverse_gate_bypassed") {
+// // 		if (value.ToULong(&ival)) {
+// // 			engine->setBypassInverseGateFilter (ival==1 ? true: false);
+// // 		}
+// // 	}
+// // 	else if (key == "feedback_bypassed") {
+// // 		if (value.ToULong(&ival)) {
+// // 			engine->setBypassFeedbackFilter (ival==1 ? true: false);
+// // 		}
+// // 	}
+
+// // 	// link stuff
+// // 	else if (key == "freq_linked") {
+// // 		if (value.ToULong(&ival)) {
+// // 			if (ival >= 0 && iosup->getProcessPath(ival))
+// // 			{
+// // 				engine->getFreqFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getFreqFilter());
+// // 			}
+// // 			else {
+// // 				engine->getFreqFilter()->unlink(false);
+// // 			}
+// // 		}
+// // 	}
+// // 	else if (key == "scale_linked") {
+// // 		if (value.ToULong(&ival)) {
+// // 			if (ival >= 0 && iosup->getProcessPath(ival))
+// // 			{
+// // 				engine->getScaleFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getScaleFilter());
+// // 			}
+// // 			else {
+// // 				engine->getScaleFilter()->unlink(false);
+// // 			}
+// // 		}
+// // 	}
+// // 	else if (key == "delay_linked") {
+// // 		if (value.ToULong(&ival)) {
+// // 			if (ival >= 0 && iosup->getProcessPath(ival))
+// // 			{
+// // 				engine->getDelayFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getDelayFilter());
+// // 			}
+// // 			else {
+// // 				engine->getDelayFilter()->unlink(false);
+// // 			}
+// // 		}
+// // 	}
+// // 	else if (key == "gate_linked") {
+// // 		if (value.ToULong(&ival)) {
+// // 			if (ival >= 0 && iosup->getProcessPath(ival))
+// // 			{
+// // 				engine->getGateFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getGateFilter());
+// // 			}
+// // 			else {
+// // 				engine->getGateFilter()->unlink(false);
+// // 			}
+// // 		}
+// // 	}
+// // 	else if (key == "inverse_gate_linked") {
+// // 		if (value.ToULong(&ival)) {
+// // 			if (ival >= 0 && iosup->getProcessPath(ival))
+// // 			{
+// // 				engine->getInverseGateFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getInverseGateFilter());
+// // 			}
+// // 			else {
+// // 				engine->getInverseGateFilter()->unlink(false);
+// // 			}
+// // 		}
+// // 	}
+// // 	else if (key == "feedback_linked") {
+// // 		if (value.ToULong(&ival)) {
+// // 			if (ival >= 0 && iosup->getProcessPath(ival))
+// // 			{
+// // 				engine->getFeedbackFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getFeedbackFilter());
+// // 			}
+// // 			else {
+// // 				engine->getFeedbackFilter()->unlink(false);
+// // 			}
+// // 		}
+// // 	}
+
+// // 	else {
+// // 		printf ("none of the above\n");
+// // 	}
+// }
 
 
 
@@ -771,3 +1020,23 @@ FTstringList * FTconfigManager::getSettingsNames()
 	return flist;
 }
 
+XMLNode *
+FTconfigManager::find_named_node (const XMLNode * node, string name)
+{
+        XMLNodeList nlist;
+        XMLNodeConstIterator niter;
+        XMLNode* child;
+                                                                                                      
+        nlist = node->children();
+                                                                                                      
+        for (niter = nlist.begin(); niter != nlist.end(); ++niter) {
+                                                                                                      
+                child = *niter;
+                                                                                                      
+                if (child->name() == name) {
+                        return child;
+                }
+        }
+                                                                                                      
+        return 0;
+}

@@ -24,7 +24,7 @@
 #include "FTtypes.hpp"
 
 class RingBuffer;
-class FTspectralManip;
+class FTspectralEngine;
 
 class FTprocessPath
 {
@@ -38,8 +38,8 @@ class FTprocessPath
 	void setMaxBufsize (nframes_t bsize) { _maxBufsize = bsize; }
 	void setSampleRate (nframes_t srate) { _sampleRate = srate; }
 
-	//void setSpectralManip (FTspectralManip * smanip) { _specManip = smanip; }
-	FTspectralManip * getSpectralManip () { return _specManip; }
+	//void setSpectralEngine (FTspectralEngine * sengine) { _specEngine = sengine; }
+	FTspectralEngine * getSpectralEngine () { return _specEngine; }
 	
 	void processData (sample_t *inbuf, sample_t *outbuf, nframes_t nframes);
 
@@ -51,13 +51,16 @@ class FTprocessPath
 	
  protected:
 
+	void initSpectralEngine();
+	
+	
 	nframes_t _maxBufsize;
 	nframes_t _sampleRate;
 
 	RingBuffer * _inputFifo;
 	RingBuffer * _outputFifo;
 
-	FTspectralManip * _specManip;
+	FTspectralEngine * _specEngine;
 
 	bool _readyToDie;
 	int _id;

@@ -63,8 +63,31 @@ public:
 	static void vector_fast_square_root (const float* x_input, float* y_output, int N);
 	static void vector_fast_fourth_root (const float* x_input, float* y_output, int N);
 	
+
+
+	static inline float powerLogScale(float yval, float min);
+	
 	
 };
+
+
+
+inline float FTutils::powerLogScale(float yval, float min)
+{
+			
+	if (yval <= min) {
+		return -200.0;
+	}
+	
+//   	if (yval > _maxval) {
+//   		_maxval = yval;
+//   	}
+	
+	//float nval = (10.0 * FTutils::fast_log10(yval / max));
+	float nval = (10.0 * FTutils::fast_log10 (yval));
+	// printf ("scaled value is %g   mincut=%g\n", nval, _minCutoff);
+	return nval;
+}
 
 
 #endif

@@ -95,6 +95,7 @@ class FTioSupport
 	static FTioSupport * instance() { if (!_instance) _instance = createInstance(); return _instance; }
 
 	static void setDefaultName(const char *name) { _defaultName = name; }
+	static void setDefaultDir(const char *dir) { _defaultDir = dir; }
 	
   protected:
 
@@ -104,6 +105,7 @@ class FTioSupport
 	
 	static FTioSupport * createInstance();
 	static string _defaultName;
+	static string _defaultDir;
 	
 	string _name;
 };

@@ -28,16 +28,14 @@
 #include "FTspectrumModifier.hpp"
 #include "FTtypes.hpp"
 
-#include <wx/listimpl.cpp>
 
 
 
-WX_DEFINE_LIST(FTspecModList)
-
-
-FTspectrumModifier::FTspectrumModifier(FTspectrumModifier::ModifierType mtype, SpecModType smtype, int length, float initval)
-	:  _modType(mtype), _specmodType(smtype), _values(0), _length(length), _linkedTo(0), _initval(initval)
-	, _id(0)
+FTspectrumModifier::FTspectrumModifier(const string &name, const string &configName, int group,
+				       FTspectrumModifier::ModifierType mtype, SpecModType smtype, int length, float initval)
+	:  _modType(mtype), _specmodType(smtype), _name(name), _configName(configName), _group(group),
+	   _values(0), _length(length), _linkedTo(0), _initval(initval),
+	   _id(0), _bypassed(false)
 
 {
 	_values = new float[FT_MAX_FFT_SIZE/2];
@@ -48,16 +46,37 @@ FTspectrumModifier::FTspectrumModifier(FTspectrumModifier::ModifierType mtype, S
 		_values[i] = initval;
 	}
 
-	_linkedFrom = new FTspecModList();
 }
 
 FTspectrumModifier::~FTspectrumModifier()
 {
-	printf ("delete specmod\n");
+	for (list<Listener*>::iterator iter = _listenerList.begin(); iter != _listenerList.end(); ++iter)
+	{
+		(*iter)->goingAway(this);
+	}
+
+	unlink(true);
+	
+	//printf ("delete specmod\n");
 	delete [] _values;
 	delete [] _tmpvalues;
 	
-	delete _linkedFrom;
+}
+
+
+void FTspectrumModifier::registerListener (Listener * listener)
+{
+	if ( find(_listenerList.begin(), _listenerList.end(), listener) == _listenerList.end())
+	{
+		_listenerList.push_back (listener);
+	}
+	
+}
+
+void FTspectrumModifier::unregisterListener (Listener *listener)
+{
+	_listenerList.remove (listener);
+
 }
 
 
@@ -116,21 +135,15 @@ void FTspectrumModifier::unlink (bool unlinksources)
 
 	if (unlinksources) {
 		// now unlink all who are linked to me
-		wxFTspecModListNode *node = _linkedFrom->GetFirst();
-		while (node)
+		for (list<FTspectrumModifier*>::iterator node = _linkedFrom.begin();
+		     node != _linkedFrom.end(); )
 		{
-			FTspectrumModifier *specmod = node->GetData();
+			FTspectrumModifier *specmod = (*node);
 			specmod->unlink(false);
-			// the list will be modified underneath us, so....
-			if ((node = _linkedFrom->Find((uintptr_t) specmod))) {
-				// THIS SHOULDNT HAPPEN BUT IS HERE ANYWAY
-				printf ("blah link!\n");
-				_linkedFrom->DeleteNode(node);
-			}
-			
-			node = _linkedFrom->GetFirst();
-			
+
+			node = _linkedFrom.begin();
 		}
+		_linkedFrom.clear();
 	}
 }
 
@@ -138,21 +151,28 @@ void FTspectrumModifier::addedLinkFrom (FTspectrumModifier * specmod)
 {
 	// called from link()
 
-	if (! _linkedFrom->Find ((uintptr_t) specmod)) {
-		_linkedFrom->Append ( (uintptr_t) specmod, specmod);
+	if ( find(_linkedFrom.begin(), _linkedFrom.end(), specmod) == _linkedFrom.end())
+	{
+		_linkedFrom.push_back (specmod);
 	}
-	
+		
 }
 
 void FTspectrumModifier::removedLinkFrom (FTspectrumModifier * specmod)
 {
 	// called from unlink()
-	wxFTspecModListNode * node =  _linkedFrom->Find ((uintptr_t) specmod);
 
-	if (node) {
-		_linkedFrom->DeleteNode (node);
-	}
+	_linkedFrom.remove (specmod);
 	
+}
+
+bool FTspectrumModifier::isLinkedFrom (FTspectrumModifier *specmod)
+{
+	list<FTspectrumModifier*>::iterator node = find (_linkedFrom.begin(),
+							 _linkedFrom.end(),
+							 specmod);
+
+	return ( node != _linkedFrom.end());
 }
 
 

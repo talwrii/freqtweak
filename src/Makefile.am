@@ -12,11 +12,12 @@
 COMMON_FLAGS =  -Wall -D_REENTRANT \
 		 @ARCH_CFLAGS@
 
-AM_CXXFLAGS = $(COMMON_FLAGS) $(EXTRA_CFLAGS) $(JACK_CFLAGS)
+AM_CXXFLAGS = $(COMMON_FLAGS) $(EXTRA_CFLAGS) $(JACK_CFLAGS) @XML_CFLAGS@
 
 AM_CFLAGS = $(AM_CXXFLAGS)
 
-freqtweak_LDADD = @JACK_LIBS@
+
+freqtweak_LDADD = @JACK_LIBS@ @XML_LIBS@
 
 
 bin_PROGRAMS = freqtweak
@@ -27,7 +28,7 @@ freqtweak_SOURCES = \
 	FTioSupport.cpp \
 	FTjackSupport.cpp \
 	FTprocessPath.cpp \
-	FTspectralManip.cpp \
+	FTspectralEngine.cpp \
 	FTspectragram.cpp \
 	FTspectrumModifier.cpp \
 	FTactiveBarGraph.cpp \
@@ -35,13 +36,15 @@ freqtweak_SOURCES = \
 	FTportSelectionDialog.cpp\
 	FTconfigManager.cpp \
 	RingBuffer.cpp \
+	xml++.cpp \
+	xml++.hpp \
 	FTapp.hpp \
 	FTmainwin.hpp \
 	FTjackSupport.hpp \
 	FTioSupport.hpp \
 	FTprocessPath.hpp \
 	FTtypes.hpp \
-	FTspectralManip.hpp \
+	FTspectralEngine.hpp \
 	FTspectragram.hpp \
 	FTspectrumModifier.hpp \
 	FTactiveBarGraph.hpp \
@@ -50,6 +53,24 @@ freqtweak_SOURCES = \
 	FTconfigManager.hpp \
 	FTupdateToken.hpp \
 	RingBuffer.hpp \
-	LockFreeFifo.hpp
+	FTprocI.cpp \
+	FTprocI.hpp \
+	FTprocDelay.cpp \
+	FTprocDelay.hpp \
+	FTprocEQ.cpp \
+	FTprocEQ.hpp \
+	FTprocGate.cpp \
+	FTprocGate.hpp \
+	FTprocPitch.cpp \
+	FTprocPitch.hpp \
+	FTprocOrderDialog.cpp \
+	FTprocOrderDialog.hpp \
+	FTdspManager.cpp \
+	FTdspManager.hpp \
+	FTprocLimit.cpp \
+	FTprocLimit.hpp \
+	FTprocTranspose.cpp \
+	FTprocTranspose.hpp 
+
 
 

@@ -29,7 +29,9 @@
 #include "FTtypes.hpp"
 #include "FTioSupport.hpp"
 
-#include <wx/list.h>
+#include <string>
+#include <list>
+using namespace std;
 
 class FTprocessPath;
 
@@ -38,7 +40,7 @@ class FTjackSupport
 	: public FTioSupport
 {
   public:
-	FTjackSupport(const char * name="");
+	FTjackSupport(const char * name="", const char * dir="");
 
 	virtual ~FTjackSupport();
 
@@ -105,8 +107,8 @@ class FTjackSupport
 		jack_port_t * outputport;
 		bool active;
 
-		wxStringList inconn_list;
-		wxStringList outconn_list;
+		list<string> inconn_list;
+		list<string> outconn_list;
 	};
 
 	// FIXME: use real data structure
@@ -115,6 +117,8 @@ class FTjackSupport
 	int _activePathCount;
 	//char _name[100];
 
+	string _jackdir;
+	
 	bool _portsChanged;
 	bool _activated;
         bool _bypassed;

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2002 Jesse Chappell <jesse@essej.net>
+** Copyright (C) 2003 Jesse Chappell <jesse@essej.net>
 **  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,37 +17,31 @@
 **  
 */
 
-#if HAVE_CONFIG_H
-#include <config.h>
+#ifndef __FTPROCEQ_HPP__
+#define __FTPROCEQ_HPP__
+
+#include "FTprocI.hpp"
+
+class FTprocEQ
+	: public FTprocI
+{
+  public:
+
+	FTprocEQ(nframes_t samprate, unsigned int fftn);
+	FTprocEQ (const FTprocEQ & other);
+
+	virtual ~FTprocEQ();
+
+	FTprocI * clone() { return new FTprocEQ(*this); }
+	void initialize();
+	
+	void process (fftw_real *data,  unsigned int fftn);
+
+	
+  protected:
+
+	FTspectrumModifier * _eqfilter;
+
+};
+
 #endif
-
-#include <stdio.h>
-#include <string>
-using namespace std;
-
-#include "FTioSupport.hpp"
-#include "FTjackSupport.hpp"
-
-FTioSupport * FTioSupport::_instance = 0;
-
-FTioSupport::IOtype FTioSupport::_iotype = FTioSupport::IO_JACK;
-string FTioSupport::_defaultName;
-string FTioSupport::_defaultDir;
-
-FTioSupport * FTioSupport::createInstance()
-{
-	// static method
-
-	if (_iotype == IO_JACK) {
-		return new FTjackSupport(_defaultName.c_str(), _defaultDir.c_str());
-	}
-	else {
-		return 0;
-	}
-}
-
-
-void FTioSupport::setName (const string & name)
-{
-	_name = name;
-}

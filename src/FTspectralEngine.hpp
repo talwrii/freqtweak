@@ -17,8 +17,8 @@
 **  
 */
 
-#ifndef __FTSPECTRALMANIP_HPP__
-#define __FTSPECTRALMANIP_HPP__
+#ifndef __FTSPECTRALENGINE_HPP__
+#define __FTSPECTRALENGINE_HPP__
 
 #if HAVE_CONFIG_H
 #include <config.h>
@@ -33,18 +33,22 @@
 
 #include "FTutils.hpp"
 #include "FTtypes.hpp"
+#include "FTprocI.hpp"
+
+#include <vector>
+using namespace std;
 
 class FTprocessPath;
 class RingBuffer;
 class FTspectrumModifier;
 class FTupdateToken;
 
-class FTspectralManip
+class FTspectralEngine
 
 {
   public: 
-	FTspectralManip();
-	virtual ~FTspectralManip();
+	FTspectralEngine();
+	virtual ~FTspectralEngine();
 	
 	void processNow (FTprocessPath *procpath);
 
@@ -131,38 +135,16 @@ class FTspectralManip
 	nframes_t getLatency();
 
 
-	void setBypassFreqFilter (bool flag) { _bypassFreq = flag; }
-	bool getBypassFreqFilter () { return _bypassFreq; }
+	// processor module handling
 
-	void setBypassDelayFilter (bool flag) { _bypassDelay = flag; }
-	bool getBypassDelayFilter () { return _bypassDelay; }
-
-	void setBypassFeedbackFilter (bool flag) { _bypassFeedb = flag; }
-	bool getBypassFeedbackFilter () { return _bypassFeedb; }
-
-	void setBypassScaleFilter (bool flag) { _bypassScale = flag; }
-	bool getBypassScaleFilter () { return _bypassScale; }
-
-        void setBypassGateFilter (bool flag) { _bypassGate = flag; }
-	bool getBypassGateFilter () { return _bypassGate; }
-
-	void setBypassInverseGateFilter (bool flag) { _bypassInverseGate = flag; }
-	bool getBypassInverseGateFilter () { return _bypassInverseGate; }
-
-	void setBypassMashLimitFilter (bool flag) { _bypassMashLimit = flag; }
-	bool getBypassMashLimitFilter () { return _bypassMashLimit; }
-	void setBypassMashPushFilter (bool flag) { _bypassMashPush = flag; }
-	bool getBypassMashPushFilter () { return _bypassMashPush; }
+	void insertProcessorModule (FTprocI * procmod, unsigned int index);
+	void appendProcessorModule (FTprocI * procmod);
+	void moveProcessorModule (unsigned int from, unsigned int to);
+	void removeProcessorModule (unsigned int index, bool destroy=true);
+	void clearProcessorModules (bool destroy=true);
 	
-
-	FTspectrumModifier * getFreqFilter() { return _freqFilter; }
-	FTspectrumModifier * getDelayFilter() { return _delayFilter; }
-	FTspectrumModifier * getFeedbackFilter() { return _feedbackFilter; }
-	FTspectrumModifier * getScaleFilter() { return _scaleFilter; }
-	FTspectrumModifier * getGateFilter() { return _gateFilter; }
-	FTspectrumModifier * getInverseGateFilter() { return _inverseGateFilter; }
-	FTspectrumModifier * getMashLimitFilter() { return _mashLimitFilter; }
-	FTspectrumModifier * getMashPushFilter() { return _mashPushFilter; }
+	void getProcessorModules (vector<FTprocI *> & modules);
+	FTprocI * getProcessorModule ( unsigned int num);
 	
 	static const char ** getWindowStrings() { return (const char **) _windowStrings; }
 	static const int getWindowStringsCount() { return _windowStringCount; }
@@ -170,16 +152,6 @@ class FTspectralManip
 	static const int getFFTSizeCount() { return _fftSizeCount; }
 	
 protected:
-
-	void processFilter (FTprocessPath *procpath, fftw_real *data);
-	void processDelay (FTprocessPath *procpath, fftw_real *data);
-
-	void processPitchScale (FTprocessPath *procpath, fftw_real *data);
-	void processGate (FTprocessPath *procpath, fftw_real *data);
-	void processInverseGate (FTprocessPath *procpath, fftw_real *data);
-
-	void processMashLimit (FTprocessPath *procpath, fftw_real *data);
-	void processMashPush (FTprocessPath *procpath, fftw_real *data);
 
 	
 	void computeAverageInputPower (fftw_real *fftbuf);
@@ -194,20 +166,19 @@ protected:
 
 	void reinitPlan(FTprocessPath *procpath);
 
-	inline float powerLogScale(float yval, float min);
-	
 
 	static const int _windowStringCount;
 	static const char * _windowStrings[];
 	static const int _fftSizeCount;
 	static const int  _fftSizes[];
+
+	// the processing modules
+	vector<FTprocI *> _procModules;
 	
 	// fft size (thus frame length)
         int _fftN;
 	Windowing _windowing;
 	int _oversamp;
-	unsigned long _maxDelaySamples;
-	float _maxDelay;
 	int _maxAverages;
 	int _averages;
 	
@@ -217,12 +188,6 @@ protected:
 
 	int _newfftN;
 	bool _fftnChanged;
-	
-	// this is a very large ringbuffer
-	// used store the fft results over time
-	// each frame is stored sequentially.
-	// the length is determined by the maximum delay time
-	RingBuffer *_frameFifo;
 
 	// space for average input power buffer
 	// elements = _fftN/2 * MAX_AVERAGES * MAX_OVERSAMP 
@@ -234,30 +199,8 @@ protected:
 	fftw_real * _runningInputPower;
 	fftw_real * _runningOutputPower;
 
-	// stuff for pitchscaling
-	float *gLastPhase, *gSumPhase, *gAnaFreq, *gSynFreq, *gAnaMagn, *gSynMagn;
 	
 	nframes_t _sampleRate;
-	
-	// filters
-	FTspectrumModifier * _freqFilter;
-	FTspectrumModifier * _delayFilter;
-	FTspectrumModifier * _feedbackFilter;
-	FTspectrumModifier * _scaleFilter;
-	FTspectrumModifier * _gateFilter;
-	FTspectrumModifier * _inverseGateFilter;
-	FTspectrumModifier * _mashLimitFilter;
-	FTspectrumModifier * _mashPushFilter;
-
-	
-	bool _bypassFreq;
-	bool _bypassDelay;
-	bool _bypassFeedb;
-	bool _bypassGate;
-	bool _bypassInverseGate;
-	bool _bypassScale;
-	bool _bypassMashLimit;
-	bool _bypassMashPush;
 	
 	float _inputGain;
 	float _mixRatio;
@@ -269,6 +212,7 @@ protected:
 	FTupdateToken * _updateToken;
 
 	int _tempo;
+	float _maxDelay;
 private:
 	
 	fftw_real *_inwork, *_outwork;
@@ -286,29 +230,12 @@ private:
 	int _currOutAvgIndex;
 
 	bool _avgReady;
-	float _dbAdjust;
+
 	
 };
 
 
 
-inline float FTspectralManip::powerLogScale(float yval, float min)
-{
-	
-	if (yval <= min) {
-		return -200.0;
-	}
-
-//   	if (yval > _maxval) {
-//   		_maxval = yval;
-//   	}
-	
-	//float nval = (10.0 * FTutils::fast_log10(yval / max));
-	float nval = (10.0 * FTutils::fast_log10 (yval));
-	// printf ("scaled value is %g   mincut=%g\n", nval, _minCutoff);
-	return nval;
-	
-}
 
 
 #endif

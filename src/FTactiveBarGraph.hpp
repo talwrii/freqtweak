@@ -35,7 +35,7 @@ class FTmainwin;
 
 
 class FTactiveBarGraph
-	: public wxPanel
+	: public wxPanel, public FTspectrumModifier::Listener
 {
   public:
 	FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID id, 
@@ -83,7 +83,11 @@ class FTactiveBarGraph
 
 	void setTempo(int bpm);
 	int getTempo() { return _tempo; }
-	
+
+	// listener
+	void goingAway (FTspectrumModifier * specmod);
+
+	void refreshBounds();
 	void recalculate();
 	
   protected:

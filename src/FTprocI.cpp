@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2002 Jesse Chappell <jesse@essej.net>
+** Copyright (C) 2003 Jesse Chappell <jesse@essej.net>
 **  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,33 +21,41 @@
 #include <config.h>
 #endif
 
-#include <stdio.h>
-#include <string>
-using namespace std;
 
-#include "FTioSupport.hpp"
-#include "FTjackSupport.hpp"
+#include "FTprocI.hpp"
 
-FTioSupport * FTioSupport::_instance = 0;
 
-FTioSupport::IOtype FTioSupport::_iotype = FTioSupport::IO_JACK;
-string FTioSupport::_defaultName;
-string FTioSupport::_defaultDir;
-
-FTioSupport * FTioSupport::createInstance()
+FTprocI::FTprocI (const string & name, nframes_t samprate, unsigned int fftn)
+	: _sampleRate(samprate), _fftN(fftn), _inited(false), _name(name)
 {
-	// static method
-
-	if (_iotype == IO_JACK) {
-		return new FTjackSupport(_defaultName.c_str(), _defaultDir.c_str());
-	}
-	else {
-		return 0;
-	}
 }
 
 
-void FTioSupport::setName (const string & name)
+FTprocI::~FTprocI()
 {
-	_name = name;
 }
+
+void FTprocI::setBypassed (bool flag)
+{
+	_bypassed = flag; 
+	for (FilterList::iterator filt = _filterlist.begin();
+	     filt != _filterlist.end(); ++filt)
+	{
+		(*filt)->setBypassed (flag);
+	}
+}
+
+void FTprocI::setId (int id)
+{
+	_id = id;
+	for (FilterList::iterator filt = _filterlist.begin();
+	     filt != _filterlist.end(); ++filt)
+	{
+		(*filt)->setId(id);
+	}
+}
+	
+
+
+
+

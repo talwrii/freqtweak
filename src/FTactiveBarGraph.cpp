@@ -148,14 +148,12 @@ FTactiveBarGraph::~FTactiveBarGraph()
 	delete _xscaleMenu;
 }
 
-void FTactiveBarGraph::setSpectrumModifier (FTspectrumModifier *sm)
+
+void FTactiveBarGraph::refreshBounds()
 {
-
-	_specMod = sm;
-	if (sm == 0) {
-		return;
-	}
-
+	// mainly to handle when certain units change
+	if (!_specMod) return;
+	
 	_xscale = _width/(float)_specMod->getLength();
 
 	_min = _absmin = _specMod->getMin();
@@ -177,22 +175,66 @@ void FTactiveBarGraph::setSpectrumModifier (FTspectrumModifier *sm)
 	}
 
 	_mtype = _specMod->getModifierType();
-	
-	if (_tmpfilt) delete [] _tmpfilt;
-	_tmpfilt = new float[_specMod->getLength()];
 
+	
 	makeGridChoices(true);
 
 	recalculate();
+	
 }
+
+void FTactiveBarGraph::setSpectrumModifier (FTspectrumModifier *sm)
+{
+	int origlength=-1;
+
+	if (_specMod) {
+		origlength = _specMod->getLength();
+		// unregister from previous
+		_specMod->unregisterListener (this);
+	}
+	
+	_specMod = sm;
+	if (sm == 0) {
+		return;
+	}
+
+	_specMod->registerListener (this);
+	
+	if (_specMod->getLength() != origlength) {
+		if (_tmpfilt) delete [] _tmpfilt;
+		_tmpfilt = new float[_specMod->getLength()];
+	}
+
+	refreshBounds();
+}
+
+void FTactiveBarGraph::goingAway (FTspectrumModifier * sm)
+{
+	if (sm == _specMod) {
+		// clean it up
+		_specMod = 0;
+	}
+	else if (sm == _topSpecMod) {
+		// clean it up
+		_topSpecMod = 0;
+	}
+}
+
 
 void FTactiveBarGraph::setTopSpectrumModifier (FTspectrumModifier *sm)
 {
+	if (_topSpecMod) {
+		// unregister from previous
+		_topSpecMod->unregisterListener (this);
+	}
+
 	_topSpecMod = sm;
 
 	if (sm == 0) {
 	   return;
 	}
+
+	_topSpecMod->registerListener (this);
 	
 	// should be same as other one
 	_xscale = _width/(float)_topSpecMod->getLength();
@@ -1034,6 +1076,8 @@ void FTactiveBarGraph::paintGridlines(wxDC & dc)
 
 void FTactiveBarGraph::recalculate()
 {
+	if (!_specMod) return;
+	
 	int totbins = _specMod->getLength();
 	_xscale = _width / (float)totbins;
 

@@ -24,9 +24,13 @@
 #include <wx/wx.h>
 #include <wx/textfile.h>
 #include "FTtypes.hpp"
+#include <string>
+#include <list>
+using namespace std;
 
-class FTspectralManip;
+class FTspectralEngine;
 class FTspectrumModifier;
+class XMLNode;
 
 class FTstringList;
 
@@ -46,16 +50,27 @@ class FTconfigManager
 
    protected:
 
-	void createFilterFiles(FTspectralManip *manip, wxString &dirname, int i);
 	void writeFilter (FTspectrumModifier *specmod, wxTextFile & tf);
 
-	void loadFilterFiles(FTspectralManip *manip, wxString &dirname, int i);
 	void loadFilter (FTspectrumModifier *specmod, wxTextFile & tf);
 
-	void modifySetting (FTspectralManip *manip, int id, wxString &key, wxString &value, bool restoreports=false);
+	XMLNode* find_named_node (const XMLNode * node, string name);
 	
 	wxString _basedir;
 
+	class LinkCache {
+	public:
+		LinkCache (unsigned int src, unsigned int dest, unsigned int modn, unsigned int filtn)
+			: source_chan(src), dest_chan(dest), mod_n(modn), filt_n(filtn) {}
+		
+		unsigned int source_chan;
+		unsigned int dest_chan;
+		unsigned int mod_n;
+		unsigned int filt_n;
+
+	};
+
+	list<LinkCache> _linkCache;
 };
 
 WX_DECLARE_LIST(wxString, FTstringList);

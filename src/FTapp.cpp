@@ -47,7 +47,6 @@
 #include "FTmainwin.hpp"
 #include "FTioSupport.hpp"
 #include "FTprocessPath.hpp"
-#include "FTspectralManip.hpp"
 
 
 #ifdef HAVE_SFFTW_H
@@ -82,6 +81,7 @@ static const wxCmdLineEntryDesc cmdLineDesc[] =
 	{ wxCMD_LINE_OPTION, "o", "outputs",
 	  "connect outputs to these jack ports (separate each channel with commas).\n\t\t\t  Defaults to 'alsa_pcm:playback_1,...'" },
 	{ wxCMD_LINE_OPTION, "n", "jack-name",    "jack name.   default is freqtweak_1"},
+	{ wxCMD_LINE_OPTION, "D", "tmpdir",    "jack server tmp directory (should match jackd --tmpdir)"},
 	{ wxCMD_LINE_OPTION, "p", "preset",    "load given preset initially"},
 	{ wxCMD_LINE_OPTION, "r", "rc-dir",    "what directory to use for run-control state. default is ~/.freqtweak"},
 	{ wxCMD_LINE_NONE }
@@ -207,6 +207,7 @@ bool FTapp::OnInit()
 	wxString jackname;
 	wxString preset;
 	wxString rcdir;
+	wxString jackdir;
 	int pcnt = 2;
 	int icnt = 0;
 	int ocnt = 0;
@@ -255,6 +256,10 @@ bool FTapp::OnInit()
 		pcnt = (int) longval;
 	}
 
+	if (parser.Found ("d", &jackdir)) {
+	       FTioSupport::setDefaultDir (jackdir);
+	}
+	
 	if (parser.Found ("n", &jackname)) {
 	       FTioSupport::setDefaultName (jackname);
 	}
@@ -262,6 +267,7 @@ bool FTapp::OnInit()
 	parser.Found ("r", &rcdir);
 	parser.Found ("p", &preset);
 
+	
 	
 	// initialize jack support
 	FTioSupport * iosup = FTioSupport::instance();

@@ -17,37 +17,36 @@
 **  
 */
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif
+#ifndef __FTDSPMANAGER_HPP__
+#define __FTDSPMANAGER_HPP__
 
-#include <stdio.h>
-#include <string>
+
+#include "FTtypes.hpp"
+
+#include <list>
 using namespace std;
 
-#include "FTioSupport.hpp"
-#include "FTjackSupport.hpp"
+class FTprocI;
 
-FTioSupport * FTioSupport::_instance = 0;
-
-FTioSupport::IOtype FTioSupport::_iotype = FTioSupport::IO_JACK;
-string FTioSupport::_defaultName;
-string FTioSupport::_defaultDir;
-
-FTioSupport * FTioSupport::createInstance()
+class FTdspManager
 {
-	// static method
+   public:
+	typedef list<FTprocI*> ModuleList;
+	
+	FTdspManager();
+	virtual ~FTdspManager();
 
-	if (_iotype == IO_JACK) {
-		return new FTjackSupport(_defaultName.c_str(), _defaultDir.c_str());
-	}
-	else {
-		return 0;
-	}
-}
+	static FTdspManager * instance() { if (!_instance) _instance = new FTdspManager(); return _instance; }
+	
+	void getAvailableModules (ModuleList & outlist);
 
+	FTprocI * getModuleByName (const string & name);
+	
+   protected:
 
-void FTioSupport::setName (const string & name)
-{
-	_name = name;
-}
+	ModuleList _prototypes;
+
+	static FTdspManager* _instance;
+};
+
+#endif

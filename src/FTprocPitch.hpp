@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2002 Jesse Chappell <jesse@essej.net>
+** Copyright (C) 2003 Jesse Chappell <jesse@essej.net>
 **  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,37 +17,33 @@
 **  
 */
 
-#if HAVE_CONFIG_H
-#include <config.h>
+#ifndef __FTPROCPITCH_HPP__
+#define __FTPROCPITCH_HPP__
+
+#include "FTprocI.hpp"
+
+class FTprocPitch
+	: public FTprocI
+{
+  public:
+
+	FTprocPitch (nframes_t samprate, unsigned int fftn);
+	FTprocPitch (const FTprocPitch & other);
+	virtual ~FTprocPitch();
+	
+	FTprocI * clone() { return new FTprocPitch(*this); }
+	void initialize();
+	void process (fftw_real *data, unsigned int fftn);
+
+	
+  protected:
+
+	FTspectrumModifier * _filter;
+
+	// stuff for pitchscaling
+	float *gLastPhase, *gSumPhase, *gAnaFreq, *gSynFreq, *gAnaMagn, *gSynMagn;
+	
+};
+
+
 #endif
-
-#include <stdio.h>
-#include <string>
-using namespace std;
-
-#include "FTioSupport.hpp"
-#include "FTjackSupport.hpp"
-
-FTioSupport * FTioSupport::_instance = 0;
-
-FTioSupport::IOtype FTioSupport::_iotype = FTioSupport::IO_JACK;
-string FTioSupport::_defaultName;
-string FTioSupport::_defaultDir;
-
-FTioSupport * FTioSupport::createInstance()
-{
-	// static method
-
-	if (_iotype == IO_JACK) {
-		return new FTjackSupport(_defaultName.c_str(), _defaultDir.c_str());
-	}
-	else {
-		return 0;
-	}
-}
-
-
-void FTioSupport::setName (const string & name)
-{
-	_name = name;
-}

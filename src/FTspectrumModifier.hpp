@@ -22,9 +22,10 @@
 
 #include "FTtypes.hpp"
 
-#include <wx/wx.h>
+#include <string>
+#include <list>
+using namespace std;
 
-class FTspecModList;
 
 
 class FTspectrumModifier
@@ -44,7 +45,15 @@ class FTspectrumModifier
 		NULL_MODIFIER, 
 	};
 
-	FTspectrumModifier(ModifierType mtype, SpecModType smtype, int length=512, float initval=0.0);
+	class Listener {
+	  public:
+		virtual void goingAway(FTspectrumModifier * ft) = 0;
+	};
+	
+	
+	FTspectrumModifier(const string & name, const string &configName, int group,
+			   ModifierType mtype, SpecModType smtype, int length=512, float initval=0.0);
+
 	virtual ~FTspectrumModifier();
 
 	void setId (int id) { _id = id; }
@@ -53,6 +62,14 @@ class FTspectrumModifier
 	void setLength(int length);
 	int getLength() { return _length; }
 
+	string getName() { return _name; }
+	void setName(const string & name) { _name = name; }
+
+	string getConfigName() { return _configName; }
+	void setConfigName(const string & name) { _configName = name; }
+
+	int getGroup() { return _group; }
+	void setGroup(int grp) { _group = grp; }
 	
 	float * getValues();
 
@@ -68,12 +85,22 @@ class FTspectrumModifier
 	float getMin() const { return _min;}
 	float getMax() const { return _max;}
 
+
+	void setBypassed (bool flag) { _bypassed = flag; }
+	bool getBypassed () { return _bypassed; }
+	
 	// resets all bins to constructed value
 	void reset();
 
 	void copy (FTspectrumModifier *specmod);
 	
-	FTspecModList & getLinkedFrom() { return *_linkedFrom; }
+	list<FTspectrumModifier*> & getLinkedFrom() { return _linkedFrom; }
+
+	bool isLinkedFrom (FTspectrumModifier *specmod);
+
+	// user notification
+	void registerListener (Listener * listener);
+	void unregisterListener (Listener *listener);
 	
   protected:
 
@@ -82,6 +109,10 @@ class FTspectrumModifier
 	
 	ModifierType _modType;
 	SpecModType _specmodType;
+
+	string _name;
+	string _configName;
+	int _group;
 	
 	// might point to a linked value array
 	float * _values;
@@ -95,12 +126,13 @@ class FTspectrumModifier
 	float _min, _max;
 	float _initval;
 
-	FTspecModList * _linkedFrom;
+	list<FTspectrumModifier*> _linkedFrom;
 
 	int _id;
-};
+	bool _bypassed;
 
-WX_DECLARE_LIST(FTspectrumModifier, FTspecModList);
+	list<Listener *> _listenerList;
+};
 
 
 #endif

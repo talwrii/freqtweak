@@ -11,11 +11,11 @@
 AC_INIT(src/FTapp.cpp)
 
 
-BETA=
+BETA=dev
 
 FREQTWEAK_MAJOR_VERSION=0
-FREQTWEAK_MINOR_VERSION=4
-FREQTWEAK_MICRO_VERSION=8
+FREQTWEAK_MINOR_VERSION=5
+FREQTWEAK_MICRO_VERSION=0
 
 FREQTWEAK_VERSION=$FREQTWEAK_MAJOR_VERSION.$FREQTWEAK_MINOR_VERSION.${FREQTWEAK_MICRO_VERSION}${BETA}
 
@@ -80,16 +80,16 @@ AM_CONDITIONAL(ARCH_686,test "$ARCH_TYPE" = "i686")
 AM_CONDITIONAL(ARCH_PPC,test "$ARCH_TYPE" = "ppc")
 AM_CONDITIONAL(ARCH_ULTRA,test "$ARCH_TYPE" = "sun4u")
 
-AC_MSG_CHECKING(for gcc optimization flags)
-old_cflags=$CFLAGS
-CFLAGS="$CFLAGS -O2 -fexpensive-optimizations -funroll-loops -finline-functions -ffast-math"
-AC_TRY_COMPILE([#include <stdio.h>],
-[ printf ("hello, world"); ],
-[ EXTRA_OPT_CFLAGS="-O2 -fexpensive-optimizations -funroll-loops -finline-functions -ffast-math"],[ EXTRA_OPT_CFLAGS=""])
-CFLAGS=$old_cflags
-AC_MSG_RESULT([$EXTRA_OPT_CFLAGS])
+dnl AC_MSG_CHECKING(for gcc optimization flags)
+dnl old_cflags=$CFLAGS
+dnl CFLAGS="$CFLAGS -O2 -fexpensive-optimizations -funroll-loops -finline-functions -ffast-math"
+dnl AC_TRY_COMPILE([#include <stdio.h>],
+dnl [ printf ("hello, world"); ],
+dnl [ EXTRA_OPT_CFLAGS="-O2 -fexpensive-optimizations -funroll-loops -finline-functions -ffast-math"],[ EXTRA_OPT_CFLAGS=""])
+dnl CFLAGS=$old_cflags
+dnl AC_MSG_RESULT([$EXTRA_OPT_CFLAGS])
 
-ARCH_CFLAGS="$CFLAGS $EXTRA_OPT_CFLAGS"
+dnl ARCH_CFLAGS="$CFLAGS $EXTRA_OPT_CFLAGS"
 
 if test "$ARCH_TYPE" = "i486" || test "$ARCH_TYPE" = "i586" || test "$ARCH_TYPE" = "i686"
 then
@@ -244,6 +244,10 @@ fi
 
 
 
+dnl LIBXML
+
+AM_PATH_XML2()
+
 
 
 if [[ "$have_jack" = "no" ]] ; then
@@ -279,8 +283,8 @@ fi
 #           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
 
 
-#UNAME_MACHINE=`uname -m`
-#CXXFLAGS="$JACK_CFLAGS  -g -Wall -O3 -fomit-frame-pointer -fstrength-reduce -funroll-loops -fmove-all-movables -ffast-math -mcpu=${UNAME_MACHINE} -march=${UNAME_MACHINE}"
+UNAME_MACHINE=`uname -m`
+CXXFLAGS="$JACK_CFLAGS  -g -Wall -O3 -fomit-frame-pointer -fstrength-reduce -funroll-loops -fmove-all-movables -ffast-math -mcpu=${UNAME_MACHINE} -march=${UNAME_MACHINE}"
 
 
 AC_SUBST(FREQTWEAK_MAJOR_VERSION)

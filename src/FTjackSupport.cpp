@@ -28,17 +28,18 @@
 #include <unistd.h>
 #include <string.h>
 #include <string>
+#include <list>
 using namespace std;
 
 #include "FTjackSupport.hpp"
 #include "FTprocessPath.hpp"
-#include "FTspectralManip.hpp"
+#include "FTspectralEngine.hpp"
 #include "FTtypes.hpp"
 
 #include <jack/jack.h>
 
 
-FTjackSupport::FTjackSupport(const char * name)
+FTjackSupport::FTjackSupport(const char * name, const char * dir)
 	:  _inited(false), _jackClient(0), _activePathCount(0), _activated(false), _bypassed(false)
 {
 	// init process path info
@@ -47,6 +48,8 @@ FTjackSupport::FTjackSupport(const char * name)
 	}
 
 	_name = name;
+
+	_jackdir = dir;
 }
 
 FTjackSupport::~FTjackSupport()
@@ -72,6 +75,10 @@ FTjackSupport::~FTjackSupport()
 bool FTjackSupport::init()
 {
 	char namebuf[100];
+
+	if (!_jackdir.empty()) {
+		jack_set_server_dir (_jackdir.c_str());
+	}
 	
 	/* try to become a client of the JACK server */
 	if (_name.empty()) {
@@ -238,7 +245,7 @@ FTprocessPath * FTjackSupport::setProcessPathActive (int index, bool active)
 		
 		sprintf(nbuf,"out_%d", index + 1);
 		tmppath->outputport = jack_port_register (_jackClient, nbuf, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
-		jack_port_set_latency (tmppath->outputport, ppath->getSpectralManip()->getLatency());
+		jack_port_set_latency (tmppath->outputport, ppath->getSpectralEngine()->getLatency());
 
 		tmppath->procpath = ppath;
 		tmppath->active = true;
@@ -290,7 +297,7 @@ bool FTjackSupport::connectPathInput (int index, const char *inname)
 			return false;
 		}
 
-		_pathInfos[index]->inconn_list.Add (inname);
+		_pathInfos[index]->inconn_list.push_back (inname);
 		return true;
 	}
 
@@ -309,7 +316,7 @@ bool FTjackSupport::connectPathOutput (int index, const char *outname)
 			return false;
 		}
 		
-		_pathInfos[index]->outconn_list.Add (outname);
+		_pathInfos[index]->outconn_list.push_back (outname);
 		return true;
 	}
 
@@ -329,7 +336,7 @@ bool FTjackSupport::disconnectPathInput (int index, const char *inname)
 				fprintf (stderr, "cannot disconnect input port\n");
 				return false;
 			}
-			_pathInfos[index]->inconn_list.Delete(wxString(inname));
+			_pathInfos[index]->inconn_list.remove (inname);
 			return true;
 		}
 		else {
@@ -342,7 +349,7 @@ bool FTjackSupport::disconnectPathInput (int index, const char *inname)
 				free(portnames);
 			}
 
-			_pathInfos[index]->inconn_list.Clear();
+			_pathInfos[index]->inconn_list.clear();
 
 			return true;
 		}
@@ -363,7 +370,7 @@ bool FTjackSupport::disconnectPathOutput (int index, const char *outname)
 				fprintf (stderr, "cannot disconnect output ports\n");
 				return false;
 			}
-			_pathInfos[index]->outconn_list.Delete(wxString(outname));
+			_pathInfos[index]->outconn_list.remove (outname);
 			return true;
 		}
 		else {
@@ -375,7 +382,7 @@ bool FTjackSupport::disconnectPathOutput (int index, const char *outname)
 				}
 				free(portnames);
 			}
-			_pathInfos[index]->outconn_list.Clear();
+			_pathInfos[index]->outconn_list.clear();
 			return true;
 		}
 
@@ -435,10 +442,10 @@ const char ** FTjackSupport::getConnectedInputPorts(int index)
 		
 		portnames = jack_port_get_connections( _pathInfos[index]->inputport);
 
-		_pathInfos[index]->inconn_list.Clear();
+		_pathInfos[index]->inconn_list.clear();
 		if (portnames) {
 			for (int i=0; portnames[i]; i++) {
-				_pathInfos[index]->inconn_list.Add (portnames[i]);
+				_pathInfos[index]->inconn_list.push_back (portnames[i]);
 			}			
 		}
 	}
@@ -459,10 +466,10 @@ const char ** FTjackSupport::getConnectedOutputPorts(int index)
 		
 		portnames = jack_port_get_connections( _pathInfos[index]->outputport);
 
-		_pathInfos[index]->outconn_list.Clear();
+		_pathInfos[index]->outconn_list.clear();
 		if (portnames) {
 			for (int i=0; portnames[i]; i++) {
-				_pathInfos[index]->outconn_list.Add (portnames[i]);
+				_pathInfos[index]->outconn_list.push_back (portnames[i]);
 			}			
 		}
 	}
@@ -531,37 +538,30 @@ bool FTjackSupport::reinit (bool rebuild)
 			}
 			
 			// reconnect to ports
-			wxStringList inlist = _pathInfos[i]->inconn_list; // copy			
-			_pathInfos[i]->inconn_list.Clear();
-			
-			wxStringListNode *node = inlist.GetFirst();
-			while (node)
+			list<string> inlist (_pathInfos[i]->inconn_list); // copy			
+			_pathInfos[i]->inconn_list.clear();
+
+			for (list<string>::iterator port = inlist.begin(); port != inlist.end(); ++port)
 			{
-				wxString port = node->GetData();
 				// only do it if the port is not one of ours
 				// those interconnected ports within ourself are added
 				// only once below
-				jack_port_t * tport = jack_port_by_name(_jackClient, port.c_str());
+				jack_port_t * tport = jack_port_by_name(_jackClient, (*port).c_str());
 				if ( tport && ! jack_port_is_mine ( _jackClient, tport))
 				{
 					//fprintf(stderr, "reconnecting to input: %s\n", port.c_str());
-					connectPathInput ( i, port );
+					connectPathInput ( i, (*port).c_str() );
 				}
 				
-				node = node->GetNext();
 			}
 
-			wxStringList outlist = _pathInfos[i]->outconn_list; // copy
-			_pathInfos[i]->outconn_list.Clear();
+			list<string> outlist (_pathInfos[i]->outconn_list); // copy
+			_pathInfos[i]->outconn_list.clear();
 			
-			node = outlist.GetFirst();
-			while (node)
+			for (list<string>::iterator port = outlist.begin(); port != outlist.end(); ++port)
 			{
-				wxString port = node->GetData();
 				//fprintf(stderr, "reconnecting to output: %s\n", port.c_str());
-				connectPathOutput ( i, port );
-				
-				node = node->GetNext();
+				connectPathOutput ( i, (*port).c_str() );
 			}
 		}
 	}

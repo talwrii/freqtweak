@@ -25,17 +25,18 @@
 #include <string.h>
 
 #include "FTprocessPath.hpp"
-#include "FTspectralManip.hpp"
+#include "FTdspManager.hpp"
+#include "FTspectralEngine.hpp"
 #include "RingBuffer.hpp"
 
 FTprocessPath::FTprocessPath()
-	: _maxBufsize(16384), _sampleRate(44100), _specManip(0), _readyToDie(false), _id(0)
+	: _maxBufsize(16384), _sampleRate(44100), _specEngine(0), _readyToDie(false), _id(0)
 {
 	// construct lockfree ringbufer
 	_inputFifo = new RingBuffer(sizeof(sample_t) * FT_FIFOLENGTH);
 	_outputFifo = new RingBuffer(sizeof(sample_t) * FT_FIFOLENGTH);
 
-	_specManip = new FTspectralManip();
+	initSpectralEngine();
 }
 
 FTprocessPath::~FTprocessPath()
@@ -43,13 +44,32 @@ FTprocessPath::~FTprocessPath()
 	printf ("$#$#$#$#$ processpath \n");
 	delete _inputFifo;
 	delete _outputFifo;
-	if (_specManip) delete _specManip;
+	if (_specEngine) delete _specEngine;
 }
+
+void FTprocessPath::initSpectralEngine()
+{
+	_specEngine = new FTspectralEngine();
+	
+	// load all dsp modules from dsp manager and put them in
+	FTdspManager::ModuleList mlist;
+	FTdspManager::instance()->getAvailableModules (mlist);
+	FTdspManager::ModuleList::iterator mod = mlist.begin();
+	
+	for (; mod != mlist.end(); ++mod)
+	{
+	        FTprocI * newmod = (*mod)->clone();
+
+		newmod->initialize();
+		_specEngine->appendProcessorModule (newmod);
+	}
+}
+
 
 void FTprocessPath::setId (int id)
 {
 	_id = id;
-	if (_specManip) _specManip->setId (id);
+	if (_specEngine) _specEngine->setId (id);
 }
 
 /**
@@ -59,9 +79,9 @@ void FTprocessPath::setId (int id)
 void FTprocessPath::processData (sample_t * inbuf, sample_t *outbuf, nframes_t nframes)
 {
 	
-	if (_specManip->getBypassed())
+	if (_specEngine->getBypassed())
 	{
-		if (_specManip->getMuted()) {
+		if (_specEngine->getMuted()) {
 			memset (outbuf, 0, sizeof(sample_t) * nframes);
 		}
 		else if (inbuf != outbuf) {
@@ -80,7 +100,7 @@ void FTprocessPath::processData (sample_t * inbuf, sample_t *outbuf, nframes_t n
 		}
 		
 		// DO SPECTRAL PROCESSING
-		_specManip->processNow (this);
+		_specEngine->processNow (this);
 		
 		
 		// copy data from fifo at read pointer into outbuf
@@ -88,13 +108,13 @@ void FTprocessPath::processData (sample_t * inbuf, sample_t *outbuf, nframes_t n
 		{
 			_outputFifo->read ((char *) outbuf, sizeof(sample_t) * nframes);	
 
-			if (_specManip->getMuted()) {
+			if (_specEngine->getMuted()) {
 				memset (outbuf, 0, sizeof(sample_t) * nframes);
 			}
 		}
 		else {
 			//fprintf(stderr, "BLAH! Can't read enough data from output fifo!\n");
-			if (_specManip->getMuted()) {
+			if (_specEngine->getMuted()) {
 				memset (outbuf, 0, sizeof(sample_t) * nframes);
 			}
 			else {

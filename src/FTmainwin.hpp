@@ -34,19 +34,18 @@ using namespace std;
 #include "FTconfigManager.hpp"
 #include "FTspectrumModifier.hpp"
 
-#include "LockFreeFifo.hpp"
 
 class wxSpinCtrl;
 
 class FTprocessPath;
 class FTactiveBarGraph;
-class FTspectralManip;
+class FTspectralEngine;
 class FTspectrumModifier;
 
 class FTupdateToken;
 class FTupdateTimer;
 class FTlinkMenu;
-
+class FTprocOrderDialog;
 
 
 class FTmainwin : public wxFrame
@@ -75,6 +74,11 @@ class FTmainwin : public wxFrame
 	void cleanup ();
 
 	void handleGridButtonMouse (wxMouseEvent &event);
+
+	void suspendProcessing();
+	void restoreProcessing();
+
+	void rebuildDisplay(bool dolink=true);
 	
   protected:
 
@@ -101,22 +105,25 @@ class FTmainwin : public wxFrame
 	void handleMixSlider (wxCommandEvent &event);
 	void handleGain (wxCommandEvent &event);
 	void handlePathCount (wxCommandEvent &event);
-	void changePathCount (int newcnt);
+	void changePathCount (int newcnt, bool rebuild=false, bool ignorelink=false);
 	
 
 	void handleStoreButton (wxCommandEvent &event);
 	void handleLoadButton (wxCommandEvent &event);
 
 	void handleIOButtons (wxCommandEvent &event);
+
+	void OnProcMod (wxCommandEvent &event);
+
 	
 	void rowpanelScrollSize();
 
-	void removePathStuff(int i);
+	void removePathStuff(int i, bool deactivate=true);
 	void createPathStuff(int i);
 	void rebuildPresetCombo();
 
-	void suspendProcessing();
-	void restoreProcessing();
+	void pushProcRow(FTspectrumModifier *specmod);
+	void popProcRow();
     
 	FTprocessPath * _processPath[FT_MAXPATHS];
 
@@ -135,62 +142,79 @@ class FTmainwin : public wxFrame
 	FTspectragram * _inputSpectragram[FT_MAXPATHS];
 	FTspectragram * _outputSpectragram[FT_MAXPATHS];
 
+
+	vector<FTactiveBarGraph **> _barGraphs;
 	
-	FTactiveBarGraph * _scaleGraph[FT_MAXPATHS];
-	FTactiveBarGraph * _freqGraph[FT_MAXPATHS];
-	FTactiveBarGraph * _delayGraph[FT_MAXPATHS];
-	FTactiveBarGraph * _feedbackGraph[FT_MAXPATHS];
-	FTactiveBarGraph * _mashGraph[FT_MAXPATHS];
-	FTactiveBarGraph * _gateGraph[FT_MAXPATHS];
+// 	FTactiveBarGraph * _scaleGraph[FT_MAXPATHS];
+// 	FTactiveBarGraph * _freqGraph[FT_MAXPATHS];
+// 	FTactiveBarGraph * _delayGraph[FT_MAXPATHS];
+// 	FTactiveBarGraph * _feedbackGraph[FT_MAXPATHS];
+// 	FTactiveBarGraph * _mashGraph[FT_MAXPATHS];
+// 	FTactiveBarGraph * _gateGraph[FT_MAXPATHS];
 
 
 	wxButton * _bypassAllButton;
 	wxButton * _muteAllButton;
+
+	vector<wxButton *> _bypassAllButtons;
 	
-	wxButton * _scaleBypassAllButton;
-	wxButton * _mashBypassAllButton;
-	wxButton * _gateBypassAllButton;
-	wxButton * _freqBypassAllButton;
-	wxButton * _delayBypassAllButton;
-	wxButton * _feedbBypassAllButton;
+// 	wxButton * _scaleBypassAllButton;
+// 	wxButton * _mashBypassAllButton;
+// 	wxButton * _gateBypassAllButton;
+// 	wxButton * _freqBypassAllButton;
+// 	wxButton * _delayBypassAllButton;
+// 	wxButton * _feedbBypassAllButton;
 
-	wxButton * _scaleLinkAllButton;
-	wxButton * _mashLinkAllButton;
-	wxButton * _gateLinkAllButton;
-	wxButton * _freqLinkAllButton;
-	wxButton * _delayLinkAllButton;
-	wxButton * _feedbLinkAllButton;
+	vector<wxButton *> _linkAllButtons;
+	
+// 	wxButton * _scaleLinkAllButton;
+// 	wxButton * _mashLinkAllButton;
+// 	wxButton * _gateLinkAllButton;
+// 	wxButton * _freqLinkAllButton;
+// 	wxButton * _delayLinkAllButton;
+// 	wxButton * _feedbLinkAllButton;
 
-	wxButton * _scaleGridButton;
-	wxButton * _gateGridButton;
-	wxButton * _freqGridButton;
-	wxButton * _delayGridButton;
-	wxButton * _feedbGridButton;
+	vector<wxButton *> _gridButtons;
+	
+// 	wxButton * _scaleGridButton;
+// 	wxButton * _gateGridButton;
+// 	wxButton * _freqGridButton;
+// 	wxButton * _delayGridButton;
+// 	wxButton * _feedbGridButton;
 
-	wxButton * _scaleGridSnapButton;
-	wxButton * _gateGridSnapButton;
-	wxButton * _freqGridSnapButton;
-	wxButton * _delayGridSnapButton;
-	wxButton * _feedbGridSnapButton;
+	vector<wxButton *> _gridSnapButtons;
+	
+// 	wxButton * _scaleGridSnapButton;
+// 	wxButton * _gateGridSnapButton;
+// 	wxButton * _freqGridSnapButton;
+// 	wxButton * _delayGridSnapButton;
+// 	wxButton * _feedbGridSnapButton;
 	
 	
 	wxButton * _inspecLabelButton;
-	wxButton * _scaleLabelButton;
-	wxButton * _mashLabelButton;
-	wxButton * _gateLabelButton;
-	wxButton * _freqLabelButton;
-	wxButton * _delayLabelButton;
-	wxButton * _feedbLabelButton;
 	wxButton * _outspecLabelButton;
 
+	vector<wxButton *> _labelButtons;
+	
+// 	wxButton * _scaleLabelButton;
+// 	wxButton * _mashLabelButton;
+// 	wxButton * _gateLabelButton;
+// 	wxButton * _freqLabelButton;
+// 	wxButton * _delayLabelButton;
+// 	wxButton * _feedbLabelButton;
+
 	wxButton * _inspecLabelButtonAlt;
-	wxButton * _scaleLabelButtonAlt;
-	wxButton * _mashLabelButtonAlt;
-	wxButton * _gateLabelButtonAlt;
-	wxButton * _freqLabelButtonAlt;
-	wxButton * _delayLabelButtonAlt;
-	wxButton * _feedbLabelButtonAlt;
 	wxButton * _outspecLabelButtonAlt;
+	
+	vector<wxButton *> _altLabelButtons;
+
+// 	wxButton * _scaleLabelButtonAlt;
+// 	wxButton * _mashLabelButtonAlt;
+// 	wxButton * _gateLabelButtonAlt;
+// 	wxButton * _freqLabelButtonAlt;
+// 	wxButton * _delayLabelButtonAlt;
+// 	wxButton * _feedbLabelButtonAlt;
+
 
 
 	wxButton * _inspecSpecTypeAllButton;
@@ -209,15 +233,19 @@ class FTmainwin : public wxFrame
 	// per path panels
 	wxPanel * _upperPanels[FT_MAXPATHS];
 	wxPanel * _inspecPanels[FT_MAXPATHS];
-	wxPanel * _freqPanels[FT_MAXPATHS];
-	wxPanel * _scalePanels[FT_MAXPATHS];
-	wxPanel * _mashPanels[FT_MAXPATHS];
-	wxPanel * _gatePanels[FT_MAXPATHS];
-	wxPanel * _delayPanels[FT_MAXPATHS];
-	wxPanel * _feedbPanels[FT_MAXPATHS];
+
+	vector<wxPanel **> _subrowPanels;
+
+	
+// 	wxPanel * _freqPanels[FT_MAXPATHS];
+// 	wxPanel * _scalePanels[FT_MAXPATHS];
+// 	wxPanel * _mashPanels[FT_MAXPATHS];
+// 	wxPanel * _gatePanels[FT_MAXPATHS];
+// 	wxPanel * _delayPanels[FT_MAXPATHS];
+// 	wxPanel * _feedbPanels[FT_MAXPATHS];
+
 	wxPanel * _outspecPanels[FT_MAXPATHS];
 	wxPanel * _lowerPanels[FT_MAXPATHS];
-
 	
 	// per path buttons
 	
@@ -237,41 +265,55 @@ class FTmainwin : public wxFrame
 	wxButton * _outspecSpecTypeButton[FT_MAXPATHS];
 	wxButton * _outspecPlotSolidTypeButton[FT_MAXPATHS];
 	wxButton * _outspecPlotLineTypeButton[FT_MAXPATHS];
-	
-	wxButton * _scaleBypassButton[FT_MAXPATHS];
-	wxButton * _mashBypassButton[FT_MAXPATHS];
-	wxButton * _gateBypassButton[FT_MAXPATHS];
-	wxButton * _freqBypassButton[FT_MAXPATHS];
-	wxButton * _delayBypassButton[FT_MAXPATHS];
-	wxButton * _feedbBypassButton[FT_MAXPATHS];
 
-	wxButton * _scaleLinkButton[FT_MAXPATHS];
-	wxButton * _mashLinkButton[FT_MAXPATHS];
-	wxButton * _gateLinkButton[FT_MAXPATHS];
-	wxButton * _freqLinkButton[FT_MAXPATHS];
-	wxButton * _delayLinkButton[FT_MAXPATHS];
-	wxButton * _feedbLinkButton[FT_MAXPATHS];
+	vector<wxButton **> _bypassButtons;
+	
+// 	wxButton * _scaleBypassButton[FT_MAXPATHS];
+// 	wxButton * _mashBypassButton[FT_MAXPATHS];
+// 	wxButton * _gateBypassButton[FT_MAXPATHS];
+// 	wxButton * _freqBypassButton[FT_MAXPATHS];
+// 	wxButton * _delayBypassButton[FT_MAXPATHS];
+// 	wxButton * _feedbBypassButton[FT_MAXPATHS];
+
+	vector<wxButton **> _linkButtons;
+
+// 	wxButton * _scaleLinkButton[FT_MAXPATHS];
+// 	wxButton * _mashLinkButton[FT_MAXPATHS];
+// 	wxButton * _gateLinkButton[FT_MAXPATHS];
+// 	wxButton * _freqLinkButton[FT_MAXPATHS];
+// 	wxButton * _delayLinkButton[FT_MAXPATHS];
+// 	wxButton * _feedbLinkButton[FT_MAXPATHS];
 
 	// sizers
-	wxBoxSizer *_inspecsizer, *_freqsizer, *_delaysizer, *_feedbsizer, *_outspecsizer, *_scalesizer, *_mashsizer, *_gatesizer;
-	wxBoxSizer *_inspecbuttsizer, *_freqbuttsizer, *_delaybuttsizer, *_feedbbuttsizer, *_outspecbuttsizer,
-		*_scalebuttsizer, *_mashbuttsizer, *_gatebuttsizer;
+	wxBoxSizer *_inspecsizer, *_outspecsizer;
+	wxBoxSizer *_inspecbuttsizer,  *_outspecbuttsizer;
+
+	vector<wxBoxSizer *> _rowSizers;
+	vector<wxBoxSizer *> _rowButtSizers;
+	
 	wxBoxSizer *_lowersizer, *_uppersizer;
 
 	wxScrolledWindow *_rowPanel;
+
+	vector<wxPanel *> _rowPanels;
 	
-	wxPanel *_inspecPanel, *_freqPanel, *_delayPanel, *_feedbPanel, *_outspecPanel, *_scalePanel, *_mashPanel, *_gatePanel;
-	wxSashLayoutWindow *_inspecSash, *_freqSash, *_delaySash, *_feedbSash, *_outspecSash, *_scaleSash, *_mashSash, *_gateSash;
+	wxPanel *_inspecPanel,  *_outspecPanel;
+
+	vector<wxSashLayoutWindow *> _rowSashes;
+	wxSashLayoutWindow *_inspecSash, *_outspecSash;
 
 
 	// shown flags
 	bool _inspecShown;
-	bool _freqShown;
-	bool _scaleShown;
-	bool _mashShown;
-	bool _gateShown;
-	bool _delayShown;
-	bool _feedbShown;
+
+	vector<bool> _shownFlags;
+// 	bool _freqShown;
+// 	bool _scaleShown;
+// 	bool _mashShown;
+// 	bool _gateShown;
+// 	bool _delayShown;
+// 	bool _feedbShown;
+
 	bool _outspecShown;
 
 	bool _linkedMix;
@@ -290,8 +332,9 @@ class FTmainwin : public wxFrame
 	int _updateMS;
 	bool _superSmooth;
 	
-	
-	wxWindow ** _rowItems;
+
+	vector<wxWindow *> _rowItems;
+	//wxWindow ** _rowItems;
 	int _pathCount;
 	int _rowCount;
 
@@ -312,6 +355,18 @@ class FTmainwin : public wxFrame
 
         bool _bypassArray[FT_MAXPATHS];
 
+	FTprocOrderDialog * _procmodDialog;
+
+	int _bwidth;
+	int _labwidth;
+	int _bheight;
+	int _rowh;
+
+	wxFont _titleFont;
+	wxFont _titleAltFont;
+	wxFont _buttFont;
+
+	
 	friend class FTupdateTimer;
 	friend class FTlinkMenu;
 	friend class FTgridMenu;
@@ -339,21 +394,24 @@ class FTlinkMenu
 	: public wxMenu
 {
   public:
-	FTlinkMenu (wxWindow *parent, FTmainwin *win, FTspectralManip *specmod, SpecModType stype);
+	FTlinkMenu (wxWindow *parent, FTmainwin *win, FTspectralEngine *specmod, SpecModType stype,
+		    unsigned int procmodnum, unsigned int filtnum);
 
 	void OnLinkItem(wxCommandEvent &event);
 	void OnUnlinkItem(wxCommandEvent &event);
 
 	FTmainwin *_mwin;
-	FTspectralManip *_specmanip;
+	FTspectralEngine *_specengine;
 	SpecModType _stype;
-
+	unsigned int _procmodnum;
+	unsigned int _filtnum;
+	
 	class SpecModObject : public wxObject
 	{
 	   public:
-		SpecModObject(FTspectralManip *sm) : specm(sm) {;}
+		SpecModObject(FTspectralEngine *sm) : specm(sm) {;}
 
-		FTspectralManip *specm;
+		FTspectralEngine *specm;
 	};
 	
   private:
