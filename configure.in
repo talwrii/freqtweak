@@ -10,7 +10,7 @@
 
 AC_INIT(reconf)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freqtweak,0.4.2)
+AM_INIT_AUTOMAKE(freqtweak,0.4.2dev1)
 #LF_CONFIGURE_CC
 LF_CONFIGURE_CXX
 LF_HOST_TYPE
@@ -22,6 +22,20 @@ FREQTWEAK_VERSION=0.4.1
 
 AC_SUBST(FREQTWEAK_VERSION)
 
+
+use_fftw=yes
+
+AC_ARG_WITH(fftw ,[  --with-fftw=PFX        Prefix where fftw is installed (optional)],
+ fftw_prefix="$withval", fftw_prefix="/usr/local") 
+
+if test "$use_fftw" = "yes"
+then
+
+LDFLAGS="$LDFLAGS -L$fftw_prefix/lib"
+JACK_CFLAGS="-I$fftw_prefix/include"
+
+CFLAGS="$CFLAGS $FFTW_CFLAGS"
+CPPFLAGS="$CPPFLAGS $FFTW_CFLAGS"
 
 # check for single precision convention first
 AC_CHECK_LIB(sfftw, fftw_create_plan)
@@ -54,6 +68,9 @@ if [[ "$have_fftw" = "no" ]] ; then
 fi
 
 AC_CHECK_HEADERS(sfftw.h srfftw.h fftw.h rfftw.h)
+
+fi
+# end fftw section
 
 
 AC_CHECK_LIB(m,pow)
