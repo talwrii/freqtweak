@@ -2326,6 +2326,7 @@ void FTmainwin::rebuildDisplay(bool dolink)
 	vector<FTprocI *> pmods;
 	engine->getProcessorModules (pmods);
 
+	
 	int initrows = _rowSizers.size();
 	
 	for (unsigned int n=0; n < pmods.size(); ++n)
@@ -2404,7 +2405,10 @@ void FTmainwin::rebuildDisplay(bool dolink)
 		engine->getProcessorModules (procmods);
 		
 		// change the plot stuff
+		_inputSpectragram[i]->setDataLength((unsigned int)engine->getFFTsize() >> 1);
+		_outputSpectragram[i]->setDataLength((unsigned int)engine->getFFTsize() >> 1);
 
+		
 		int rowcnt=-1; // preincremented below
 	
 		for (unsigned int n=0; n < procmods.size(); ++n)

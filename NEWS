@@ -5,6 +5,9 @@ See the end for copying conditions.
 
 Please send freqtweak bug reports to freqtweak-user@lists.sourceforge.net
 
+Version 0.5.1
+ * fixed terrible preset loading bug (when fft size was other than default)
+
 Version 0.5.0
  * arbitrarily selectable and reorderable modules
  * preset blending feature
