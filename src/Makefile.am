@@ -70,7 +70,11 @@ freqtweak_SOURCES = \
 	FTprocLimit.cpp \
 	FTprocLimit.hpp \
 	FTprocTranspose.cpp \
-	FTprocTranspose.hpp 
+	FTprocTranspose.hpp \
+	FTpresetBlendDialog.cpp \
+	FTpresetBlendDialog.hpp \
+	FTpresetBlender.cpp \
+	FTpresetBlender.hpp
 
 
 

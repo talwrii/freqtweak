@@ -32,7 +32,6 @@
 #include <wx/wx.h>
 #include <wx/dir.h>
 #include <wx/textfile.h>
-#include <wx/listimpl.cpp>
 #include <wx/filename.h>
 
 #include "FTconfigManager.hpp"
@@ -44,8 +43,6 @@
 #include "version.h"
 
 #include "xml++.hpp"
-
-WX_DEFINE_LIST(FTstringList);
 
 
 FTconfigManager::FTconfigManager(const char * basedir)
@@ -265,6 +262,12 @@ bool FTconfigManager::storeSettings (const char * name)
 
 bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 {
+	vector<vector <FTprocI *> > tmpvec;
+	return loadSettings(name, restore_ports, false, tmpvec);
+}
+
+bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool ignore_iosup, vector< vector<FTprocI *> > & procvec)
+{
 	if (strcmp (name, "") == 0) {
 		return false;
 	}
@@ -276,8 +279,11 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 		return false;
 	}
 
-	FTioSupport * iosup = FTioSupport::instance();
+	FTioSupport * iosup = 0;
 
+	if (!ignore_iosup) {
+		iosup = FTioSupport::instance();
+	}
 	
 	// open file
 	string configfname(wxString::Format("%s%c%s", dirname.c_str(), wxFileName::GetPathSeparator(), "config.xml").c_str());
@@ -308,17 +314,26 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 		return false;
 	}
 
-	unsigned int i;
-	for (i=0; i < chanlist.size() && i < FT_MAXPATHS; i++)
+	if (!ignore_iosup)
 	{
-	        iosup->setProcessPathActive(i, true);
+		unsigned int i;
+		for (i=0; i < chanlist.size() && i < FT_MAXPATHS; i++)
+		{
+			iosup->setProcessPathActive(i, true);
+		}
+		// set all remaining paths inactive
+		for ( ; i < FT_MAXPATHS; i++) {
+			iosup->setProcessPathActive(i, false);
+		}
 	}
-	// set all remaining paths inactive
-	for ( ; i < FT_MAXPATHS; i++) {
-		iosup->setProcessPathActive(i, false);
+	else {
+		// set up procvec with its channels
+		for (unsigned int i=0; i < chanlist.size() && i < FT_MAXPATHS; i++)
+		{
+			procvec.push_back(vector<FTprocI *>());
+		}
 	}
-
-
+	
 	// get global params
 	unsigned long fft_size = 1024;
 	unsigned long windowing = 0;
@@ -386,51 +401,55 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 			continue;
 		}
 
-		FTprocessPath * procpath = iosup->getProcessPath((int) chan_pos);
-		if (!procpath) continue; // shouldnt happen
+		FTspectralEngine * engine = 0;
 
-		FTspectralEngine * engine = procpath->getSpectralEngine();
+		if (!ignore_iosup) {
+			FTprocessPath * procpath = iosup->getProcessPath((int) chan_pos);
+			if (!procpath) continue; // shouldnt happen
+			
+			engine = procpath->getSpectralEngine();
 
-		// apply some of the global settings now
-		engine->setOversamp ((int) oversamp);
-		engine->setTempo ((int) tempo);
-		engine->setMaxDelay ((float) max_delay);
+			// apply some of the global settings now
+			engine->setOversamp ((int) oversamp);
+			engine->setTempo ((int) tempo);
+			engine->setMaxDelay ((float) max_delay);
 
 		
-		// get channel settings
-		XMLPropertyConstIterator propiter;
-		XMLPropertyList proplist = chanNode->properties();
+			// get channel settings
+			XMLPropertyConstIterator propiter;
+			XMLPropertyList proplist = chanNode->properties();
 
-		for (propiter=proplist.begin(); propiter != proplist.end(); ++propiter)
-		{
-			string key = (*propiter)->name();
-			wxString value = (*propiter)->value().c_str();
+			for (propiter=proplist.begin(); propiter != proplist.end(); ++propiter)
+			{
+				string key = (*propiter)->name();
+				wxString value = (*propiter)->value().c_str();
 
-			if (key == "input_gain") {
-				if (value.ToDouble(&fval)) {
-					engine->setInputGain ((float) fval);
+				if (key == "input_gain") {
+					if (value.ToDouble(&fval)) {
+						engine->setInputGain ((float) fval);
+					}
 				}
+				else if (key == "mix_ratio") {
+					if (value.ToDouble(&fval)) {
+						engine->setMixRatio ((float) fval);
+					}
+				}
+				else if (key == "bypassed") {
+					if (value.ToULong(&uval)) {
+						engine->setBypassed (uval==1 ? true: false);
+					}
+				}
+				else if (key == "muted") {
+					if (value.ToULong(&uval)) {
+						engine->setMuted (uval==1 ? true: false);
+					}
+				}	
 			}
-			else if (key == "mix_ratio") {
-				if (value.ToDouble(&fval)) {
-					engine->setMixRatio ((float) fval);
-				}
-			}
-			else if (key == "bypassed") {
-				if (value.ToULong(&uval)) {
-					engine->setBypassed (uval==1 ? true: false);
-				}
-			}
-			else if (key == "muted") {
-				if (value.ToULong(&uval)) {
-					engine->setMuted (uval==1 ? true: false);
-				}
-			}	
+
+
+			// clear existing procmods
+			engine->clearProcessorModules();
 		}
-
-
-		// clear existing procmods
-		engine->clearProcessorModules();
 		
 		// get procmods node
 		XMLNode * procmodsNode = find_named_node (chanNode, "ProcMods");
@@ -478,7 +497,10 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 
 			procmod->initialize();
 
-			procmod->setSampleRate (iosup->getSampleRate());
+			if (!ignore_iosup) {
+				procmod->setSampleRate (iosup->getSampleRate());
+			}
+			
 			procmod->setOversamp ((int)oversamp);
 
 			// load up the filters in the procmod
@@ -540,6 +562,9 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 						
 						_linkCache.push_back (LinkCache(chan_pos, linked, ppos, fpos));
 					}
+					else {
+						specmod->unlink(false);
+					}
 				}
 				
 				
@@ -547,11 +572,28 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 
 			// insert procmod
 
-			engine->insertProcessorModule (procmod, ppos);
-			
+			if (!ignore_iosup)
+			{
+				engine->insertProcessorModule (procmod, ppos);
+			}
+			else {
+				// add to vector in the right spot
+				vector<FTprocI*>::iterator iter = procvec[chan_pos].begin();
+				
+				for (unsigned int n=0; n < ppos && iter!=procvec[chan_pos].end(); ++n) {
+					++iter;
+				}
+				
+				procvec[chan_pos].insert (iter, procmod);
+			}
 		}
 
 
+		if (ignore_iosup) {
+			// can skip to the next one
+			continue;
+		}
+		
 		// apply global settings
 		engine->setFFTsize ((FTspectralEngine::FFT_Size) fft_size);
 		engine->setWindowing ((FTspectralEngine::Windowing) windowing);
@@ -559,76 +601,96 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 		
 
 		// input ports
-		
-		XMLNode * inputsNode = find_named_node (chanNode, "Inputs");
-		if (inputsNode )
-		{
-			XMLNodeList portlist = inputsNode->children();
-			XMLNodeConstIterator portiter;
 
-			iosup->disconnectPathInput(chan_pos, NULL); // disconnect all
-			
-			for (portiter = portlist.begin(); portiter != portlist.end(); ++portiter)
+		if (restore_ports)
+		{
+			XMLNode * inputsNode = find_named_node (chanNode, "Inputs");
+			if (inputsNode )
 			{
-				XMLNode * port = *portiter;
-				if (port->name() == "Port") {
-					XMLProperty * prop = port->property("name");
-					if (prop) {
-						iosup->connectPathInput(chan_pos, prop->value().c_str());
+				XMLNodeList portlist = inputsNode->children();
+				XMLNodeConstIterator portiter;
+
+				iosup->disconnectPathInput(chan_pos, NULL); // disconnect all
+			
+				for (portiter = portlist.begin(); portiter != portlist.end(); ++portiter)
+				{
+					XMLNode * port = *portiter;
+					if (port->name() == "Port") {
+						XMLProperty * prop = port->property("name");
+						if (prop) {
+							iosup->connectPathInput(chan_pos, prop->value().c_str());
+						}
 					}
 				}
+			
 			}
-			
-		}
-		else {
-			fprintf (stderr, "channel inputs node not found in %s!\n", configfname.c_str()); 
-		}
+			else {
+				fprintf (stderr, "channel inputs node not found in %s!\n", configfname.c_str()); 
+			}
 
-		// output ports
-		XMLNode * outputsNode = find_named_node (chanNode, "Outputs");
-		if (inputsNode )
-		{
-			XMLNodeList portlist = outputsNode->children();
-			XMLNodeConstIterator portiter;
-
-			iosup->disconnectPathOutput(chan_pos, NULL); // disconnect all
-			
-			for (portiter = portlist.begin(); portiter != portlist.end(); ++portiter)
+			// output ports
+			XMLNode * outputsNode = find_named_node (chanNode, "Outputs");
+			if (inputsNode )
 			{
-				XMLNode * port = *portiter;
-				if (port->name() == "Port") {
-					XMLProperty * prop = port->property("name");
-					if (prop) {
-						iosup->connectPathOutput(chan_pos, prop->value().c_str());
+				XMLNodeList portlist = outputsNode->children();
+				XMLNodeConstIterator portiter;
+
+				iosup->disconnectPathOutput(chan_pos, NULL); // disconnect all
+			
+				for (portiter = portlist.begin(); portiter != portlist.end(); ++portiter)
+				{
+					XMLNode * port = *portiter;
+					if (port->name() == "Port") {
+						XMLProperty * prop = port->property("name");
+						if (prop) {
+							iosup->connectPathOutput(chan_pos, prop->value().c_str());
+						}
 					}
 				}
-			}
 			
-		}
-		else {
-			fprintf (stderr, "channel outputs node not found in %s!\n", configfname.c_str()); 
-		}
-		
+			}
+			else {
+				fprintf (stderr, "channel outputs node not found in %s!\n", configfname.c_str()); 
+			}
+		}		
 		
 	}
 
-	// now we can apply linkages
-	list<LinkCache>::iterator liter;
-	for (liter = _linkCache.begin(); liter != _linkCache.end(); ++liter)
+	if (!ignore_iosup)
 	{
-		LinkCache & lc = *liter;
+		// now we can apply linkages
+		list<LinkCache>::iterator liter;
+		for (liter = _linkCache.begin(); liter != _linkCache.end(); ++liter)
+		{
+			LinkCache & lc = *liter;
 
-		FTspectrumModifier *source = iosup->getProcessPath(lc.source_chan)->getSpectralEngine()
-			->getProcessorModule(lc.mod_n)->getFilter(lc.filt_n);
+			FTspectrumModifier *source = iosup->getProcessPath(lc.source_chan)->getSpectralEngine()
+				->getProcessorModule(lc.mod_n)->getFilter(lc.filt_n);
 
-		FTspectrumModifier *dest = iosup->getProcessPath(lc.dest_chan)->getSpectralEngine()
-			->getProcessorModule(lc.mod_n)->getFilter(lc.filt_n);
+			FTspectrumModifier *dest = iosup->getProcessPath(lc.dest_chan)->getSpectralEngine()
+				->getProcessorModule(lc.mod_n)->getFilter(lc.filt_n);
 
-		source->link (dest);
+			source->link (dest);
 		
+		}
+	
 	}
-	
-	
+	else
+	{
+		// just use the stored ones
+		list<LinkCache>::iterator liter;
+		for (liter = _linkCache.begin(); liter != _linkCache.end(); ++liter)
+		{
+			LinkCache & lc = *liter;
+
+			FTspectrumModifier *source = procvec[lc.source_chan][lc.mod_n]->getFilter(lc.filt_n);
+			FTspectrumModifier *dest = procvec[lc.dest_chan][lc.mod_n]->getFilter(lc.filt_n);
+
+			source->link (dest);
+		}
+	}
+		
+
 	return true;
 }
 
@@ -760,263 +822,30 @@ void FTconfigManager::writeFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 }
 
 
-// void FTconfigManager::modifySetting (FTspectralEngine *engine, int id, string &key, string &val, bool restoreports)
-// {
 
-// 	double fval;
-// 	unsigned long ival;
-// 	FTioSupport * iosup = FTioSupport::instance();
-// 	wxString value(val);
-	
-// 	if (key == "fft_size") {
-// 		if (value.ToULong(&ival)) {
-// 			engine->setFFTsize ((FTspectralEngine::FFT_Size) ival);
-// 		}
-// 	}
-// 	else if (key == "windowing") {
-// 		if (value.ToULong(&ival)) {
-// 			engine->setWindowing ((FTspectralEngine::Windowing) ival);
-// 		}
-// 	}
-// 	else if (key == "update_speed") {
-// 		if (value.ToULong(&ival)) {
-// 			engine->setUpdateSpeed ((FTspectralEngine::UpdateSpeed)(int)ival);
-// 		}
-// 	}
-// 	else if (key == "oversamp") {
-// 		if (value.ToULong(&ival)) {
-// 			engine->setOversamp ((int)ival);
-// 		}
-// 	}
-// 	else if (key == "input_gain") {
-// 		if (value.ToDouble(&fval)) {
-// 			engine->setInputGain ((float) fval);
-// 		}
-// 	}
-// 	else if (key == "mix_ratio") {
-// 		if (value.ToDouble(&fval)) {
-// 			engine->setMixRatio ((float) fval);
-// 		}
-// 	}
-// 	else if (key == "bypassed") {
-// 		if (value.ToULong(&ival)) {
-// 			engine->setBypassed (ival==1 ? true: false);
-// 		}
-// 	}
-// 	else if (key == "muted") {
-// 		if (value.ToULong(&ival)) {
-// 			engine->setMuted (ival==1 ? true: false);
-// 		}
-// 	}
-// 	// io stuff
-// 	else if (key == "input_ports" && restoreports) {
-// 		// value is comma separated list of port names
-// 		iosup->disconnectPathInput(id, NULL); // disconnect all
-
-// 		wxString port = value.BeforeFirst(',');
-// 		wxString remain = value.AfterFirst(',');
-// 		while (!port.IsEmpty()) {
-// 			iosup->connectPathInput(id, port.c_str());
-
-// 			port = remain.BeforeFirst(',');
-// 			remain = remain.AfterFirst(',');
-// 		}
-		
-// 	}
-// 	else if (key == "output_ports"  && restoreports) {
-// 		// value is comma separated list of port names
-// 		iosup->disconnectPathOutput(id, NULL); // disconnect all
-
-// 		wxString port = value.BeforeFirst(',');
-// 		wxString remain = value.AfterFirst(',');
-// 		while (!port.IsEmpty()) {
-// 			iosup->connectPathOutput(id, port.c_str());
-
-// 			port = remain.BeforeFirst(',');
-// 			remain = remain.AfterFirst(',');
-// 		}
-		
-// 	}
-// 	else if (key == "tempo") {
-// 		if (value.ToULong(&ival)) {
-// 			engine->setTempo ((int) ival);
-// 		}
-// 	}
-// 	else if (key == "max_delay") {
-// 		if (value.ToDouble(&fval)) {
-// 			engine->setMaxDelay ((float) fval);
-// 		}
-// 	}
-// 	else {
-// 		vector<FTprocI *> procmods;
-// 		engine->getProcessorModules (procmods);
-
-// 		bool done = false;
-// 		for (unsigned int n=0; n < procmods.size(); ++n)
-// 		{
-// 			FTprocI *pm = procmods[n];
-// 			vector<FTspectrumModifier *> filts;
-// 			pm->getFilters (filts);
-			
-// 			for (unsigned int m=0; m < filts.size(); ++m)
-// 			{
-// 				if (key == wxString::Format("%s_bypassed", filts[m]->getConfigName().c_str())) {
-// 					if (value.ToULong(&ival)) {
-// 						filts[m]->setBypassed (ival==1 ? true: false);
-// 					}
-// 					done = true;
-// 					break;
-// 				}
-// 				else if ( key == wxString::Format("%s_linked", filts[m]->getConfigName().c_str())) {
-// 					if (value.ToULong(&ival)) {
-// 						if (ival >= 0 && iosup->getProcessPath(ival))
-// 						{
-// 							filts[m]->link (iosup->getProcessPath(ival)->getSpectralEngine()->
-// 									getProcessorModule(n)->getFilter(m));
-// 						}
-// 						else {
-// 							filts[m]->unlink(false);
-// 						}
-// 					}
-// 					done = true;
-// 					break;
-// 				}
-// 			}
-// 			if (done) break;
-// 		}
-
-// 	}
-	
-// // 	else if (key == "freq_bypassed") {
-// // 		if (value.ToULong(&ival)) {
-// // 			engine->setBypassFreqFilter (ival==1 ? true: false);
-// // 		}
-// // 	}
-// // 	else if (key == "scale_bypassed") {
-// // 		if (value.ToULong(&ival)) {
-// // 			engine->setBypassScaleFilter (ival==1 ? true: false);
-// // 		}
-// // 	}
-// // 	else if (key == "delay_bypassed") {
-// // 		if (value.ToULong(&ival)) {
-// // 			engine->setBypassDelayFilter (ival==1 ? true: false);
-// // 		}
-// // 	}
-// // 	else if (key == "gate_bypassed") {
-// // 		if (value.ToULong(&ival)) {
-// // 			engine->setBypassGateFilter (ival==1 ? true: false);
-// // 		}
-// // 	}
-// // 	else if (key == "inverse_gate_bypassed") {
-// // 		if (value.ToULong(&ival)) {
-// // 			engine->setBypassInverseGateFilter (ival==1 ? true: false);
-// // 		}
-// // 	}
-// // 	else if (key == "feedback_bypassed") {
-// // 		if (value.ToULong(&ival)) {
-// // 			engine->setBypassFeedbackFilter (ival==1 ? true: false);
-// // 		}
-// // 	}
-
-// // 	// link stuff
-// // 	else if (key == "freq_linked") {
-// // 		if (value.ToULong(&ival)) {
-// // 			if (ival >= 0 && iosup->getProcessPath(ival))
-// // 			{
-// // 				engine->getFreqFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getFreqFilter());
-// // 			}
-// // 			else {
-// // 				engine->getFreqFilter()->unlink(false);
-// // 			}
-// // 		}
-// // 	}
-// // 	else if (key == "scale_linked") {
-// // 		if (value.ToULong(&ival)) {
-// // 			if (ival >= 0 && iosup->getProcessPath(ival))
-// // 			{
-// // 				engine->getScaleFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getScaleFilter());
-// // 			}
-// // 			else {
-// // 				engine->getScaleFilter()->unlink(false);
-// // 			}
-// // 		}
-// // 	}
-// // 	else if (key == "delay_linked") {
-// // 		if (value.ToULong(&ival)) {
-// // 			if (ival >= 0 && iosup->getProcessPath(ival))
-// // 			{
-// // 				engine->getDelayFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getDelayFilter());
-// // 			}
-// // 			else {
-// // 				engine->getDelayFilter()->unlink(false);
-// // 			}
-// // 		}
-// // 	}
-// // 	else if (key == "gate_linked") {
-// // 		if (value.ToULong(&ival)) {
-// // 			if (ival >= 0 && iosup->getProcessPath(ival))
-// // 			{
-// // 				engine->getGateFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getGateFilter());
-// // 			}
-// // 			else {
-// // 				engine->getGateFilter()->unlink(false);
-// // 			}
-// // 		}
-// // 	}
-// // 	else if (key == "inverse_gate_linked") {
-// // 		if (value.ToULong(&ival)) {
-// // 			if (ival >= 0 && iosup->getProcessPath(ival))
-// // 			{
-// // 				engine->getInverseGateFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getInverseGateFilter());
-// // 			}
-// // 			else {
-// // 				engine->getInverseGateFilter()->unlink(false);
-// // 			}
-// // 		}
-// // 	}
-// // 	else if (key == "feedback_linked") {
-// // 		if (value.ToULong(&ival)) {
-// // 			if (ival >= 0 && iosup->getProcessPath(ival))
-// // 			{
-// // 				engine->getFeedbackFilter()->link (iosup->getProcessPath(ival)->getSpectralEngine()->getFeedbackFilter());
-// // 			}
-// // 			else {
-// // 				engine->getFeedbackFilter()->unlink(false);
-// // 			}
-// // 		}
-// // 	}
-
-// // 	else {
-// // 		printf ("none of the above\n");
-// // 	}
-// }
-
-
-
-
-FTstringList * FTconfigManager::getSettingsNames()
+list<string> FTconfigManager::getSettingsNames()
 {
 	wxString dirname(wxString::Format("%s/presets", _basedir.c_str()));
 
+	list<string> flist;
+	
 	wxDir dir(dirname);
 	if ( !dir.IsOpened() ) {
-		return false;
+		return flist;
 	}
 
 	wxString filename;
 
-	FTstringList * flist = new FTstringList();
 	
 	bool cont = dir.GetFirst(&filename, "", wxDIR_DIRS);
 
 	while ( cont )
 	{
 		//printf ("%s\n", filename.c_str());
-		flist->Append (new wxString(filename));
+		flist.push_back (string(filename.c_str()));
 		cont = dir.GetNext(&filename);
 	}
-	
-	flist->DeleteContents(TRUE);
+
 	return flist;
 }
 

@@ -26,13 +26,13 @@
 #include "FTtypes.hpp"
 #include <string>
 #include <list>
+#include <vector>
 using namespace std;
 
 class FTspectralEngine;
 class FTspectrumModifier;
 class XMLNode;
-
-class FTstringList;
+class FTprocI;
 
 class FTconfigManager
 {
@@ -45,8 +45,9 @@ class FTconfigManager
 	bool storeSettings (const char * name);
 
 	bool loadSettings (const char * name, bool restore_ports=false);
+	bool loadSettings (const char * name, bool restore_ports, bool ignore_iosup, vector<vector <FTprocI *> > & procvec);
 
-	FTstringList * getSettingsNames();
+	list<string> getSettingsNames();
 
    protected:
 
@@ -72,8 +73,6 @@ class FTconfigManager
 
 	list<LinkCache> _linkCache;
 };
-
-WX_DECLARE_LIST(wxString, FTstringList);
 
 
 #endif

@@ -52,6 +52,7 @@ using namespace std;
 #include "FTconfigManager.hpp"
 #include "FTupdateToken.hpp"
 #include "FTprocOrderDialog.hpp"
+#include "FTpresetBlendDialog.hpp"
 
 #include "version.h"
 
@@ -72,6 +73,7 @@ enum WindowIds
 	FT_QuitMenu = 1,
 	FT_AboutMenu,
 	FT_ProcModMenu,
+	FT_PresetBlendMenu,
 	FT_InputButtonId,
 	FT_OutputButtonId,
 	FT_InSpecTypeId,
@@ -133,6 +135,7 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 	EVT_MENU(FT_QuitMenu,  FTmainwin::OnQuit)
 	EVT_MENU(FT_AboutMenu, FTmainwin::OnAbout)
 	EVT_MENU(FT_ProcModMenu, FTmainwin::OnProcMod)
+	EVT_MENU(FT_PresetBlendMenu, FTmainwin::OnPresetBlend)
 
 	
 	EVT_IDLE(FTmainwin::OnIdle)
@@ -198,7 +201,7 @@ FTmainwin::FTmainwin(int startpath, const wxString& title, const wxString& rcdir
 	  _updateMS(10), _superSmooth(false),
 	  _pathCount(startpath),
 	  _configManager(rcdir),
-	  _procmodDialog(0),
+	  _procmodDialog(0), _blendDialog(0),
 	  _titleFont(10, wxDEFAULT, wxNORMAL, wxBOLD),
 	  _titleAltFont(10, wxDEFAULT, wxSLANT, wxBOLD),
 	  _buttFont(10, wxDEFAULT, wxNORMAL, wxNORMAL)
@@ -230,6 +233,7 @@ void FTmainwin::buildGui()
 	wxMenu *menuFile = new wxMenu("", wxMENU_TEAROFF);
 
 	menuFile->Append(FT_ProcModMenu, "&DSP Modules...\tCtrl-P", "Configure DSP modules");
+	menuFile->Append(FT_PresetBlendMenu, "Preset &Blend...\tCtrl-B", "Blend multiple presets");
 
 	menuFile->AppendSeparator();	
 	menuFile->Append(FT_AboutMenu, "&About...\tCtrl-A", "Show about dialog");
@@ -2466,6 +2470,21 @@ void FTmainwin::OnProcMod (wxCommandEvent &event)
 	
 }
 
+void FTmainwin::OnPresetBlend (wxCommandEvent &event)
+{
+	// popup our preset blend dialog
+
+	if (!_blendDialog) {
+		_blendDialog = new FTpresetBlendDialog(this, &_configManager, -1, "Preset Blend");
+		_blendDialog->SetSize(372,228);
+	}
+
+	_blendDialog->refreshState();
+
+	_blendDialog->Show(true);
+	
+}
+
 
 void FTmainwin::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
@@ -2604,6 +2623,11 @@ void FTmainwin::handleStoreButton (wxCommandEvent &event)
 {
 	_configManager.storeSettings ( _presetCombo->GetValue().c_str());
 
+	if (_blendDialog && _blendDialog->IsShown()) {
+		_blendDialog->refreshState();
+	}
+		
+	
 	rebuildPresetCombo();
 }
 
@@ -2630,6 +2654,10 @@ void FTmainwin::loadPreset (const wxString &name)
 		if (_procmodDialog && _procmodDialog->IsShown()) {
 			_procmodDialog->refreshState();
 		}
+
+		if (_blendDialog && _blendDialog->IsShown()) {
+			_blendDialog->refreshState(name.c_str(), true, "", true);
+		}
 		
 	}
 	
@@ -2640,27 +2668,20 @@ void FTmainwin::loadPreset (const wxString &name)
 
 void FTmainwin::rebuildPresetCombo()
 {
-	FTstringList * namelist =  _configManager.getSettingsNames();
-
+	list<string> namelist =   _configManager.getSettingsNames();
+	
 	wxString selected = _presetCombo->GetValue();
 	
 	_presetCombo->Clear();
-	
-	wxNode * node = (wxNode *) namelist->GetFirst();
-	while (node)
-	{
-		wxString *name = (wxString *) node->GetData();
 
-		_presetCombo->Append(*name);
-		
-		node = node->GetNext();
+	for (list<string>::iterator name=namelist.begin(); name != namelist.end(); ++name)
+	{
+		_presetCombo->Append(wxString((*name).c_str()));
 	}
 
 	if ( _presetCombo->FindString(selected) >= 0) {
 		_presetCombo->SetValue(selected);
 	}
-	
-	delete namelist;
 }
 
 void FTmainwin::suspendProcessing()

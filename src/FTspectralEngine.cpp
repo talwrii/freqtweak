@@ -97,19 +97,11 @@ FTspectralEngine::FTspectralEngine()
 
 	_sampleRate = FTioSupport::instance()->getSampleRate();
 
-	//setMaxelay(_maxDelay);
-	
 	// window init
 	createWindowVectors();
 
 
 	_averages = (int) (_oversamp * _updateSpeed * 512/(float)_fftN); // magic?
-
-
-	// create processing modules
-	// TODO: do this dynamically
-
-
 	
 }
 

@@ -46,7 +46,7 @@ class FTupdateToken;
 class FTupdateTimer;
 class FTlinkMenu;
 class FTprocOrderDialog;
-
+class FTpresetBlendDialog;
 
 class FTmainwin : public wxFrame
 {
@@ -79,6 +79,8 @@ class FTmainwin : public wxFrame
 	void restoreProcessing();
 
 	void rebuildDisplay(bool dolink=true);
+
+	FTconfigManager & getConfigManager() { return _configManager; }
 	
   protected:
 
@@ -114,6 +116,7 @@ class FTmainwin : public wxFrame
 	void handleIOButtons (wxCommandEvent &event);
 
 	void OnProcMod (wxCommandEvent &event);
+	void OnPresetBlend (wxCommandEvent &event);
 
 	
 	void rowpanelScrollSize();
@@ -356,6 +359,7 @@ class FTmainwin : public wxFrame
         bool _bypassArray[FT_MAXPATHS];
 
 	FTprocOrderDialog * _procmodDialog;
+	FTpresetBlendDialog * _blendDialog;
 
 	int _bwidth;
 	int _labwidth;
