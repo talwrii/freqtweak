@@ -15,15 +15,16 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    $Id: RingBuffer.cpp,v 1.1 2002/10/13 04:13:25 essej Exp $
+    $Id: RingBuffer.cpp,v 1.2 2004/11/10 17:16:08 trutkin Exp $
 */
 
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif
 
+#include <sys/types.h>
 #include <sys/mman.h>
-#include <string.h>
+#include <cstring>
 #include "RingBuffer.hpp"
 
 RingBuffer::~RingBuffer ()

@@ -1342,7 +1342,7 @@ void FTactiveBarGraph::OnSize(wxSizeEvent & event)
 	_backingMap = new wxBitmap(_width, _height);
 	
 	SetBackgroundColour(*wxBLACK);
-	Clear();
+	//Clear();
 
 	recalculate();
 

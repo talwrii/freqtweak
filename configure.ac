@@ -272,7 +272,7 @@ fi
 
 dnl LIBXML
 
-AM_PATH_XML2()
+PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.0, have_xml2=yes, have_xml2=no)
 
 
 

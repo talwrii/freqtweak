@@ -27,7 +27,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <values.h>
+#include <climits>
 
 #include <wx/wx.h>
 #include <wx/dir.h>
