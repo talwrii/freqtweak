@@ -1591,6 +1591,7 @@ void FTmainwin::handleBypassButtons (wxCommandEvent &event)
 			   if (source == _bypassButtons[rowcnt][i])
 			   {
 				   filts[m]->setBypassed ( ! filts[m]->getBypassed() );
+				   _barGraphs[rowcnt][i]->setBypassed (filts[m]->getBypassed());
 				   alldone = done = true;
 			   }
 			   else if (source == _bypassAllButtons[rowcnt]) {
@@ -1899,6 +1900,13 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			vector<FTprocI *> procmods;
 			engine->getProcessorModules (procmods);
 
+			// unset all specmods for safety
+			for (unsigned int n=0; n < _barGraphs.size(); ++n)
+			{
+				_barGraphs[n][i]->setSpectrumModifier(0);
+				_barGraphs[n][i]->setTopSpectrumModifier(0);
+			}
+			
 			engine->setFFTsize ((FTspectralEngine::FFT_Size) (intptr_t) _freqBinsChoice->GetClientData(sel) );
 			
 			// reset all the activeplots
@@ -1915,10 +1923,10 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 					if (filts[m]->getGroup() != lastgroup) {
 						rowcnt++;
 						lastgroup = filts[m]->getGroup();
-						_barGraphs[rowcnt][i]->setSpectrumModifier(_barGraphs[rowcnt][i]->getSpectrumModifier());
+						_barGraphs[rowcnt][i]->setSpectrumModifier(filts[m]);
 					}
 					else {
-						_barGraphs[rowcnt][i]->setTopSpectrumModifier(_barGraphs[rowcnt][i]->getTopSpectrumModifier());
+						_barGraphs[rowcnt][i]->setTopSpectrumModifier(filts[m]);
 					}
 
 				}
@@ -2700,7 +2708,7 @@ void FTmainwin::suspendProcessing()
 	
 	//printf ("suspended before sleep\n");
 	
-	wxThread::Sleep(100); // sleep to let the process callback get around to the beginning
+	wxThread::Sleep(150); // sleep to let the process callback get around to the beginning
 	//printf ("suspended after sleep\n");
 
 }
@@ -2792,9 +2800,9 @@ void FTlinkMenu::OnLinkItem(wxCommandEvent &event)
 	
 	for (unsigned int m=0; m < dfilts.size(); ++m)
 	{
-		if (dfilts[m]->getGroup() == group) {
-			sfilts[m]->link (dfilts[m]);
-		}
+		//if (dfilts[m]->getGroup() == group) {
+		sfilts[m]->link (dfilts[m]);
+		//}
 	}
 
 	wxMenuItem *item = (wxMenuItem *) event.GetEventObject();

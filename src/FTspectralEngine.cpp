@@ -283,7 +283,7 @@ void FTspectralEngine::setFFTsize (FTspectralEngine::FFT_Size sz)
 
 		if (_averages == 0) _averages = 1;
 		
-		// change these now for the GUIs sake
+		// change these now
 		for (vector<FTprocI*>::iterator iter = _procModules.begin();
 		     iter != _procModules.end(); ++iter)
 		{

@@ -21,6 +21,9 @@
 #include <config.h>
 #endif
 
+#include <string>
+using namespace std;
+
 #include <wx/wx.h>
 #include <wx/listctrl.h>
 
