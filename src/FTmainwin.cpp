@@ -442,7 +442,7 @@ void FTmainwin::buildGui()
 	timeSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
 	
 	_tempoSpinCtrl = new wxSpinCtrl(timepanel, FT_TempoSpinId, "120", wxDefaultPosition, wxSize(65,-1),
-						  wxSP_ARROW_KEYS, 0, 300, 120);
+						  wxSP_ARROW_KEYS, 1, 300, 120);
 	timeSizer->Add(_tempoSpinCtrl, 0, wxALL|wxALIGN_CENTER, 2);
 	
 	

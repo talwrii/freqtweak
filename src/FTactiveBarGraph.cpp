@@ -427,6 +427,8 @@ void FTactiveBarGraph::setXscale(XScaleType sc)
 
 void FTactiveBarGraph::setTempo(int bpm)
 {
+	if (_tempo <= 0) return; // this is important!!
+	
 	_tempo = bpm;
 	if (_mtype == FTspectrumModifier::TIME_MODIFIER) {
 		makeGridChoices();
