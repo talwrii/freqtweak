@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "FTspectrumModifier.hpp"
 #include "FTtypes.hpp"
@@ -121,7 +122,7 @@ void FTspectrumModifier::unlink (bool unlinksources)
 			FTspectrumModifier *specmod = node->GetData();
 			specmod->unlink(false);
 			// the list will be modified underneath us, so....
-			if ((node = _linkedFrom->Find((unsigned) specmod))) {
+			if ((node = _linkedFrom->Find((uintptr_t) specmod))) {
 				// THIS SHOULDNT HAPPEN BUT IS HERE ANYWAY
 				printf ("blah link!\n");
 				_linkedFrom->DeleteNode(node);
@@ -137,8 +138,8 @@ void FTspectrumModifier::addedLinkFrom (FTspectrumModifier * specmod)
 {
 	// called from link()
 
-	if (! _linkedFrom->Find ((unsigned) specmod)) {
-		_linkedFrom->Append ( (unsigned) specmod, specmod);
+	if (! _linkedFrom->Find ((uintptr_t) specmod)) {
+		_linkedFrom->Append ( (uintptr_t) specmod, specmod);
 	}
 	
 }
@@ -146,7 +147,7 @@ void FTspectrumModifier::addedLinkFrom (FTspectrumModifier * specmod)
 void FTspectrumModifier::removedLinkFrom (FTspectrumModifier * specmod)
 {
 	// called from unlink()
-	wxFTspecModListNode * node =  _linkedFrom->Find ((unsigned) specmod);
+	wxFTspecModListNode * node =  _linkedFrom->Find ((uintptr_t) specmod);
 
 	if (node) {
 		_linkedFrom->DeleteNode (node);

@@ -222,7 +222,7 @@ inline float FTactiveBarGraph::dbToVal(float db)
 {
 	
 	//float nval = (20.0 * FTutils::fast_log10(yval / refmax));
-	float nval = pow ( 10.0, db/20);
+	float nval = pow ( (float)10.0, db/20);
 	
 	// printf ("scaled value is %g   mincut=%g\n", nval, _minCutoff);
 	return nval;

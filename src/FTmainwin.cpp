@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdint.h>
 
 #include "FTmainwin.hpp"
 #include "FTspectragram.hpp"
@@ -334,7 +335,7 @@ void FTmainwin::buildGui()
 	_freqBinsChoice = new wxChoice(fftpanel, FT_FreqBinsChoiceId);
 	const int * fftbins = FTspectralManip::getFFTSizes();
 	for (int i=0; i < FTspectralManip::getFFTSizeCount(); i++) {
-		_freqBinsChoice->Append(wxString::Format("%d", fftbins[i] / 2), (void *) fftbins[i]);
+		_freqBinsChoice->Append(wxString::Format("%d", fftbins[i] / 2), (void *) ((intptr_t)fftbins[i]));
 	}
 
 	specCtrlSizer->Add(_freqBinsChoice, 0, wxALL|wxALIGN_CENTER, 2);
@@ -840,7 +841,7 @@ void FTmainwin::buildGui()
 
 	_pathCountChoice = new wxChoice(this, FT_PathCountChoice, wxDefaultPosition, wxSize(labwidth,-1));
 	for (int i=0; i < FT_MAXPATHS; i++) {
-		_pathCountChoice->Append(wxString::Format("%d chan", i+1), (void *) (i+1));
+		_pathCountChoice->Append(wxString::Format("%d chan", i+1), (void *) ((intptr_t)(i+1)));
 	}
 	_pathCountChoice->SetStringSelection(wxString::Format("%d chan", _startpaths));
 	
@@ -2334,7 +2335,7 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 		for (int i=0; i < _pathCount; i++) {
 			if (!_processPath[i]) continue;
 
-			_processPath[i]->getSpectralManip()->setFFTsize( (FTspectralManip::FFT_Size) (unsigned)_freqBinsChoice->GetClientData(sel) );
+			_processPath[i]->getSpectralManip()->setFFTsize( (FTspectralManip::FFT_Size) (intptr_t) _freqBinsChoice->GetClientData(sel) );
 
 			// reset all the activeplots
 			_freqGraph[i]->setSpectrumModifier(_freqGraph[i]->getSpectrumModifier());
@@ -2365,7 +2366,7 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 		for (int i=0; i < _pathCount; i++) {
 			if (!_processPath[i]) continue;
 
-			_processPath[i]->getSpectralManip()->setOversamp( (int )_overlapChoice->GetClientData(sel) );
+			_processPath[i]->getSpectralManip()->setOversamp( (intptr_t) _overlapChoice->GetClientData(sel) );
 		}
 		
 	}
@@ -2384,7 +2385,7 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			if (!_processPath[i]) continue;
 
 			_processPath[i]->getSpectralManip()->setUpdateSpeed( (FTspectralManip::UpdateSpeed)
-									     (int) _plotSpeedChoice->GetClientData(sel) );
+									     (intptr_t) _plotSpeedChoice->GetClientData(sel) );
 			if (i==0) {
 				_updateMS = 10; // start small
 				_eventTimer->Stop();
@@ -2526,6 +2527,7 @@ void FTmainwin::handleGridButtonMouse (wxMouseEvent &event)
 	if (graphs.size() > 0) {
 		FTgridMenu *menu = new FTgridMenu (source, this, graphs, mtype);
 		source->PopupMenu (menu, 0, source->GetSize().GetHeight());
+		delete menu;
 	}
 	event.Skip();
 }
@@ -2932,7 +2934,7 @@ FTlinkMenu::FTlinkMenu (wxWindow * parent, FTmainwin *win, FTspectralManip *spec
 		switch (stype) {
 		  case FREQ_SPECMOD:
 			  tempfilt =  tempmanip->getFreqFilter();
-			  if (linkedto == tempfilt || thisfilt->getLinkedFrom().Find((unsigned) tempfilt)) {
+			  if (linkedto == tempfilt || thisfilt->getLinkedFrom().Find((uintptr_t)tempfilt)) {
 				  item = new wxMenuItem(this, itemid, wxString::Format("* Path %d *", i+1)); 
 			  } else {
 				  item = new wxMenuItem(this, itemid, wxString::Format("Path %d", i+1)); 
@@ -2945,7 +2947,7 @@ FTlinkMenu::FTlinkMenu (wxWindow * parent, FTmainwin *win, FTspectralManip *spec
 			  break;
 		  case DELAY_SPECMOD:
 			  tempfilt =  tempmanip->getDelayFilter();
-			  if (linkedto == tempfilt  || thisfilt->getLinkedFrom().Find((unsigned) tempfilt)) {
+			  if (linkedto == tempfilt  || thisfilt->getLinkedFrom().Find((uintptr_t) tempfilt)) {
 				  item = new wxMenuItem(this, itemid, wxString::Format("* Path %d *", i+1)); 
 			  } else {
 				  item = new wxMenuItem(this, itemid, wxString::Format("Path %d", i+1)); 
@@ -2960,7 +2962,7 @@ FTlinkMenu::FTlinkMenu (wxWindow * parent, FTmainwin *win, FTspectralManip *spec
 		  case FEEDB_SPECMOD:
 
 			  tempfilt =  tempmanip->getFeedbackFilter();
-			  if (linkedto == tempfilt  || thisfilt->getLinkedFrom().Find((unsigned) tempfilt)) {
+			  if (linkedto == tempfilt  || thisfilt->getLinkedFrom().Find((uintptr_t) tempfilt)) {
 				  item = new wxMenuItem(this, itemid, wxString::Format("* Path %d *", i+1)); 
 			  } else {
 				  item = new wxMenuItem(this, itemid, wxString::Format("Path %d", i+1)); 
@@ -2975,7 +2977,7 @@ FTlinkMenu::FTlinkMenu (wxWindow * parent, FTmainwin *win, FTspectralManip *spec
 		  case SCALE_SPECMOD:
 
 			  tempfilt =  tempmanip->getScaleFilter();
-			  if (linkedto == tempfilt  || thisfilt->getLinkedFrom().Find((unsigned) tempfilt)) {
+			  if (linkedto == tempfilt  || thisfilt->getLinkedFrom().Find((uintptr_t) tempfilt)) {
 				  item = new wxMenuItem(this, itemid, wxString::Format("* Path %d *", i+1)); 
 			  } else {
 				  item = new wxMenuItem(this, itemid, wxString::Format("Path %d", i+1)); 
@@ -3005,7 +3007,7 @@ FTlinkMenu::FTlinkMenu (wxWindow * parent, FTmainwin *win, FTspectralManip *spec
 		  case GATE_SPECMOD:
 
 			  tempfilt =  tempmanip->getGateFilter();
-			  if (linkedto == tempfilt  || thisfilt->getLinkedFrom().Find((unsigned) tempfilt)) {
+			  if (linkedto == tempfilt  || thisfilt->getLinkedFrom().Find((uintptr_t) tempfilt)) {
 				  item = new wxMenuItem(this, itemid, wxString::Format("* Path %d *", i+1)); 
 			  } else {
 				  item = new wxMenuItem(this, itemid, wxString::Format("Path %d", i+1)); 

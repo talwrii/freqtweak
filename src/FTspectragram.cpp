@@ -860,7 +860,7 @@ void FTspectragram::xToBinRange(int x, int &frombin, int &tobin)
 			float xscale = x / (float)_width;
 			
 			// use log scale for freq
-			lbin = rbin = (int) pow ( totbins/3.0, xscale) - 1;
+			lbin = rbin = (int) pow ( (float)(totbins/3.0), xscale) - 1;
 			
 			// find lowest with same x
 			while ( (lbin > 0) && ((int)(((FTutils::fast_log10(lbin) / FTutils::fast_log10(totbins/3.0)) * _width)) == x)) {
