@@ -28,9 +28,9 @@ typedef jack_nframes_t nframes_t;
 
 #define FT_MAXPATHS 4
 
-#define FT_FIFOLENGTH (1 << 17)
+#define FT_FIFOLENGTH (1 << 18)
 
-#define FT_MAX_FFT_SIZE 8192
+#define FT_MAX_FFT_SIZE 16384
 #define FT_MAX_FFT_SIZE_HALF  (FT_MAX_FFT_SIZE / 2)
 #define FT_MAX_AVERAGES 128
 #define FT_MAX_OVERSAMP  16

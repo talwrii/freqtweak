@@ -54,9 +54,9 @@ const char * FTspectralManip::_windowStrings[] = {
 	"Hanning", "Hamming", "Blackman", "Rectangle"
 	};
 
-const int FTspectralManip::_fftSizeCount = 8;
+const int FTspectralManip::_fftSizeCount = 9;
 const int FTspectralManip::_fftSizes[] = {
-	32, 64, 128, 256, 512, 1024, 2048, 4096
+	32, 64, 128, 256, 512, 1024, 2048, 4096, 8192
 };
 
 
