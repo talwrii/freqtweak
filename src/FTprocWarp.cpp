@@ -23,12 +23,13 @@
 FTprocWarp::FTprocWarp (nframes_t samprate, unsigned int fftn)
 	: FTprocI("Warp", samprate, fftn)
 {
+	_confname = "Warp";
 }
 
 FTprocWarp::FTprocWarp (const FTprocWarp & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)	
 {
-	
+	_confname = "Warp";
 }
 
 void FTprocWarp::initialize()
@@ -41,7 +42,7 @@ void FTprocWarp::initialize()
 	
 	_filterlist.push_back (_filter);
 
-	_tmpdata = new fftw_real[FT_MAX_FFT_SIZE];
+	_tmpdata = new fft_data[FT_MAX_FFT_SIZE];
 	
 	_inited = true;
 }
@@ -56,7 +57,7 @@ FTprocWarp::~FTprocWarp()
 	delete [] _tmpdata;
 }
 
-void FTprocWarp::process (fftw_real *data, unsigned int fftn)
+void FTprocWarp::process (fft_data *data, unsigned int fftn)
 {
 	if (!_inited || _filter->getBypassed()) {
 		return;
@@ -69,7 +70,7 @@ void FTprocWarp::process (fftw_real *data, unsigned int fftn)
 
 	int fftN2 = (fftn+1) >> 1;
 
-	memset(_tmpdata, 0, fftn * sizeof(fftw_real));
+	memset(_tmpdata, 0, fftn * sizeof(fft_data));
 	
 	for (int i = 0; i < fftN2; i++)
 	{
@@ -84,7 +85,7 @@ void FTprocWarp::process (fftw_real *data, unsigned int fftn)
 
 	}
 
-	memcpy (data, _tmpdata, fftn * sizeof(fftw_real));
+	memcpy (data, _tmpdata, fftn * sizeof(fft_data));
 }
 
 

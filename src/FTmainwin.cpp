@@ -53,6 +53,7 @@ using namespace std;
 #include "FTupdateToken.hpp"
 #include "FTprocOrderDialog.hpp"
 #include "FTpresetBlendDialog.hpp"
+#include "FThelpWindow.hpp"
 
 #include "version.h"
 
@@ -76,6 +77,7 @@ enum WindowIds
 	FT_AboutMenu,
 	FT_ProcModMenu,
 	FT_PresetBlendMenu,
+	FT_HelpTipsMenu,
 	FT_InputButtonId,
 	FT_OutputButtonId,
 	FT_InSpecTypeId,
@@ -140,6 +142,7 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 //	EVT_SIZE(FTmainwin::OnSize)
 	EVT_MENU(FT_QuitMenu,  FTmainwin::OnQuit)
 	EVT_MENU(FT_AboutMenu, FTmainwin::OnAbout)
+	EVT_MENU(FT_HelpTipsMenu, FTmainwin::OnAbout)
 	EVT_MENU(FT_ProcModMenu, FTmainwin::OnProcMod)
 	EVT_MENU(FT_PresetBlendMenu, FTmainwin::OnPresetBlend)
 
@@ -268,12 +271,16 @@ void FTmainwin::buildGui()
 	menuFile->Append(FT_PresetBlendMenu, "Preset &Blend...\tCtrl-B", "Blend multiple presets");
 
 	menuFile->AppendSeparator();	
-	menuFile->Append(FT_AboutMenu, "&About...\tCtrl-A", "Show about dialog");
 	menuFile->Append(FT_QuitMenu, "&Quit\tCtrl-Q", "Quit this program");
 
 	// now append the freshly created menu to the menu bar...
 	wxMenuBar *menuBar = new wxMenuBar();
 	menuBar->Append(menuFile, "&Control");
+
+	wxMenu *menuHelp = new wxMenu("", wxMENU_TEAROFF);
+	menuHelp->Append(FT_HelpTipsMenu, "&Usage Tips...\tCtrl-H", "Show Usage Tips window");
+	menuHelp->Append(FT_AboutMenu, "&About...\tCtrl-A", "Show about dialog");
+	menuBar->Append(menuHelp, "&Help");
 	
 	// ... and attach this menu bar to the frame
 	SetMenuBar(menuBar);
@@ -2033,8 +2040,6 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			if (!_processPath[i]) continue;
 
 			FTspectralEngine *engine =  _processPath[i]->getSpectralEngine();
-			vector<FTprocI *> procmods;
-			engine->getProcessorModules (procmods);
 
 			// unset all specmods for safety
 			for (unsigned int n=0; n < _barGraphs.size(); ++n)
@@ -2044,6 +2049,9 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			}
 			
 			engine->setFFTsize ((FTspectralEngine::FFT_Size) (intptr_t) _freqBinsChoice->GetClientData(sel) );
+
+			vector<FTprocI *> procmods;
+			engine->getProcessorModules (procmods);
 			
 			// reset all the activeplots
 			int rowcnt=-1;  // preincremented
@@ -2289,7 +2297,7 @@ void FTmainwin::handleIOButtons (wxCommandEvent &event)
 			fprintf(stderr, "Reconnecting as %s...\n", _ioNameText->GetValue().c_str());
 			
 			iosup->stopProcessing();
-			wxThread::Sleep(100);
+			wxThread::Sleep(200);
 			iosup->close();
 			
 			iosup->setName (_ioNameText->GetValue().c_str());
@@ -2306,7 +2314,7 @@ void FTmainwin::handleIOButtons (wxCommandEvent &event)
 	{
 		if (iosup->isInited()) {
 			iosup->stopProcessing();
-			wxThread::Sleep(100);
+			wxThread::Sleep(200);
 			iosup->close();
 		}
 	}
@@ -2767,11 +2775,19 @@ void FTmainwin::OnQuit(wxCommandEvent& WXUNUSED(event))
 	Close(TRUE);
 }
 
-void FTmainwin::OnAbout(wxCommandEvent& WXUNUSED(event))
+void FTmainwin::OnAbout(wxCommandEvent& event)
 {
-	wxString msg(wxString::Format("FreqTweak %s brought to you by Jesse Chappell", freqtweak_version));
-
-	wxMessageBox(msg, "About FreqTweak", wxOK | wxICON_INFORMATION, this);
+	if (event.GetId() == FT_AboutMenu)
+	{
+		wxString msg(wxString::Format("FreqTweak %s brought to you by Jesse Chappell", freqtweak_version));
+		
+		wxMessageBox(msg, "About FreqTweak", wxOK | wxICON_INFORMATION, this);
+	}
+	else if (event.GetId() == FT_HelpTipsMenu)
+	{
+		FThelpWindow *helpwin = new FThelpWindow(this, -1, "Usage Tips");
+		helpwin->Show(true);
+	}
 }
 
 
@@ -2819,7 +2835,6 @@ void FTmainwin::checkEvents()
 
 void FTmainwin::updatePlot (int plotid)
 {
-	
 	FTspectralEngine *engine = _processPath[plotid]->getSpectralEngine();
 	
 	if (_inspecSash->IsShown()) {
@@ -2977,7 +2992,7 @@ void FTmainwin::suspendProcessing()
 	
 	//printf ("suspended before sleep\n");
 	
-	wxThread::Sleep(150); // sleep to let the process callback get around to the beginning
+	wxThread::Sleep(250); // sleep to let the process callback get around to the beginning
 	//printf ("suspended after sleep\n");
 
 }

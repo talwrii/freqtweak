@@ -25,13 +25,6 @@
 #include <config.h>
 #endif
 
-
-#ifdef HAVE_SRFFTW_H
-#include <srfftw.h>
-#else
-#include <rfftw.h>
-#endif
-
 #include "FTtypes.hpp"
 
 #include "xml++.hpp"
@@ -42,6 +35,14 @@
 #include <string>
 using namespace std;
 
+
+// Limit a value to be l<=v<=u
+#define LIMIT(v,l,u) ((v)<(l)?(l):((v)>(u)?(u):(v)))
+
+// to handle denormals
+#define FLUSH_TO_ZERO(fv) (((*(unsigned int*)&(fv))&0x7f800000)==0)?0.0f:(fv)
+
+typedef float fft_data;
 
 #include "FTspectrumModifier.hpp"
 
@@ -57,7 +58,7 @@ class FTprocI
 	
 	virtual void initialize() = 0;
 	
-	virtual void process (fftw_real *data, unsigned int fftn) = 0;
+	virtual void process (fft_data *data, unsigned int fftn) = 0;
 
 	virtual void setBypassed (bool flag);
 
@@ -100,7 +101,9 @@ class FTprocI
 
 	virtual void setName (const string & name) { _name = name; }
 	virtual const string & getName() { return _name; }
-	
+
+	virtual const string & getConfName() { return _confname; }
+
 	virtual void setMaxDelay(float secs) {}
 	
 	virtual void reset() {}
@@ -121,7 +124,7 @@ class FTprocI
 
 	int _id;
 	string _name;
-
+	string _confname;
 };
 
 

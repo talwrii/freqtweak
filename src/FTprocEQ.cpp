@@ -21,14 +21,15 @@
 
 
 FTprocEQ::FTprocEQ (nframes_t samprate, unsigned int fftn)
-	: FTprocI("EQ", samprate, fftn)
+	: FTprocI("EQ Cut", samprate, fftn)
 {
+	_confname = "EQ";
 }
 
 FTprocEQ::FTprocEQ (const FTprocEQ & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)	
 {
-	
+	_confname = "EQ";
 }
 
 void FTprocEQ::initialize()
@@ -51,7 +52,7 @@ FTprocEQ::~FTprocEQ()
 	delete _eqfilter;
 }
 
-void FTprocEQ::process (fftw_real *data, unsigned int fftn)
+void FTprocEQ::process (fft_data *data, unsigned int fftn)
 {
 	if (!_inited || _eqfilter->getBypassed()) {
 		return;

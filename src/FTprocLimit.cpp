@@ -27,13 +27,14 @@ FTprocLimit::FTprocLimit (nframes_t samprate, unsigned int fftn)
 	  , _dbAdjust(-48.0)
 	  
 {
+	_confname = "Limit";
 }
 
 FTprocLimit::FTprocLimit (const FTprocLimit & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)	
 	  , _dbAdjust(-48.0)
 {
-	
+	_confname = "Limit";
 }
 
 void FTprocLimit::initialize()
@@ -56,7 +57,7 @@ FTprocLimit::~FTprocLimit()
 	delete _threshfilter;
 }
 
-void FTprocLimit::process (fftw_real *data, unsigned int fftn)
+void FTprocLimit::process (fft_data *data, unsigned int fftn)
 {
 	if (!_inited || _threshfilter->getBypassed()) {
 		return;

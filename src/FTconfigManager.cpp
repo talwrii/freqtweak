@@ -197,7 +197,7 @@ bool FTconfigManager::storeSettings (const char * name, bool uselast)
 
 			XMLNode * pmNode = procmodsNode->add_child ("ProcMod");
 			pmNode->add_property ("pos", wxString::Format("%d", n).c_str());
-			pmNode->add_property ("name", pm->getName());
+			pmNode->add_property ("name", pm->getConfName());
 			
 			for (unsigned int m=0; m < filts.size(); ++m)
 			{
@@ -509,7 +509,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 			string pmname = prop->value();
 
 			// construct new procmod
-			FTprocI * procmod = FTdspManager::instance()->getModuleByName(pmname);
+			FTprocI * procmod = FTdspManager::instance()->getModuleByConfigName(pmname);
 			if (!procmod) {
 				fprintf (stderr, "no proc module '%s' supported\n", pmname.c_str()); 
 				continue;

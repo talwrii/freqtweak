@@ -63,7 +63,6 @@ FTdspManager::FTdspManager()
 	procmod = new FTprocCompressor (samprate, fftn);
  	_prototypes.push_back (procmod);
 
-	
 }
 
 FTdspManager::~FTdspManager()
@@ -90,6 +89,18 @@ FTprocI * FTdspManager::getModuleByName (const string & name)
 {
 	for (ModuleList::iterator iter = _prototypes.begin(); iter != _prototypes.end(); ++iter) {
 		if ((*iter)->getName() == name) {
+			return (*iter);
+		}
+	}
+
+	return 0;
+}
+
+
+FTprocI * FTdspManager::getModuleByConfigName (const string & name)
+{
+	for (ModuleList::iterator iter = _prototypes.begin(); iter != _prototypes.end(); ++iter) {
+		if ((*iter)->getConfName() == name) {
 			return (*iter);
 		}
 	}

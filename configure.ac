@@ -159,8 +159,27 @@ AC_ARG_WITH(fftw,[  --with-fftw=PFX        Prefix where fftw is installed (optio
  fftw_prefix="$withval", fftw_prefix="/usr/local") 
 
 
+AC_ARG_WITH(fftw3,[  --with-fftw3        Try to use fftw3 if installed (yes by default)],
+ try_fftw3="$withval", fftw_prefix="yes") 
 
-if test "$use_fftw" = "yes"
+
+if test "x$try_fftw3" != "xno"
+then
+   # try fftw3 first
+   #PKG_CHECK_MODULES(FFTW, fftw3f >= 3.0, [AC_DEFINE(USING_FFTW3, [1], [Using FFTW3])] , [AC_DEFINE(USING_FFTW3, [0], [Using FFTW3])] )
+   PKG_CHECK_MODULES(FFTW, fftw3f >= 3.0, have_fftw3=yes , have_fftw3=no )
+fi
+
+if test "x$have_fftw3" = "xyes"
+then
+
+   AC_DEFINE(USING_FFTW3, [1], [Using FFTW3])
+
+else
+  # no fftw3
+
+
+if test "x$use_fftw" = "xyes"
 then
 
 LDFLAGS="$LDFLAGS -L$fftw_prefix/lib -lm"
@@ -240,6 +259,8 @@ fi
 rm -f ./mytest ./mytest.$ac_ext
 
 fi
+
+fi
 # end fftw section
 
 
@@ -266,14 +287,14 @@ AC_PATH_PROG(WX_CONFIG, wx-config, no, $PATH:/usr/local/bin )
 if [[ "$WX_CONFIG" = "no" ]] ; then
         AC_MSG_ERROR("Could not find wx-config: is wxWindows installed? is wx-config in your path?")
 fi
-LIBS="$LIBS `$WX_CONFIG --libs`"
+WX_LIBS="`$WX_CONFIG --libs`"
 
 #CPPFLAGS="$CPPFLAGS `$WX_CONFIG --cxxflags`"
 
 if $WX_CONFIG --cxxflags > /dev/null 2>&1 ; then
-    CPPFLAGS="$CPPFLAGS `$WX_CONFIG --cxxflags`"
+    WX_CFLAGS="`$WX_CONFIG --cxxflags`"
 else
-    CPPFLAGS="$CPPFLAGS `$WX_CONFIG --cflags`"
+    WX_CFLAGS="`$WX_CONFIG --cflags`"
 fi
 #wx_config_major_version=`$WX_CONFIG  --version | \
 #           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
@@ -285,6 +306,29 @@ fi
 
 #UNAME_MACHINE=`uname -m`
 #CXXFLAGS="$JACK_CFLAGS  -g -Wall -O3 -fomit-frame-pointer -fstrength-reduce -funroll-loops -fmove-all-movables -ffast-math -mcpu=${UNAME_MACHINE} -march=${UNAME_MACHINE}"
+
+AC_ARG_ENABLE(debug,
+      [  --enable-debug    not optimized and includes debug symbols],
+      [ if test "x$enable_debug" != "xno" ; then
+	  CXXFLAGS="-g -Wall -D_REENTRANT $FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS"
+	  CFLAGS="$CXXFLAGS"
+        else
+	  CXXFLAGS="$FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS -Wall -D_REENTRANT $ARCH_CFLAGS"
+	  CFLAGS="$CXXFLAGS"
+	fi
+      ],
+	[
+	  CXXFLAGS="$FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS -Wall -D_REENTRANT $ARCH_CFLAGS"
+	  CFLAGS="$CXXFLAGS"
+        ]
+)
+
+#CFLAGS="$CPPFLAGS $FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS -Wall -D_REENTRANT $ARCH_CFLAGS"
+#CXXFLAGS="$CFLAGS"
+
+#CXXFLAGS="-g -Wall $FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS"
+
+LIBS="$LIBS $FFTW_LIBS $JACK_LIBS $WX_LIBS $XML_LIBS"
 
 
 AC_SUBST(FREQTWEAK_MAJOR_VERSION)

@@ -8,5 +8,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST = autogen.sh configure ft_preset_convert.py
+EXTRA_DIST = autogen.sh configure ft_preset_convert.py freqtweak.1
 SUBDIRS =  src
+
+
+man_MANS = freqtweak.1

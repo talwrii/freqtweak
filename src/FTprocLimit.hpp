@@ -35,7 +35,7 @@ class FTprocLimit
 	FTprocI * clone() { return new FTprocLimit(*this); }
 	void initialize();
 	
-	void process (fftw_real *data,  unsigned int fftn);
+	void process (fft_data *data,  unsigned int fftn);
 
 	virtual bool useAsDefault() { return false; }
 	

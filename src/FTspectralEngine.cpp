@@ -22,6 +22,11 @@
 #endif
 
 
+#if USING_FFTW3
+
+#include <fftw3.h>
+
+#else
 
 #ifdef HAVE_SFFTW_H
 #include <sfftw.h>
@@ -35,6 +40,7 @@
 #include <rfftw.h>
 #endif
 
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,27 +80,45 @@ FTspectralEngine::FTspectralEngine()
 	  , _id(0), _updateToken(0), _maxDelay(2.5)
 	, _currInAvgIndex(0), _currOutAvgIndex(0), _avgReady(false)
 {
-	_inwork = new fftw_real [FT_MAX_FFT_SIZE];
-	_outwork = new fftw_real [FT_MAX_FFT_SIZE];
-	_winwork = new fftw_real [FT_MAX_FFT_SIZE];
-
+	// one time allocations, why?  because mysterious crash occurs when
+	// when reallocating them
 	
-	_accum = new fftw_real [2 * FT_MAX_FFT_SIZE];
+	_inputPowerSpectra = new fft_data [FT_MAX_FFT_SIZE_HALF];
+        _outputPowerSpectra = new fft_data [FT_MAX_FFT_SIZE_HALF];
+	memset((char *) _inputPowerSpectra, 0, FT_MAX_FFT_SIZE_HALF*sizeof(fft_data));
+	memset((char *) _outputPowerSpectra, 0, FT_MAX_FFT_SIZE_HALF*sizeof(fft_data));
 
-	memset((char *) _accum, 0, 2*FT_MAX_FFT_SIZE*sizeof(fftw_real));
-	memset((char *) _inwork, 0, FT_MAX_FFT_SIZE*sizeof(fftw_real));
+	_runningInputPower = new fft_data [FT_MAX_FFT_SIZE_HALF];
+	_runningOutputPower = new fft_data [FT_MAX_FFT_SIZE_HALF];
+	memset((char *) _runningOutputPower, 0, FT_MAX_FFT_SIZE_HALF*sizeof(fft_data));
+	memset((char *) _runningInputPower, 0, FT_MAX_FFT_SIZE_HALF*sizeof(fft_data));
 
-	
-	_inputPowerSpectra = new fftw_real [FT_MAX_FFT_SIZE/2];
-        _outputPowerSpectra = new fftw_real [FT_MAX_FFT_SIZE/2];
 
-	_runningInputPower = new fftw_real [FT_MAX_FFT_SIZE/2];
-	_runningOutputPower = new fftw_real [FT_MAX_FFT_SIZE/2];
-	
-	
+	initState();
+}
+
+void FTspectralEngine::initState()
+{
+	_inwork = new fft_data [_fftN];
+	_accum = new fft_data [2 * _fftN];
+
+	memset((char *) _accum, 0, 2*_fftN*sizeof(fft_data));
+	memset((char *) _inwork, 0, _fftN*sizeof(fft_data));
+
+		
+#if USING_FFTW3
+	_outwork = (fft_data *) fftwf_malloc(sizeof(fft_data) * _fftN);
+ 	_winwork = (fft_data *) fftwf_malloc(sizeof(fft_data) * _fftN);
+
+	_fftPlan  = fftwf_plan_r2r_1d(_fftN, _winwork, _outwork, FFTW_R2HC, FFTW_ESTIMATE);
+	_ifftPlan = fftwf_plan_r2r_1d(_fftN, _outwork, _winwork, FFTW_HC2R, FFTW_ESTIMATE);
+#else
+	_outwork = new fft_data [_fftN];
+	_winwork = new fft_data [_fftN];
+
 	_fftPlan = rfftw_create_plan(_fftN, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);		
 	_ifftPlan = rfftw_create_plan(_fftN, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);		
-
+#endif
 	_sampleRate = FTioSupport::instance()->getSampleRate();
 
 	// window init
@@ -102,25 +126,25 @@ FTspectralEngine::FTspectralEngine()
 
 
 	_averages = (int) (_oversamp * _updateSpeed * 512/(float)_fftN); // magic?
+	if (_averages == 0) _averages = 1;
+
+	// reset averages
+	_currInAvgIndex = 0;
+	_currOutAvgIndex = 0;
+	_avgReady = false;
 	
+	for (vector<FTprocI*>::iterator iter = _procModules.begin();
+	     iter != _procModules.end(); ++iter)
+	{
+		(*iter)->reset();
+	}
 }
 
-FTspectralEngine::~FTspectralEngine()
+void FTspectralEngine::destroyState()
 {
-	delete [] _inwork;
-	delete [] _outwork;
-	delete [] _winwork;
 
-	
-	delete [] _accum;
-
-	
-	delete [] _inputPowerSpectra;
-        delete [] _outputPowerSpectra;
-
-	delete [] _runningInputPower;
-	delete [] _runningOutputPower;
-	
+ 	delete [] _inwork;
+ 	delete [] _accum;
 	
 
 	// destroy window vectors
@@ -129,17 +153,33 @@ FTspectralEngine::~FTspectralEngine()
 		delete [] _mWindows[i];
 	}
 	
+#if USING_FFTW3
+	
+	fftwf_destroy_plan (_fftPlan);
+	fftwf_destroy_plan (_ifftPlan);
+
+	fftwf_free (_winwork);
+	fftwf_free (_outwork);
+
+#else
+
+	rfftw_destroy_plan (_fftPlan);
+	rfftw_destroy_plan (_ifftPlan);
+	delete [] _outwork;
+	delete [] _winwork;
+
+#endif
+}
+
+FTspectralEngine::~FTspectralEngine()
+{
+	destroyState();
 
 	for (vector<FTprocI*>::iterator iter = _procModules.begin();
 	     iter != _procModules.end(); ++iter)
 	{
 		delete (*iter);
 	}
-	
-	rfftw_destroy_plan (_fftPlan);
-	rfftw_destroy_plan (_ifftPlan);
-	
-	
 }
 
 
@@ -275,24 +315,20 @@ void FTspectralEngine::setFFTsize (FTspectralEngine::FFT_Size sz)
 {
 	// THIS MUST NOT BE CALLED WHILE WE ARE ACTIVATED!
 	
-	if ((int) sz != _fftN) {
-		_newfftN = sz;
-		_fftnChanged = false;
+	if ((int) sz != _fftN)
+	{
+		_fftN = sz;
 
-		_averages = (int) (_oversamp * _updateSpeed * 512/(float)_newfftN); // magic?
-
-		if (_averages == 0) _averages = 1;
-		
-		// change these now
+		// change these first
 		for (vector<FTprocI*>::iterator iter = _procModules.begin();
 		     iter != _procModules.end(); ++iter)
 		{
-			(*iter)->setFFTsize (_newfftN);
+			(*iter)->setFFTsize (_fftN);
 		}
 
-		reinitPlan(0);
+		destroyState();
+		initState();
 	}
-
 }
 
 void FTspectralEngine::setOversamp (int osamp)
@@ -348,38 +384,6 @@ void FTspectralEngine::setMaxDelay(float secs)
 	
 }
 
-void FTspectralEngine::reinitPlan(FTprocessPath *procpath)
-{
-
-	// destroy current plan
-	_fftN = _newfftN;
-	rfftw_destroy_plan (_fftPlan);
-	rfftw_destroy_plan (_ifftPlan);
-	_fftPlan = rfftw_create_plan(_fftN, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);		
-	_ifftPlan = rfftw_create_plan(_fftN, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);		
-	
-	createWindowVectors(true);
-
-	// reset averages
-	memset(_runningOutputPower, 0, _fftN * sizeof(float));
-	memset(_runningInputPower, 0, _fftN * sizeof(float));
-	_currInAvgIndex = 0;
-	_currOutAvgIndex = 0;
-	_avgReady = false;
-	
-	//procpath->getInputFifo()->reset();
-	//procpath->getOutputFifo()->reset();
-
-	for (vector<FTprocI*>::iterator iter = _procModules.begin();
-	     iter != _procModules.end(); ++iter)
-	{
-		(*iter)->reset();
-	}
-	
-	memset((char *) _accum, 0, 2* _fftN * sizeof(fftw_real));
-	memset((char *) _inwork, 0, _fftN * sizeof(fftw_real));
-
-}
 
 nframes_t FTspectralEngine::getLatency()
 {
@@ -401,12 +405,11 @@ void FTspectralEngine::processNow (FTprocessPath *procpath)
         int latency = _fftN - step_size;
 	float * win = _mWindows[_windowing];
 
-	
 
 	// do we have enough data for next frame (oversampled)?
 	while (procpath->getInputFifo()->read_space() >= (step_size * sizeof(sample_t)))
 	{
-		//printf ("processing spectral sizeof sample = %d  fftw_real = %d\n", sizeof(sample_t), sizeof(fftw_real));
+		//printf ("processing spectral sizeof sample = %d  fft_data = %d\n", sizeof(sample_t), sizeof(fftw_real));
 		
 		// copy data into fft work buf
 		procpath->getInputFifo()->read ( (char *) (&_inwork[latency]), step_size * sizeof(sample_t) );
@@ -419,38 +422,43 @@ void FTspectralEngine::processNow (FTprocessPath *procpath)
 			_winwork[i] = _inwork[i] * win[i] * _inputGain; 
 		}
 
-		
+#if USING_FFTW3
+		// do forward real FFT
+		fftwf_execute(_fftPlan);
+#else
 		// do forward real FFT
 		rfftw_one(_fftPlan, _winwork, _outwork);
-
+#endif
 		// compute running mag^2 buffer for input
 		computeAverageInputPower (_outwork);
 
 
 		// do processing in order with each processing module
-		fftw_real * tempin = _outwork;
-		fftw_real * tempout = _winwork;
 		
 		for (vector<FTprocI*>::iterator iter = _procModules.begin();
 		     iter != _procModules.end(); ++iter)
 		{
 			// do it in place
-			(*iter)->process (tempin,  _fftN);
+			(*iter)->process (_outwork,  _fftN);
 
 		}
 		// at the end the good data is in tempin
 		
 		// compute running mag^2 buffer for output
-		computeAverageOutputPower (tempin);
+		computeAverageOutputPower (_outwork);
 
-		
+#if USING_FFTW3
 		// do reverse FFT
-		rfftw_one(_ifftPlan, tempin, tempout);
+		fftwf_execute(_ifftPlan);
+#else
+		// do reverse FFT
+		rfftw_one(_ifftPlan, _outwork, _winwork);
+#endif
 
 		// the output is scaled by fftN, we need to normalize it and window it
 		for ( i=0; i < _fftN; i++)
 		{
-			_accum[i] += _mixRatio * 4.0f * win[i] * tempout[i] / ((float)_fftN * osamp);
+			_accum[i] += _mixRatio * 4.0f * win[i] * _winwork[i] / ((float)_fftN * osamp);
 		}
 
 		// mix in dry only if necessary
@@ -485,7 +493,7 @@ void FTspectralEngine::processNow (FTprocessPath *procpath)
 
 
 
-void FTspectralEngine::computeAverageInputPower (fftw_real *fftbuf)
+void FTspectralEngine::computeAverageInputPower (fft_data *fftbuf)
 {
 	float power;
 	int fftn2 = (_fftN+1) / 2;
@@ -526,7 +534,7 @@ void FTspectralEngine::computeAverageInputPower (fftw_real *fftbuf)
 	
 }
 
-void FTspectralEngine::computeAverageOutputPower (fftw_real *fftbuf)
+void FTspectralEngine::computeAverageOutputPower (fft_data *fftbuf)
 {
 	float power;
 	int fftn2 = (_fftN+1) / 2;
@@ -586,7 +594,7 @@ void FTspectralEngine::createWindowVectors (bool noalloc)
 	    // allocate vectors
 	    for(i = 0; i < NUM_WINDOWS; i++)
 	    {
-		    _mWindows[i] = new float[FT_MAX_FFT_SIZE];
+		    _mWindows[i] = new float[_fftN];
 	    }
     }
     
@@ -604,7 +612,7 @@ void FTspectralEngine::createRectangleWindow ()
     int i;
     ///////////////////////////////////////////////////////////////////////////
     
-    for(i = 0; i < FT_MAX_FFT_SIZE; i++)
+    for(i = 0; i < _fftN; i++)
     {
 	_mWindows[WINDOW_RECTANGLE][i] = 0.5;
     }

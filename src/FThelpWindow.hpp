@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2003 Jesse Chappell <jesse@essej.net>
+** Copyright (C) 2002 Jesse Chappell <jesse@essej.net>
 **  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,32 +17,38 @@
 **  
 */
 
-#ifndef __FTPROCBOOST_HPP__
-#define __FTPROCBOOST_HPP__
+#ifndef __FTHELPWIN_HPP__
+#define __FTHELPWIN_HPP__
 
-#include "FTprocI.hpp"
+#include <wx/wx.h>
+#include <wx/html/htmlwin.h>
 
-class FTprocBoost
-	: public FTprocI
+#include "FTtypes.hpp"
+
+#include <vector>
+#include <string>
+using namespace std;
+
+
+class FThelpWindow
+	: public wxFrame
 {
   public:
 
-	FTprocBoost(nframes_t samprate, unsigned int fftn);
-	FTprocBoost (const FTprocBoost & other);
+	FThelpWindow(wxWindow * parent, wxWindowID id, const wxString & title,
+		     const wxPoint& pos = wxDefaultPosition,
+		     const wxSize& size = wxSize(400,600),
+		     long style = wxDEFAULT_FRAME_STYLE,
+		     const wxString& name = "HelpWin");
 
-	virtual ~FTprocBoost();
-
-	FTprocI * clone() { return new FTprocBoost(*this); }
-	void initialize();
+	virtual ~FThelpWindow();
 	
-	void process (fft_data *data,  unsigned int fftn);
 
-	virtual bool useAsDefault() { return false; }
-	
   protected:
 
-	FTspectrumModifier * _eqfilter;
+	void init();
 
+	wxHtmlWindow * _htmlWin;
 };
 
 #endif

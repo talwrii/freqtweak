@@ -21,14 +21,15 @@
 
 
 FTprocBoost::FTprocBoost (nframes_t samprate, unsigned int fftn)
-	: FTprocI("Boost", samprate, fftn)
+	: FTprocI("EQ Boost", samprate, fftn)
 {
+	_confname = "Boost";
 }
 
 FTprocBoost::FTprocBoost (const FTprocBoost & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)	
 {
-	
+	_confname = "Boost";
 }
 
 void FTprocBoost::initialize()
@@ -51,7 +52,7 @@ FTprocBoost::~FTprocBoost()
 	delete _eqfilter;
 }
 
-void FTprocBoost::process (fftw_real *data, unsigned int fftn)
+void FTprocBoost::process (fft_data *data, unsigned int fftn)
 {
 	if (!_inited || _eqfilter->getBypassed()) {
 		return;

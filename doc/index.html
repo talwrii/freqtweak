@@ -205,7 +205,18 @@
 		This is very harsh brick wall limiter on a per-bin
 		basis.  It is not very pleasant, but can be interesting.
 		</font>
-		
+
+	      <li> <b>Compressor</b> -- <font size=-1>
+			  This is a massively multiband compressor.
+			  It will not behave quite like a normal
+			  time-domain compressor because of the
+			  inherent block processing of the FFT.  Each
+			  frequency bin has its own compressor
+			  complete with Threshold, Ratio,
+			  Attack/Release time, and makeup gain.
+			  This is *not* suitable for mastering applications!
+			</font>
+			
 	      <li> <b>Warp</b> -- <font size=-1>
 		  This one is a little different, both axes represent
 		  frequency, and the identity matrix is unaltered
@@ -217,7 +228,9 @@
 		  is a sensitive filter, the Log frequency scale is helpful here
 		  (it affects both axes).
 		  </font>
-	    </ul>
+			
+
+		    </ul>
 		  </td>
 		</tr>  
 	    </table>
@@ -367,13 +380,13 @@
 	  at <a
 	    href="mailto:freqtweak-user@lists.sourceforge.net">freqtweak-user@lists.sourceforge.net</a>
 	  <p>
-	    Created by <b>Jesse Chappell  &lt;jesse@essej.net&gt;</b>
+	    Created by <b>Jesse Chappell  &lt;jesse at essej dot net&gt;</b>
 
 <p>
 	      <font size=-1>
 	    <!-- Created: Wed Oct  9 17:02:31 EDT 2002 -->
 	    <!-- hhmts start -->
-Last modified: Thu Jul 17 09:17:06 EDT 2003
+Last modified: Tue Aug 19 23:54:39 EDT 2003
 <!-- hhmts end -->
 </font>
 	    <p>

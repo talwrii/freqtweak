@@ -42,6 +42,7 @@ class FTdspManager
 	void getAvailableModules (ModuleList & outlist);
 
 	FTprocI * getModuleByName (const string & name);
+	FTprocI * getModuleByConfigName (const string & name);
 	
    protected:
 

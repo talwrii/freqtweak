@@ -5,6 +5,14 @@ See the end for copying conditions.
 
 Please send freqtweak bug reports to freqtweak-user@lists.sourceforge.net
 
+Version 0.5.2
+ * fixed dialog closing problem, made them real windows
+ * fixed compile problems for gcc 2.96
+ * added Compressor module
+ * added EQ Boost module
+ * now supports FFTW3
+ * manpage contributed by Enrique Arnuncio
+
 Version 0.5.1
  * fixed terrible preset loading bug (when fft size was other than default)
 

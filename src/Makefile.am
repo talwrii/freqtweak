@@ -12,13 +12,13 @@
 COMMON_FLAGS =  -Wall -D_REENTRANT \
 		 @ARCH_CFLAGS@
 
-AM_CXXFLAGS = $(COMMON_FLAGS) $(EXTRA_CFLAGS) $(JACK_CFLAGS) @XML_CFLAGS@
+#AM_CXXFLAGS = $(COMMON_FLAGS) $(EXTRA_CFLAGS) $(JACK_CFLAGS) $(FFTW_CFLAGS) @XML_CFLAGS@
 
-AM_CFLAGS = $(AM_CXXFLAGS)
+#AM_CFLAGS = $(AM_CXXFLAGS)
 
 EXTRA_DIST = ftlogo.xpm
 
-freqtweak_LDADD = @JACK_LIBS@ @XML_LIBS@
+#freqtweak_LDADD = @JACK_LIBS@ @XML_LIBS@
 
 
 bin_PROGRAMS = freqtweak
@@ -79,7 +79,9 @@ freqtweak_SOURCES = \
 	FTprocCompressor.cpp \
 	FTprocCompressor.hpp \
 	FTprocBoost.cpp \
-	FTprocBoost.hpp
+	FTprocBoost.hpp \
+	FThelpWindow.cpp \
+	FThelpWindow.hpp
 
 
 

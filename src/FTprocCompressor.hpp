@@ -46,9 +46,10 @@ class FTprocCompressor
 	FTprocI * clone() { return new FTprocCompressor(*this); }
 	void initialize();
 	
-	void process (fftw_real *data,  unsigned int fftn);
+	void process (fft_data *data,  unsigned int fftn);
 
 	virtual void setFFTsize (unsigned int fftn);
+	virtual void setOversamp (int osamp);
 
 	virtual bool useAsDefault() { return false; }
 

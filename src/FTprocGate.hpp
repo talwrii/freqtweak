@@ -34,7 +34,7 @@ class FTprocGate
 	FTprocI * clone() { return new FTprocGate(*this); }
 	void initialize();
 	
-	void process (fftw_real *data, unsigned int fftn);
+	void process (fft_data *data, unsigned int fftn);
 
 	
   protected:

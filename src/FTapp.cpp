@@ -49,13 +49,6 @@
 #include "FTprocessPath.hpp"
 
 
-#ifdef HAVE_SFFTW_H
-#include <sfftw.h>
-#else
-#include <fftw.h>
-#endif
-
-
 // Create a new application object: this macro will allow wxWindows to create
 // the application object during program execution (it's better than using a
 // static object for many reasons) and also declares the accessor function
@@ -218,7 +211,7 @@ bool FTapp::OnInit()
 	setupSignals();
 
 	
-	if (sizeof(sample_t) != sizeof(fftw_real)) {
+	if (sizeof(sample_t) != sizeof(float)) {
 		fprintf(stderr, "FFTW Mismatch!  You need to build FreqTweak against a single-precision\n");
 		fprintf(stderr, "  FFTW library.  See the INSTALL file for instructions.\n");  		
 		return FALSE;

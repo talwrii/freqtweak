@@ -35,7 +35,7 @@ class FTprocWarp
 	FTprocI * clone() { return new FTprocWarp(*this); }
 	void initialize();
 	
-	void process (fftw_real *data,  unsigned int fftn);
+	void process (fft_data *data,  unsigned int fftn);
 
 	void setFFTsize (unsigned int fftn);
 	
@@ -45,7 +45,7 @@ class FTprocWarp
 
 	FTspectrumModifier * _filter;
 
-	fftw_real *_tmpdata;
+	fft_data *_tmpdata;
 	
 };
 

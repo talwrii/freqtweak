@@ -24,7 +24,7 @@ FTprocDelay::FTprocDelay (nframes_t samprate, unsigned int fftn)
 	: FTprocI("Delay", samprate, fftn),
 	  _delayFilter(0), _feedbackFilter(0), _frameFifo(0), _maxDelay(2.5)
 {
-
+	_confname = "Delay";
 }
 
 FTprocDelay::FTprocDelay (const FTprocDelay & other)
@@ -32,7 +32,7 @@ FTprocDelay::FTprocDelay (const FTprocDelay & other)
 	_delayFilter(0), _feedbackFilter(0), _frameFifo(0), _maxDelay(2.5)
 
 {
-	
+	_confname = "Delay";
 }
 
 void FTprocDelay::initialize()
@@ -92,7 +92,7 @@ void FTprocDelay::setMaxDelay(float secs)
 	//printf ("using %lu for maxsamples\n", maxsamples);
 
 	// this is a big boy containing the frequency data frames over time
-	_frameFifo = new RingBuffer( maxsamples * sizeof(fftw_real) );
+	_frameFifo = new RingBuffer( maxsamples * sizeof(fft_data) );
 
 	// adjust time filter
 	if (_delayFilter) {
@@ -102,15 +102,15 @@ void FTprocDelay::setMaxDelay(float secs)
 }
 
 
-void FTprocDelay::process (fftw_real *data, unsigned int fftn)
+void FTprocDelay::process (fft_data *data, unsigned int fftn)
 {
 	if (!_inited) return;
 	
 	if (_delayFilter->getBypassed())
 	{
-		_frameFifo->write ( (char *) data, sizeof(fftw_real) * fftn);
+		_frameFifo->write ( (char *) data, sizeof(fft_data) * fftn);
 
-		_frameFifo->read( (char *) data, sizeof(fftw_real) * fftn);
+		_frameFifo->read( (char *) data, sizeof(fft_data) * fftn);
 		
 		// RETURNS HERE
 		return;
@@ -192,11 +192,11 @@ void FTprocDelay::process (fftw_real *data, unsigned int fftn)
 	}
 	
 	// advance it
-	_frameFifo->write_advance(fftn * sizeof(fftw_real));
+	_frameFifo->write_advance(fftn * sizeof(fft_data));
 	
-	//_frameFifo->write ( (char *) data, sizeof(fftw_real) * fftn);
+	//_frameFifo->write ( (char *) data, sizeof(fft_data) * fftn);
 
 	// read data into output
-	_frameFifo->read( (char *) data, sizeof(fftw_real) * fftn);
+	_frameFifo->read( (char *) data, sizeof(fft_data) * fftn);
 
 }

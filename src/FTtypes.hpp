@@ -26,6 +26,7 @@
 typedef jack_default_audio_sample_t sample_t;
 typedef jack_nframes_t nframes_t;
 
+
 #define FT_MAXPATHS 4
 
 #define FT_FIFOLENGTH (1 << 18)
@@ -49,7 +50,9 @@ enum SpecModType {
 	WARP_SPECMOD,
 	EXPAND_SPECMOD,
 	COMPRESS_SPECMOD,
-	BOOST_SPECMOD
+	BOOST_SPECMOD,
+	RESCUT_SPECMOD,
+	RESCUTEQ_SPECMOD
 };
 
 

@@ -26,7 +26,7 @@
 
 
 FTprocI::FTprocI (const string & name, nframes_t samprate, unsigned int fftn)
-	: _sampleRate(samprate), _fftN(fftn), _inited(false), _name(name)
+	: _sampleRate(samprate), _fftN(fftn), _inited(false), _name(name), _confname(name)
 {
 }
 

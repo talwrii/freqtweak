@@ -25,13 +25,14 @@ FTprocGate::FTprocGate (nframes_t samprate, unsigned int fftn)
 	  , _dbAdjust(-37.0)
 	
 {
+	_confname = "Gate";
 }
 
 FTprocGate::FTprocGate (const FTprocGate & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)
 	  , _dbAdjust(other._dbAdjust)
 {
-	
+	_confname = "Gate";
 }
 
 void FTprocGate::initialize()
@@ -62,7 +63,7 @@ FTprocGate::~FTprocGate()
 	delete _invfilter;
 }
 
-void FTprocGate::process (fftw_real *data, unsigned int fftn)
+void FTprocGate::process (fft_data *data, unsigned int fftn)
 {
 	if (!_inited || _filter->getBypassed()) {
 		return;

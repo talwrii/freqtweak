@@ -152,7 +152,7 @@ bool FTjackSupport::startProcessing()
 	}
 
 	_activated = true;
-	
+
 	return true;
 }
 

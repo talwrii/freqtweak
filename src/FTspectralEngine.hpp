@@ -24,11 +24,18 @@
 #include <config.h>
 #endif
 
+#if USING_FFTW3
+
+#include <fftw3.h>
+
+#else
 
 #ifdef HAVE_SRFFTW_H
 #include <srfftw.h>
 #else
 #include <rfftw.h>
+#endif
+
 #endif
 
 #include "FTutils.hpp"
@@ -37,6 +44,7 @@
 
 #include <vector>
 using namespace std;
+
 
 class FTprocessPath;
 class RingBuffer;
@@ -154,8 +162,8 @@ class FTspectralEngine
 protected:
 
 	
-	void computeAverageInputPower (fftw_real *fftbuf);
-	void computeAverageOutputPower (fftw_real *fftbuf);
+	void computeAverageInputPower (fft_data *fftbuf);
+	void computeAverageOutputPower (fft_data *fftbuf);
 	
 	void createWindowVectors(bool noalloc=false);   
 	void createRaisedCosineWindow();
@@ -164,9 +172,9 @@ protected:
 	void createHammingWindow();
 	void createBlackmanWindow();
 
-	void reinitPlan(FTprocessPath *procpath);
-
-
+	void initState();
+	void destroyState();
+	
 	static const int _windowStringCount;
 	static const char * _windowStrings[];
 	static const int _fftSizeCount;
@@ -181,23 +189,27 @@ protected:
 	int _oversamp;
 	int _maxAverages;
 	int _averages;
-	
+
+#ifdef USING_FFTW3
+	fftwf_plan _fftPlan;
+	fftwf_plan _ifftPlan;
+#else
 	rfftw_plan _fftPlan; // forward fft
 	rfftw_plan _ifftPlan; // inverse fft
-
+#endif
 
 	int _newfftN;
 	bool _fftnChanged;
 
 	// space for average input power buffer
 	// elements = _fftN/2 * MAX_AVERAGES * MAX_OVERSAMP 
-	fftw_real * _inputPowerSpectra;
-	fftw_real * _outputPowerSpectra;
+	fft_data * _inputPowerSpectra;
+	fft_data * _outputPowerSpectra;
 
 	// the current running avg power
 	// elements = _fftN/2
-	fftw_real * _runningInputPower;
-	fftw_real * _runningOutputPower;
+	fft_data * _runningInputPower;
+	fft_data * _runningOutputPower;
 
 	
 	nframes_t _sampleRate;
@@ -215,10 +227,10 @@ protected:
 	float _maxDelay;
 private:
 	
-	fftw_real *_inwork, *_outwork;
-	fftw_real *_winwork;
-	fftw_real *_accum;
-	fftw_real *_scaletemp;
+	fft_data *_inwork, *_outwork;
+	fft_data *_winwork;
+	fft_data *_accum;
+	fft_data *_scaletemp;
 	
 	// for windowing
 	float ** _mWindows;

@@ -25,13 +25,13 @@
 FTprocPitch::FTprocPitch (nframes_t samprate, unsigned int fftn)
 	: FTprocI("Pitch", samprate, fftn)
 {
-
+	_confname = "Pitch";
 }
 
 FTprocPitch::FTprocPitch (const FTprocPitch & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)
 {
-	
+	_confname = "Pitch";
 }
 
 void FTprocPitch::initialize()
@@ -69,7 +69,7 @@ FTprocPitch::~FTprocPitch()
 	delete _filter;
 }
 
-void FTprocPitch::process (fftw_real *data, unsigned int fftn)
+void FTprocPitch::process (fft_data *data, unsigned int fftn)
 {
  	if (!_inited || _filter->getBypassed()) {
  		return;

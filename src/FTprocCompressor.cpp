@@ -32,12 +32,6 @@ using namespace std;
 
 #define A_TBL 256
 
-// Limit a value to be l<=v<=u
-#define LIMIT(v,l,u) ((v)<(l)?(l):((v)>(u)?(u):(v)))
-
-// to handle denormals
-#define FLUSH_TO_ZERO(fv) (((*(unsigned int*)&(fv))&0x7f800000)==0)?0.0f:(fv)
-
 
 static inline float rms_env_process(rms_env *r, float x);
 
@@ -89,13 +83,14 @@ FTprocCompressor::FTprocCompressor (nframes_t samprate, unsigned int fftn)
 	  , _dbAdjust(12.0)
 	  
 {
+	_confname = "Compressor";
 }
 
 FTprocCompressor::FTprocCompressor (const FTprocCompressor & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)	
 	  , _dbAdjust(12.0)
 {
-	
+	_confname = "Compressor";
 }
 
 void FTprocCompressor::initialize()
@@ -149,11 +144,21 @@ void FTprocCompressor::initialize()
 	_as = new float[A_TBL];
 	_as[0] = 1.0f;
 	for (unsigned int i=1; i<A_TBL; i++) {
-		_as[i] = expf(-1.0f / ((_sampleRate/(4*(float)_fftN)) * (float)i / (float)A_TBL));
+		_as[i] = expf(-1.0f / ((_sampleRate/(_oversamp*(float)_fftN)) * (float)i / (float)A_TBL));
 	}
 	
 	_inited = true;
 }
+
+void FTprocCompressor::setOversamp (int osamp)
+{
+	FTprocI::setOversamp(osamp);
+	
+	for (unsigned int i=1; i<A_TBL; i++) {
+		_as[i] = expf(-1.0f / ((_sampleRate/(_oversamp*(float)_fftN)) * (float)i / (float)A_TBL));
+	}
+}
+
 
 void FTprocCompressor::setFFTsize (unsigned int fftn)
 {
@@ -219,7 +224,7 @@ FTprocCompressor::~FTprocCompressor()
 	delete _makeup_filter;
 }
 
-void FTprocCompressor::process (fftw_real *data, unsigned int fftn)
+void FTprocCompressor::process (fft_data *data, unsigned int fftn)
 {
 	if (!_inited || _thresh_filter->getBypassed()) {
 		return;
