@@ -20,6 +20,7 @@
 #include "FTmodShift.hpp"
 #include <cstdlib>
 #include <cstdio>
+#include <iostream>
 
 using namespace std;
 using namespace PBD;
@@ -40,9 +41,9 @@ void FTmodShift::initialize()
 {
 	_lastframe = 0;
 	
-	_rate = new Control (Control::FloatType, "Rate", "Units/sec");
-	_rate->_floatLB = -1000.0;
-	_rate->_floatUB = 1000.0;
+	_rate = new Control (Control::FloatType, "Rate", "Hz/sec");
+	_rate->_floatLB = -((float) _sampleRate);
+	_rate->_floatUB =  (float) _sampleRate;
 	_rate->setValue (0.0f);
 	_controls.push_back (_rate);
 
@@ -75,8 +76,6 @@ FTmodShift::~FTmodShift()
 {
 	if (!_inited) return;
 
-	// need a going away signal
-	
 	_controls.clear();
 
 	delete _rate;
@@ -109,20 +108,29 @@ void FTmodShift::modulate (nframes_t current_frame, fft_data * fftdata, unsigned
 	int i,j;
 	float minfreq, maxfreq;
 	int minbin, maxbin;
+	double hzperbin;
 	
+	// in hz/sec
 	_rate->getValue (rate);
+	
 	_minfreq->getValue (minfreq);
 	_maxfreq->getValue (maxfreq);
 
 	if (minfreq >= maxfreq) {
 		return;
 	}
+
+	hzperbin = _sampleRate / (double) fftn;
+
+	// shiftval (bins) = deltasamples / (samp/sec) * (hz/sec) / (hz/bins)
+
+	// bins = sec * hz/sec 
 	
-	int shiftval = (int) (((current_frame - _lastframe) / (double) _sampleRate) * rate);
-	
+	int shiftval = (int) (((current_frame - _lastframe) / (double) _sampleRate) * rate / hzperbin);
+
 	if (current_frame != _lastframe && shiftval != 0)
 	{
-		// fprintf (stderr, "randomize at %lu :  samps=%g  s*c=%g  s*e=%g \n", (unsigned long) current_frame, samps, (current_frame/samps), ((current_frame + nframes)/samps) );
+		// fprintf (stderr, "shift at %lu :  samps=%g  s*c=%g  s*e=%g \n", (unsigned long) current_frame, samps, (current_frame/samps), ((current_frame + nframes)/samps) );
 
 		
 		for (SpecModList::iterator iter = _specMods.begin(); iter != _specMods.end(); ++iter)
@@ -130,6 +138,11 @@ void FTmodShift::modulate (nframes_t current_frame, fft_data * fftdata, unsigned
 			FTspectrumModifier * sm = (*iter);
 			if (sm->getBypassed()) continue;
 
+			cerr << "shiftval is: " << shiftval
+			     << " hz/bin: " << hzperbin
+			     << " rate:   " << rate << endl;
+			
+			
 			filter = sm->getValues();
 			sm->getRange(lb, ub);
 			len = (int) sm->getLength();

@@ -2799,7 +2799,7 @@ void FTmainwin::OnModulatorDialog (wxCommandEvent &event)
 	// popup our modulator dialog
 	if (!_modulatorDialog) {
 		_modulatorDialog = new FTmodulatorDialog(this, -1, wxT("Modulations"));
-		_modulatorDialog->SetSize(500,350);
+		_modulatorDialog->SetSize(400,350);
 	}
 
 	//_modulatorDialog->refreshState();
@@ -2916,7 +2916,6 @@ void FTmainwin::updateGraphs(FTactiveBarGraph *exclude, SpecModType smtype, bool
 			vector<FTspectrumModifier *> filts;
 			pm->getFilters (filts);
 			int lastgroup = -1;
-			bool infirst = true;
 			
 			for (unsigned int m=0; m < filts.size(); ++m)
 			{
@@ -2927,26 +2926,15 @@ void FTmainwin::updateGraphs(FTactiveBarGraph *exclude, SpecModType smtype, bool
 				}
 
 				if (filts[m]->getGroup() == lastgroup) {
-					infirst = false;
-					if (!refreshonly) {
-						//cerr << "first will do" << endl;
-						rowcnt++;
-						continue; // first will do
-					}
+					continue; // first will do
 				}
-				else  {
-					infirst = true;
-				}
-				
 				lastgroup = filts[m]->getGroup();
 
 				// prevent too many updates
 				if ((!_rowSashes[rowcnt]->IsShown()) ||
 				    (refreshonly && !filts[m]->getDirty())) {
-					if (infirst) {
-						rowcnt++;
-					}
 					//cerr << "skipping " << filts[m]->getName() << " dirty: " << filts[m]->getDirty() << " refre: " << refreshonly<<  endl;
+					rowcnt++;
 					continue;
 				}
 				
@@ -2969,9 +2957,8 @@ void FTmainwin::updateGraphs(FTactiveBarGraph *exclude, SpecModType smtype, bool
 					//break;
 				}
 
-				if (infirst) {
-					rowcnt++;
-				}
+				rowcnt++;
+				
 			}
 			if (done) break;
 		}

@@ -42,10 +42,11 @@
 
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+#include <cmath>
+#include <algorithm>
 
 #include "FTtypes.hpp"
 #include "FTspectralEngine.hpp"
@@ -58,6 +59,7 @@
 #include "FTmodulatorI.hpp"
 
 using namespace PBD;
+using namespace std;
 
 const int FTspectralEngine::_windowStringCount = 4;
 const char * FTspectralEngine::_windowStrings[] = {
@@ -434,6 +436,8 @@ void FTspectralEngine::removeModulator (unsigned int index, bool destroy)
 
 void FTspectralEngine::removeModulator (FTmodulatorI * procmod, bool destroy)
 {
+	bool candel = false;
+
 	{
 		LockMonitor pmlock(_modulatorLock, __LINE__, __FILE__);
 		
@@ -443,17 +447,24 @@ void FTspectralEngine::removeModulator (FTmodulatorI * procmod, bool destroy)
 			if (procmod == *iter) {
 				
 				_modulators.erase(iter);
-
+				candel = true;
 				break;
 			}
 		}
 	}
 	
-	if (destroy) {
+	if (destroy && candel) {
 		delete procmod;
 	}
 }
 
+
+bool FTspectralEngine::hasModulator (FTmodulatorI * procmod)
+{
+	LockMonitor pmlock(_modulatorLock, __LINE__, __FILE__);
+
+	return (find(_modulators.begin(), _modulators.end(), procmod) != _modulators.end());
+}
 
 void FTspectralEngine::clearModulators (bool destroy)
 {

@@ -20,6 +20,7 @@
 #include "FTmodRandomize.hpp"
 #include <cstdlib>
 #include <cstdio>
+#include <iostream>
 
 using namespace std;
 using namespace PBD;
@@ -46,6 +47,31 @@ void FTmodRandomize::initialize()
 	_rate->setValue (0.0f);
 	_controls.push_back (_rate);
 
+	_minfreq = new Control (Control::FloatType, "Min Freq", "Hz");
+	_minfreq->_floatLB = 0.0;
+	_minfreq->_floatUB = _sampleRate / 2;
+	_minfreq->setValue (_minfreq->_floatLB);
+	_controls.push_back (_minfreq);
+
+	_maxfreq = new Control (Control::FloatType, "Max Freq", "Hz");
+	_maxfreq->_floatLB = 0.0;
+	_maxfreq->_floatUB = _sampleRate / 2;
+	_maxfreq->setValue (_maxfreq->_floatUB);
+	_controls.push_back (_maxfreq);
+
+	_minval = new Control (Control::FloatType, "Min Val", "%");
+	_minval->_floatLB = 0.0;
+	_minval->_floatUB = 100.0;
+	_minval->setValue (_minval->_floatLB);
+	_controls.push_back (_minval);
+
+	_maxval = new Control (Control::FloatType, "Max Val", "%");
+	_maxval->_floatLB = 0.0;
+	_maxval->_floatUB = 100.0;
+	_maxval->setValue (_maxval->_floatUB);
+	_controls.push_back (_maxval);
+	
+	
 	srand(0);
 	
 	_inited = true;
@@ -55,11 +81,14 @@ FTmodRandomize::~FTmodRandomize()
 {
 	if (!_inited) return;
 
-	// need a going away signal
-	
 	_controls.clear();
 
 	delete _rate;
+	delete _minfreq;
+	delete _maxfreq;
+	delete _minval;
+	delete _maxval;
+	
 }
 
 void FTmodRandomize::modulate (nframes_t current_frame, fft_data * fftdata, unsigned int fftn, sample_t * timedata, nframes_t nframes)
@@ -69,14 +98,32 @@ void FTmodRandomize::modulate (nframes_t current_frame, fft_data * fftdata, unsi
 	if (!lm.locked() || !_inited || _bypassed) return;
 
 	float rate = 1.0;
-	float ub,lb;
+	float ub,lb, tmplb, tmpub;
 	float * filter;
 	unsigned int len;
 	
 	_rate->getValue (rate);
 
+	unsigned int minbin, maxbin;
+	float minval, maxval;
+	float minfreq,maxfreq;
+	
 	double samps = _sampleRate / rate;
 
+	_minval->getValue (minval);
+	_maxval->getValue (maxval);
+
+	if (minval > maxval) {
+		minval = maxval;
+	}
+
+	_minfreq->getValue (minfreq);
+	_maxfreq->getValue (maxfreq);
+
+	if (minfreq >= maxfreq) {
+		return;
+	}
+	
 	if (current_frame != _lastframe &&
 	    (nframes_t) (current_frame/samps) != (nframes_t) ((current_frame + nframes)/samps))
 	{
@@ -89,11 +136,22 @@ void FTmodRandomize::modulate (nframes_t current_frame, fft_data * fftdata, unsi
 			if (sm->getBypassed()) continue;
 
 			filter = sm->getValues();
-			sm->getRange(lb, ub);
+			sm->getRange(tmplb, tmpub);
 			len = sm->getLength();
+
+			lb = tmplb + (tmpub-tmplb) * minval/100.0;
+			ub = tmplb + (tmpub-tmplb) * maxval/100.0;
+
+			cerr << " lb: " << lb << "  ub: " << ub
+			     << " minval: " << minval << "   maxval: " << maxval
+			     << " tmlb: " << tmplb << "  tmpub: " << tmpub
+			     << endl;
+			
+			minbin = (int) ((minfreq*2/ _sampleRate) * len);
+			maxbin = (int) ((maxfreq*2/ _sampleRate) * len);
 			
 			// crap random
-			for (unsigned int i=0; i < len; ++i) {
+			for (unsigned int i=minbin; i < maxbin; ++i) {
 				filter[i] = lb + (float) ((ub-lb) * rand() / (RAND_MAX+1.0));
 			}
 

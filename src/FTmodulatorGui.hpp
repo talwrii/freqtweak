@@ -24,7 +24,7 @@
 
 #include <map>
 
-#include <sigc++/object.h>
+#include <sigc++/sigc++.h>
 
 #include "FTtypes.hpp"
 //#include "FTmodulatorI.hpp"
@@ -32,14 +32,15 @@
 #include "LockMonitor.hpp"
 #include "FTspectrumModifier.hpp"
 
-class FTspectralEngine;
+class FTioSupport;
 class FTmodulatorI;
+class FTspectralEngine;
 
 class FTmodulatorGui
 	: public wxPanel, public SigC::Object
 {
    public:
-	FTmodulatorGui(FTspectralEngine * engine, FTmodulatorI * mod,
+	FTmodulatorGui(FTioSupport * iosup, FTmodulatorI * mod,
 		       wxWindow *parent, wxWindowID id, 
 		       const wxPoint& pos = wxDefaultPosition,
 		       const wxSize& size = wxDefaultSize,
@@ -51,6 +52,10 @@ class FTmodulatorGui
 
 	void onRemoveButton (wxCommandEvent & ev);
 	void onAttachButton (wxCommandEvent & ev);
+	void onChannelButton (wxCommandEvent & ev);
+
+
+	SigC::Signal0<void> RemovalRequest;
 	
    protected:
 
@@ -61,15 +66,19 @@ class FTmodulatorGui
 	void onChoiceChanged(wxCommandEvent &ev);
 
 	void onAttachMenu (wxCommandEvent &ev);
+	void onChannelMenu (wxCommandEvent &ev);
 	
 	void refreshMenu();
+	void refreshChannelMenu();
 	
 	FTmodulatorI * _modulator;
-	FTspectralEngine * _engine;
+	FTioSupport * _iosup;
 	
 	wxTextCtrl *   _nameText;
 
 	wxMenu *       _popupMenu;
+
+	wxMenu *       _channelPopupMenu;
 	
 	// std::map<wxWindow *, FTmodulatorI::Control *> _controlMap;
 

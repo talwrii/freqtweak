@@ -55,6 +55,8 @@ class FTconfigManager
 
 	void loadFilter (FTspectrumModifier *specmod, wxTextFile & tf);
 
+	bool lookupFilterLocation (int chan, int modpos, int filtpos);
+	
 	XMLNode* find_named_node (const XMLNode * node, string name);
 	
 	std::string _basedir;

@@ -66,6 +66,9 @@ class FTmodulatorI
 	virtual const string & getConfName() { return _confname; }
 
 
+	virtual bool getBypassed() { return _bypassed; }
+	virtual void setBypassed(bool byp) { _bypassed = byp; }
+
 	SigC::Signal1<void, FTmodulatorI *> GoingAway;
 
 

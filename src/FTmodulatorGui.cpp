@@ -22,6 +22,8 @@
 #include "FTmodulatorGui.hpp"
 #include "FTmodulatorI.hpp"
 #include "FTspectralEngine.hpp"
+#include "FTioSupport.hpp"
+#include "FTprocessPath.hpp"
 #include "FTprocI.hpp"
 
 using namespace SigC;
@@ -30,6 +32,7 @@ enum
 {
 	ID_RemoveButton = 8000,
 	ID_AttachButton,
+	ID_ChannelButton,
 	ID_DetachAll,
 	ID_AttachAll
 };
@@ -37,7 +40,8 @@ enum
 
 enum {
 	ID_ControlBase = 10000,
-	ID_SpecModBase = 11000
+	ID_SpecModBase = 11000,
+	ID_ChannelBase = 12000
 };
 
 class FTmodControlObject : public wxObject
@@ -51,31 +55,42 @@ class FTmodControlObject : public wxObject
 class FTspecmodObject : public wxObject
 {
   public:
-	FTspecmodObject(int mi, int fi) : modIndex(mi), filtIndex(fi) {}
-	
+	FTspecmodObject(int chan, int mi, int fi) : channel(chan), modIndex(mi), filtIndex(fi) {}
+
+	int channel;
 	int modIndex;
 	int filtIndex;
 };
+
+class FTchannelObject : public wxObject
+{
+  public:
+	FTchannelObject(int chan) : channel(chan) {}
+
+	int channel;
+};
+
 
 
 BEGIN_EVENT_TABLE(FTmodulatorGui, wxPanel)
 
 	EVT_BUTTON(ID_RemoveButton, FTmodulatorGui::onRemoveButton)
 	EVT_BUTTON(ID_AttachButton, FTmodulatorGui::onAttachButton)
+	EVT_BUTTON(ID_ChannelButton, FTmodulatorGui::onChannelButton)
 
 	EVT_MENU (ID_AttachAll, FTmodulatorGui::onAttachMenu)
 	EVT_MENU (ID_DetachAll, FTmodulatorGui::onAttachMenu)
 	
 END_EVENT_TABLE()
 
-FTmodulatorGui::FTmodulatorGui (FTspectralEngine * engine, FTmodulatorI *mod, wxWindow *parent, wxWindowID id,
+FTmodulatorGui::FTmodulatorGui (FTioSupport * iosup, FTmodulatorI *mod, wxWindow *parent, wxWindowID id,
 				const wxPoint& pos,
 				const wxSize& size,
 				long style ,
 				const wxString& name)
 
 	: wxPanel(parent, id, pos, size, style, name),
-	  _modulator (mod), _engine(engine), _popupMenu(0)
+	  _modulator (mod), _iosup(iosup), _popupMenu(0), _channelPopupMenu(0)
 {
 
 	init();
@@ -84,7 +99,7 @@ FTmodulatorGui::FTmodulatorGui (FTspectralEngine * engine, FTmodulatorI *mod, wx
 
 FTmodulatorGui::~FTmodulatorGui()
 {
-	cerr << "MODGUI destructor" << endl;
+	// cerr << "MODGUI destructor" << endl;
 }
 
 
@@ -108,6 +123,10 @@ void FTmodulatorGui::init()
 	topSizer->Add (_nameText, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
 
+	wxButton * chanButton = new wxButton(this, ID_ChannelButton, wxT("Source..."), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+	topSizer->Add (chanButton, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+
+	
 	wxButton * attachButton = new wxButton(this, ID_AttachButton, wxT("Attach..."), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	topSizer->Add (attachButton, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
@@ -122,6 +141,7 @@ void FTmodulatorGui::init()
 	wxBoxSizer * controlSizer = new wxBoxSizer(wxVERTICAL);
 
 	wxBoxSizer * rowsizer;
+
 	
 	int ctrlid = ID_ControlBase;
 	
@@ -188,11 +208,11 @@ void FTmodulatorGui::init()
 			ctrl->getValue(currval);
 			ctrl->getBounds(minval, maxval);
 
-			// we'll always have slider values between 0 and 100 for now
+			// we'll always have slider values between 0 and 1000 for now
 
-			currval = ((currval-minval) / (maxval - minval)) * 100;
+			currval = ((currval-minval) / (maxval - minval)) * 1000;
 			
-			wxSlider * slider = new wxSlider(this, ctrlid, (int) currval, 0, 100);
+			wxSlider * slider = new wxSlider(this, ctrlid, (int) currval, 0, 1000);
 
 			rowsizer->Add (slider, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 			
@@ -266,37 +286,52 @@ void FTmodulatorGui::refreshMenu()
 	_popupMenu = new wxMenu();
 
 	int itemid = ID_SpecModBase;
-
-	_popupMenu->Append (ID_AttachAll, wxT("Attach All"));
+	wxMenuItem * labelitem;
+	
 	_popupMenu->Append (ID_DetachAll, wxT("Detach All"));
+	_popupMenu->Append (ID_AttachAll, wxT("Attach All"));
 
-	_popupMenu->AppendSeparator();
-
-	// go through all the spectrum modifiers in the engine
-	vector<FTprocI *> procmods;
-	_engine->getProcessorModules (procmods);
-
-	for (unsigned int n=0; n < procmods.size(); ++n)
+	FTprocessPath * procpath;
+	for (int i=0; i < _iosup->getActivePathCount(); ++i)
 	{
-		FTprocI *pm = procmods[n];
-		vector<FTspectrumModifier *> filts;
-		pm->getFilters (filts);
+		procpath = _iosup->getProcessPath(i);
+		if (procpath) {
 
-		for (unsigned int m=0; m < filts.size(); ++m)
-		{
-		
-			_popupMenu->AppendCheckItem (itemid, wxString::FromAscii (filts[m]->getName().c_str()));
+			FTspectralEngine *engine = procpath->getSpectralEngine();
 
-			if (_modulator->hasSpecMod (filts[m])) {
-				_popupMenu->Check (itemid, true);
+			_popupMenu->AppendSeparator();
+			labelitem = new wxMenuItem(_popupMenu, itemid++, wxString::Format(wxT("Channel %d"), i+1));
+			labelitem->Enable(false);
+			_popupMenu->Append (labelitem);
+			
+			
+			// go through all the spectrum modifiers in the engine
+			vector<FTprocI *> procmods;
+			engine->getProcessorModules (procmods);
+			
+			for (unsigned int n=0; n < procmods.size(); ++n)
+			{
+				FTprocI *pm = procmods[n];
+				vector<FTspectrumModifier *> filts;
+				pm->getFilters (filts);
+				
+				for (unsigned int m=0; m < filts.size(); ++m)
+				{
+					
+					_popupMenu->AppendCheckItem (itemid, wxString::FromAscii (filts[m]->getName().c_str()));
+					
+					if (_modulator->hasSpecMod (filts[m])) {
+						_popupMenu->Check (itemid, true);
+					}
+					
+					Connect( itemid,  wxEVT_COMMAND_MENU_SELECTED,
+						 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
+						 &FTmodulatorGui::onAttachMenu,
+						 (wxObject *) new FTspecmodObject(i, n, m));
+					
+					itemid++;
+				}
 			}
-			
-			Connect( itemid,  wxEVT_COMMAND_MENU_SELECTED,
-				 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
-				 &FTmodulatorGui::onAttachMenu,
-				 (wxObject *) new FTspecmodObject(n, m));
-			
-			itemid++;
 		}
 	}
 
@@ -308,23 +343,33 @@ void FTmodulatorGui::onAttachMenu (wxCommandEvent & ev)
 
 	if (id == ID_AttachAll) {
 		// go through every one and add it
-		vector<FTprocI *> procmods;
-		_engine->getProcessorModules (procmods);
-		
-		for (unsigned int n=0; n < procmods.size(); ++n)
+		FTprocessPath * procpath;
+		for (int i=0; i < _iosup->getActivePathCount(); ++i)
 		{
-			FTprocI *pm = procmods[n];
-			vector<FTspectrumModifier *> filts;
-			pm->getFilters (filts);
-			
-			for (unsigned int m=0; m < filts.size(); ++m)
-			{
-				_modulator->addSpecMod (filts[m]);
+			procpath = _iosup->getProcessPath(i);
+			if (procpath) {
+				
+				FTspectralEngine *engine = procpath->getSpectralEngine();
+				
+				vector<FTprocI *> procmods;
+				engine->getProcessorModules (procmods);
+				
+				for (unsigned int n=0; n < procmods.size(); ++n)
+				{
+					FTprocI *pm = procmods[n];
+					vector<FTspectrumModifier *> filts;
+					pm->getFilters (filts);
+					
+					for (unsigned int m=0; m < filts.size(); ++m)
+					{
+						_modulator->addSpecMod (filts[m]);
+					}
+				}
 			}
 		}
-
 	}
-	else if (id == ID_DetachAll) {
+	else if (id == ID_DetachAll)
+	{
 		_modulator->clearSpecMods();
 	}
 	else {
@@ -332,9 +377,13 @@ void FTmodulatorGui::onAttachMenu (wxCommandEvent & ev)
 		FTspecmodObject * smo = (FTspecmodObject *) ev.m_callbackUserData;
 		FTprocI * procmod;
 		FTspectrumModifier * specmod;
+		FTprocessPath *  procpath;
+		FTspectralEngine * engine;
 		
 		if (smo
-		    && (procmod = _engine->getProcessorModule(smo->modIndex))
+		    && (procpath = _iosup->getProcessPath(smo->channel))
+		    && (engine   = procpath->getSpectralEngine())
+		    && (procmod = engine->getProcessorModule(smo->modIndex))
 		    && (specmod = procmod->getFilter(smo->filtIndex)))
 		{
 			if (ev.IsChecked()) {
@@ -353,7 +402,16 @@ void FTmodulatorGui::onRemoveButton (wxCommandEvent & ev)
 	// remove our own dear mod
 	cerr << "on remove" << endl;
 
-	_engine->removeModulator (_modulator);
+	RemovalRequest (); // emit signal
+	
+	// remove from old engine 
+	for (int i=0; i < _iosup->getActivePathCount(); ++i)
+	{
+		FTprocessPath * ppath = _iosup->getProcessPath(i);
+		if (ppath) {
+			ppath->getSpectralEngine()->removeModulator (_modulator);
+		}
+	}
 
 	cerr << "post remove" << endl;
 
@@ -395,7 +453,7 @@ void FTmodulatorGui::onSliderChanged(wxScrollEvent &ev)
 		else if (ctrl->getType() == FTmodulatorI::Control::FloatType) {
 			float minval,maxval;
 			ctrl->getBounds(minval, maxval);
-			float currval = (slider->GetValue() / 100.0) * (maxval - minval)  + minval;
+			float currval = (slider->GetValue() / 1000.0) * (maxval - minval)  + minval;
 
 			ctrl->setValue (currval);
 			cerr << "slider float changed for " << ctrl->getName() <<  ": new val = " << currval << endl;
@@ -429,3 +487,79 @@ void FTmodulatorGui::onCheckboxChanged(wxCommandEvent &ev)
 	
 
 }
+
+void FTmodulatorGui::refreshChannelMenu ()
+{
+
+	if (_channelPopupMenu) {
+		delete _channelPopupMenu;
+	}
+	
+	_channelPopupMenu = new wxMenu();
+
+	int itemid = ID_ChannelBase;
+	
+	FTprocessPath * procpath;
+	for (int i=0; i < _iosup->getActivePathCount(); ++i)
+	{
+		procpath = _iosup->getProcessPath(i);
+		if (procpath) {
+			cerr << "adding item for " << i << endl;
+			
+			_channelPopupMenu->AppendCheckItem (itemid, wxString::Format(wxT("Channel %d"), i+1));
+
+			if (procpath->getSpectralEngine()->hasModulator(_modulator)) {
+				_channelPopupMenu->Check (itemid, true);
+			}
+			
+			Connect( itemid,  wxEVT_COMMAND_MENU_SELECTED,
+				 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
+				 &FTmodulatorGui::onChannelMenu,
+				 (wxObject *) new FTchannelObject(i));
+			
+			itemid++;
+		}
+	}
+
+}
+
+void FTmodulatorGui::onChannelMenu (wxCommandEvent &ev)
+{
+	FTchannelObject * smo = (FTchannelObject *) ev.m_callbackUserData;
+	FTprocessPath *  procpath;
+	
+	if (smo
+	    && (procpath = _iosup->getProcessPath(smo->channel))
+	    && (!procpath->getSpectralEngine()->hasModulator(_modulator)))
+	{
+		// only if engine doesn't already contain it
+		cerr << "on channel menu" << endl;
+		
+		// remove from old engine without destroying
+		for (int i=0; i < _iosup->getActivePathCount(); ++i)
+		{
+			FTprocessPath * ppath = _iosup->getProcessPath(i);
+			if (ppath) {
+				ppath->getSpectralEngine()->removeModulator (_modulator, false);
+			}
+		}
+
+		// add to new one
+		procpath->getSpectralEngine()->appendModulator(_modulator);
+		
+	}
+	    
+
+}
+
+void FTmodulatorGui::onChannelButton (wxCommandEvent &ev)
+{
+	wxWindow * source = (wxWindow *) ev.GetEventObject();
+	
+	wxRect pos = source->GetRect();
+
+	refreshChannelMenu();
+	
+	PopupMenu(_channelPopupMenu, pos.x, pos.y + pos.height);
+}
+

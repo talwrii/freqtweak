@@ -41,6 +41,10 @@ class FTmodRandomize
   protected:
 
 	Control * _rate;
+	Control * _minfreq;
+	Control * _maxfreq;
+	Control * _minval;
+	Control * _maxval;
 
 	nframes_t _lastframe;
 

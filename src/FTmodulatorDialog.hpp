@@ -65,14 +65,20 @@ class FTmodulatorDialog : public wxFrame, public SigC::Object
 	void onAddModulator (wxCommandEvent &ev);
 	void onAddButton (wxCommandEvent &ev);
 
-	void onModulatorDeath (FTmodulatorI * mod, int channel);
+	void onModulatorDeath (FTmodulatorI * mod);
 
 	void onModulatorAdded (FTmodulatorI * mod, int channel);
+
+
+	void appendModGui(FTmodulatorI * mod, bool layout=true);
 	
 	// void onAutoCheck (wxCommandEvent &ev);
 
 	wxScrolledWindow * _channelScrollers[FT_MAXPATHS];
 	wxBoxSizer * _channelSizers[FT_MAXPATHS];
+
+	wxScrolledWindow * _channelScroller;
+	wxBoxSizer       * _channelSizer;
 	
 	int  _channelCount;
 	

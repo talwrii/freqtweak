@@ -167,6 +167,7 @@ class FTspectralEngine
 	void clearModulators (bool destroy=true);
 	void getModulators (vector<FTmodulatorI *> & modules);
 	FTmodulatorI * getModulator ( unsigned int num);
+	bool hasModulator (FTmodulatorI * procmod);
 
 	SigC::Signal1<void, FTmodulatorI *> ModulatorAdded;
 
