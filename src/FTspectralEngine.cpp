@@ -696,6 +696,8 @@ bool FTspectralEngine::processNow (FTprocessPath *procpath)
 			_updateToken->setUpdated(true);
  			_avgReady = false;
  		}
+
+		current_frame += step_size;
 	}
 
 	return true;

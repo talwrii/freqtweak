@@ -26,6 +26,9 @@
 
 #include <stdint.h>
 
+#include <cmath>
+using namespace std;
+
 /*
  * Please excuse all the macros.
  * They are used for explicit inlining of
@@ -467,3 +470,57 @@ void FTutils::vector_fast_fourth_root (const float* x_input, float* y_output, in
 	y_output[i] = ans;
     }
 }
+
+
+
+
+
+double FTutils::sine_wave (double time, double freq_Hz)
+{
+    return sin (2.0 * M_PI * freq_Hz * time);
+}
+
+double FTutils::square_wave (double time, double freq_Hz)
+{
+    double sq = 1.0;
+
+    /* get fractional time in the current period */
+    /* of the waveform                           */
+    double norm_time = time * freq_Hz;
+    double frac = norm_time - floor(norm_time);
+    /* check which half of period we're in */
+    if (frac < 0.5)
+    {
+        sq = -1.0;
+    }
+
+    return sq;
+}
+
+double FTutils::triangle_wave (double time, double freq_Hz)
+{
+    double tr;
+
+    /* get fractional time in the current period */
+    /* of the waveform                           */
+    double norm_time = time * freq_Hz;
+    double frac = norm_time - floor(norm_time);
+    
+    /* check which half of period we're in */
+    if (frac < 0.5)
+    {
+        /* ascending slope        */
+        /* frac in range [0, 1/2) */
+        tr = -1.0 + 4.0*frac;
+    }
+    else
+    {
+        /* descending slope */
+        /* frac in range [1/2, 1) */
+        tr = 3.0 - 4.0*frac;
+    }
+
+    return tr;
+}
+
+

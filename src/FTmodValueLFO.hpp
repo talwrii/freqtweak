@@ -17,36 +17,46 @@
 **  
 */
 
-#ifndef __FTMODROTATE_HPP__
-#define __FTMODROTATE_HPP__
+#ifndef __FTMODVALUELFO_HPP__
+#define __FTMODVALUELFO_HPP__
 
 #include "FTmodulatorI.hpp"
 
-class FTmodRotate
+#include <map>
+
+class FTmodValueLFO
 	: public FTmodulatorI
 {
   public:
 
-	FTmodRotate(nframes_t samplerate, unsigned int fftn);
-	FTmodRotate (const FTmodRotate & other);
+	FTmodValueLFO(nframes_t samplerate, unsigned int fftn);
+	FTmodValueLFO (const FTmodValueLFO & other);
 
-	virtual ~FTmodRotate();
+	virtual ~FTmodValueLFO();
 
-	FTmodulatorI * clone() { return new FTmodRotate(*this); }
+	FTmodulatorI * clone() { return new FTmodValueLFO(*this); }
 	void initialize();
 	
 	void modulate (nframes_t current_frame, fft_data * fftdata, unsigned int fftn, sample_t * timedata, nframes_t nframes);
 
 	void setFFTsize (unsigned int fftn);
 	
+	void addSpecMod (FTspectrumModifier * specmod);
+	void removeSpecMod (FTspectrumModifier * specmod);
+	void clearSpecMods ();
 	
   protected:
 
 	Control * _rate;
+	Control * _depth;
+	Control * _lfotype;
 	Control * _minfreq;
 	Control * _maxfreq;
 	
 	nframes_t _lastframe;
+
+	std::map<FTspectrumModifier *, double> _lastshifts;
+	
 	float * _tmpfilt;
 };
 

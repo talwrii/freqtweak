@@ -28,8 +28,8 @@
 using namespace std;
 using namespace PBD;
 
-FTmodulatorI::FTmodulatorI(string name, nframes_t samplerate, unsigned int fftn)
-	: _inited(false), _name(name), _confname("UNNAMED"), _userName("Unnamed"), _bypassed(false),
+FTmodulatorI::FTmodulatorI(string confname, string name, nframes_t samplerate, unsigned int fftn)
+	: _inited(false), _name(name), _confname(confname), _userName("Unnamed"), _bypassed(false),
 	  _sampleRate(samplerate), _fftN(fftn)
 {
 }

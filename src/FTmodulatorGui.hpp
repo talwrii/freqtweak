@@ -63,7 +63,8 @@ class FTmodulatorGui
 	void onAttachButton (wxCommandEvent & ev);
 	void onChannelButton (wxCommandEvent & ev);
 	void onTextEnter (wxCommandEvent &ev);
-
+	void onBypassButton (wxCommandEvent &ev);
+	
 
 
 	

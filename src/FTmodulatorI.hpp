@@ -23,7 +23,9 @@
 #include "FTtypes.hpp"
 #include <string>
 #include <list>
+#include <algorithm>
 #include <sigc++/sigc++.h>
+#include <iostream>
 
 
 #include "LockMonitor.hpp"
@@ -139,7 +141,7 @@ class FTmodulatorI
 
    protected:
 
-	FTmodulatorI(std::string name, nframes_t samplerate, unsigned int fftn);
+	FTmodulatorI(std::string confname, std::string name, nframes_t samplerate, unsigned int fftn);
 	
 	ControlList _controls;
 
@@ -237,11 +239,14 @@ inline bool FTmodulatorI::Control::setValue(const std::string & val)
 {
 	if (_type == StringType) {
 		_stringVal = val;
+		return true;
 	}
 	else if (_type == EnumType && std::find(_enumList.begin(), _enumList.end(), val) != _enumList.end()) {
 		_stringVal = val;
+		return true;
 	}
-	else return false;
+
+	return false;
 }
 
 

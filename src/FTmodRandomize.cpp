@@ -26,15 +26,13 @@ using namespace std;
 using namespace PBD;
 
 FTmodRandomize::FTmodRandomize (nframes_t samplerate, unsigned int fftn)
-	: FTmodulatorI ("Randomize", samplerate, fftn)
+	: FTmodulatorI ("Randomize","Randomize", samplerate, fftn)
 {
-	_confname = "Randomize";
 }
 
 FTmodRandomize::FTmodRandomize (const FTmodRandomize & other)
-	: FTmodulatorI ("Randomize", other._sampleRate, other._fftN)
+	: FTmodulatorI ("Randomize", "Randomize", other._sampleRate, other._fftN)
 {
-	_confname = "Randomize";
 }
 
 void FTmodRandomize::initialize()
@@ -129,7 +127,7 @@ void FTmodRandomize::modulate (nframes_t current_frame, fft_data * fftdata, unsi
 
 	double delta = current_frame - _lastframe;
 	
-	if (delta >=  samps) 
+	if (delta >= samps) 
 	{
 		// fprintf (stderr, "randomize at %lu :  samps=%g  s*c=%g  s*e=%g \n", (unsigned long) current_frame, samps, (current_frame/samps), ((current_frame + nframes)/samps) );
 		
@@ -142,8 +140,8 @@ void FTmodRandomize::modulate (nframes_t current_frame, fft_data * fftdata, unsi
 			sm->getRange(tmplb, tmpub);
 			len = sm->getLength();
 
-			lb = tmplb + (tmpub-tmplb) * minval/100.0;
-			ub = tmplb + (tmpub-tmplb) * maxval/100.0;
+			lb = tmplb + (tmpub-tmplb) * minval * 0.01;
+			ub = tmplb + (tmpub-tmplb) * maxval * 0.01;
 
 // 			cerr << " lb: " << lb << "  ub: " << ub
 // 			     << " minval: " << minval << "   maxval: " << maxval

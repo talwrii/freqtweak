@@ -35,7 +35,8 @@ enum
 	ID_ChannelButton,
 	ID_DetachAll,
 	ID_AttachAll,
-	ID_ModUserName
+	ID_ModUserName,
+	ID_BypassCheck
 };
 
 
@@ -86,7 +87,8 @@ BEGIN_EVENT_TABLE(FTmodulatorGui, wxPanel)
 	EVT_BUTTON(ID_RemoveButton, FTmodulatorGui::onRemoveButton)
 	EVT_BUTTON(ID_AttachButton, FTmodulatorGui::onAttachButton)
 	EVT_BUTTON(ID_ChannelButton, FTmodulatorGui::onChannelButton)
-
+	EVT_CHECKBOX(ID_BypassCheck, FTmodulatorGui::onBypassButton)
+	
 	EVT_TEXT_ENTER (ID_ModUserName, FTmodulatorGui::onTextEnter)
 	
 	EVT_MENU (ID_AttachAll, FTmodulatorGui::onAttachMenu)
@@ -124,16 +126,20 @@ void FTmodulatorGui::init()
 
 //	wxBoxSizer *tmpsizer, *tmpsizer2;
 	wxStaticText * stattext;
-	
+
 	stattext = new wxStaticText(this, -1, wxString::FromAscii(_modulator->getName().c_str()),
 				    wxDefaultPosition, wxSize(-1, -1));
+	stattext->SetFont(wxFont(stattext->GetFont().GetPointSize(), wxDEFAULT, wxNORMAL, wxBOLD, false, "arial"));
 	topSizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
 
 	_nameText = new wxTextCtrl (this, ID_ModUserName, wxString::FromAscii(_modulator->getUserName().c_str()), wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	topSizer->Add (_nameText, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
-
+	wxCheckBox * bypassCheck = new wxCheckBox(this, ID_BypassCheck, wxT("Bypass"));
+	bypassCheck->SetValue(_modulator->getBypassed());
+	topSizer->Add (bypassCheck, 0, wxTOP|wxBOTTOM|wxALIGN_CENTRE_VERTICAL, 2);
+	
 	wxButton * chanButton = new wxButton(this, ID_ChannelButton, wxT("Source..."), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	topSizer->Add (chanButton, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
@@ -164,12 +170,17 @@ void FTmodulatorGui::init()
 	for (FTmodulatorI::ControlList::iterator ctrliter = controls.begin(); ctrliter != controls.end(); ++ctrliter)
 	{
 		FTmodulatorI::Control * ctrl = (FTmodulatorI::Control *) *ctrliter;
+
+		wxString unitstr = wxString::Format(wxT("%s"), ctrl->getName().c_str());
+		if (!ctrl->getUnits().empty()) {
+			unitstr +=  wxString::Format(wxT(" [%s]"), ctrl->getUnits().c_str());
+		}
 		
 		if (ctrl->getType() == FTmodulatorI::Control::BooleanType) {
 			// make a checkbox
-
-			wxCheckBox * checkb = new wxCheckBox(this, ctrlid,
-							     wxString::Format(wxT("%s [%s]"), ctrl->getName().c_str(), ctrl->getUnits().c_str()));
+			
+			wxCheckBox * checkb = new wxCheckBox(this, ctrlid, unitstr);
+							     
 
 			FTmodControlObject * ctrlobj = new FTmodControlObject(ctrl);
 			ctrlobj->checkbox = checkb;
@@ -183,10 +194,9 @@ void FTmodulatorGui::init()
 		}
 		else if (ctrl->getType() == FTmodulatorI::Control::IntegerType) {
 			// make a slider and spinbox for now
+
 			rowsizer = new wxBoxSizer(wxHORIZONTAL);
-			stattext = new wxStaticText(this, -1, wxString::Format(wxT("%s [%s]"),
-									       ctrl->getName().c_str(),
-									       ctrl->getUnits().c_str()));
+			stattext = new wxStaticText(this, -1, unitstr);
 
 			rowsizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
@@ -230,9 +240,7 @@ void FTmodulatorGui::init()
 		else if (ctrl->getType() == FTmodulatorI::Control::FloatType) {
 			// make a slider and spinbox for now
 			rowsizer = new wxBoxSizer(wxHORIZONTAL);
-			stattext = new wxStaticText(this, -1, wxString::Format(wxT("%s [%s]"),
-									       ctrl->getName().c_str(),
-									       ctrl->getUnits().c_str()));
+			stattext = new wxStaticText(this, -1, unitstr);
 
 			rowsizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
@@ -284,9 +292,7 @@ void FTmodulatorGui::init()
 			// use a wxChoice
 
 			rowsizer = new wxBoxSizer(wxHORIZONTAL);
-			stattext = new wxStaticText(this, -1, wxString::Format(wxT("%s [%s]"),
-									       ctrl->getName().c_str(),
-									       ctrl->getUnits().c_str()));
+			stattext = new wxStaticText(this, -1, unitstr);
 
 			rowsizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
@@ -296,14 +302,15 @@ void FTmodulatorGui::init()
 			ctrl->getValue(currval);
 			ctrl->getEnumStrings (vallist);
 			
-			wxChoice * choice = new wxChoice(this, ctrlid);
+			wxChoice * choice = new wxChoice(this, ctrlid, wxDefaultPosition, wxDefaultSize, 0, 0);
 
+			
 			for (list<string>::iterator citer = vallist.begin(); citer != vallist.end(); ++citer) {
 				choice->Append (wxString::FromAscii((*citer).c_str()));
 			}
 			choice->SetStringSelection (wxString::FromAscii(currval.c_str()));
 			
-			rowsizer->Add (choice, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+			rowsizer->Add (choice, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
 			FTmodControlObject * ctrlobj = new FTmodControlObject(ctrl);
 			ctrlobj->choice = choice;
@@ -533,14 +540,12 @@ void FTmodulatorGui::onChoiceChanged(wxCommandEvent &ev)
 	FTmodControlObject * obj = (FTmodControlObject *) ev.m_callbackUserData;
 	FTmodulatorI::Control * ctrl;
 
-	cerr << "choice" << endl;
-	
 	if (obj && (ctrl = obj->control)) {
 
 		
-		ctrl->setValue (choice->GetStringSelection().c_str());
+		ctrl->setValue (string((choice->GetStringSelection().c_str())));
 
-		cerr << " choice changed for " << ctrl->getName() <<  ": new val = " << choice->GetStringSelection().c_str() << endl;
+		//cerr << " choice changed for " << ctrl->getName() <<  ": new val = " << choice->GetStringSelection().c_str() << endl;
 		
 	}
 
@@ -555,7 +560,7 @@ void FTmodulatorGui::onCheckboxChanged(wxCommandEvent &ev)
 		
 		ctrl->setValue ((bool) obj->checkbox->GetValue());
 
-		cerr << " checkbox changed for " << ctrl->getName() <<  ": new val = " << obj->checkbox->GetValue() << endl;
+		// cerr << " checkbox changed for " << ctrl->getName() <<  ": new val = " << obj->checkbox->GetValue() << endl;
 		
 	}
 }
@@ -644,7 +649,7 @@ void FTmodulatorGui::onTextEnter (wxCommandEvent &ev)
 		string name = static_cast<const char *> (_nameText->GetValue().fn_str());
 		
 		_modulator->setUserName (name);
-		cerr << "name changed to :" << name << endl;
+		// cerr << "name changed to :" << name << endl;
 	}
 	else {
 
@@ -693,4 +698,15 @@ void FTmodulatorGui::onTextEnter (wxCommandEvent &ev)
 		}
 
 	}
+}
+
+
+void FTmodulatorGui::onBypassButton (wxCommandEvent &ev)
+{
+
+	if (_modulator->getBypassed() != ev.IsChecked()) {
+	
+		_modulator->setBypassed (ev.IsChecked());
+	}
+	
 }

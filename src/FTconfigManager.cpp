@@ -953,7 +953,7 @@ void FTconfigManager::loadModulators (const XMLNode * modulatorsNode)
 
 
 		// create the modulator
-		FTmodulatorI * protomod = FTmodulatorManager::instance()->getModuleByName (modname);
+		FTmodulatorI * protomod = FTmodulatorManager::instance()->getModuleByConfigName (modname);
 		if (!protomod) {
 			fprintf (stderr, "module %s could not be found\n", modname.c_str());
 			continue;

@@ -17,7 +17,9 @@
 **  
 */
 
-#include "FTmodRotate.hpp"
+#include "FTmodRotateLFO.hpp"
+#include "FTutils.hpp"
+
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
@@ -25,26 +27,40 @@
 using namespace std;
 using namespace PBD;
 
-FTmodRotate::FTmodRotate (nframes_t samplerate, unsigned int fftn)
-	: FTmodulatorI ("Rotate", "Rotate", samplerate, fftn)
+FTmodRotateLFO::FTmodRotateLFO (nframes_t samplerate, unsigned int fftn)
+	: FTmodulatorI ("RotateLFO", "Rotate LFO", samplerate, fftn)
 {
 }
 
-FTmodRotate::FTmodRotate (const FTmodRotate & other)
-	: FTmodulatorI ("Rotate", "Rotate", other._sampleRate, other._fftN)
+FTmodRotateLFO::FTmodRotateLFO (const FTmodRotateLFO & other)
+	: FTmodulatorI ("RotateLFO", "Rotate LFO", other._sampleRate, other._fftN)
 {
 }
 
-void FTmodRotate::initialize()
+void FTmodRotateLFO::initialize()
 {
 	_lastframe = 0;
+	_lastshift = 0;
 	
-	_rate = new Control (Control::FloatType, "rate", "Rate", "Hz/sec");
-	_rate->_floatLB = -((float) _sampleRate);
-	_rate->_floatUB =  (float) _sampleRate;
+	_rate = new Control (Control::FloatType, "rate", "Rate", "Hz");
+	_rate->_floatLB = 0.0;
+	_rate->_floatUB = 20.0;
 	_rate->setValue (0.0f);
 	_controls.push_back (_rate);
 
+	_depth = new Control (Control::FloatType, "depth", "Depth", "Hz");
+	_depth->_floatLB = 0;
+	_depth->_floatUB = (float) _sampleRate/2;
+	_depth->setValue (_depth->_floatUB);
+	_controls.push_back (_depth);
+
+	_lfotype = new Control (Control::EnumType, "lfo_type", "LFO Type", "");
+	_lfotype->_enumList.push_back("Sine");
+	_lfotype->_enumList.push_back("Triangle");
+	_lfotype->_enumList.push_back("Square");
+	_lfotype->setValue ("Sine");
+	_controls.push_back (_lfotype);
+	
 	_minfreq = new Control (Control::FloatType, "min_freq", "Min Freq", "Hz");
 	_minfreq->_floatLB = 0.0;
 	_minfreq->_floatUB = _sampleRate / 2;
@@ -59,29 +75,26 @@ void FTmodRotate::initialize()
 
 	
 	
-// 	_dimension = new Control (Control::EnumType, "Target", "");
-// 	_dimension->_enumList.push_back("Frequency");
-// 	_dimension->_enumList.push_back("Value");
-// 	_dimension->setValue ("Frequency");
-// 	_controls.push_back (_dimension);
 	
 	_tmpfilt = new float[_fftN];
 	
 	_inited = true;
 }
 
-FTmodRotate::~FTmodRotate()
+FTmodRotateLFO::~FTmodRotateLFO()
 {
 	if (!_inited) return;
 
 	_controls.clear();
 
 	delete _rate;
+	delete _depth;
+	delete _lfotype;
 	delete _minfreq;
 	delete _maxfreq;
 }
 
-void FTmodRotate::setFFTsize (unsigned int fftn)
+void FTmodRotateLFO::setFFTsize (unsigned int fftn)
 {
 	_fftN = fftn;
 
@@ -93,23 +106,31 @@ void FTmodRotate::setFFTsize (unsigned int fftn)
 }
 
 
-void FTmodRotate::modulate (nframes_t current_frame, fft_data * fftdata, unsigned int fftn, sample_t * timedata, nframes_t nframes)
+void FTmodRotateLFO::modulate (nframes_t current_frame, fft_data * fftdata, unsigned int fftn, sample_t * timedata, nframes_t nframes)
 {
 	TentativeLockMonitor lm (_specmodLock, __LINE__, __FILE__);
 
 	if (!lm.locked() || !_inited || _bypassed) return;
 
 	float rate = 1.0;
+	double currdev = 0.0;
 	float ub,lb;
 	float * filter;
 	int len;
 	int i,j;
 	float minfreq, maxfreq;
+	float depth = 1.0;
 	int minbin, maxbin;
 	double hzperbin;
+	double current_secs;
+	string shape;
 	
-	// in hz/sec
+	// in hz
 	_rate->getValue (rate);
+	_lfotype->getValue (shape);
+
+	// in hz
+	_depth->getValue (depth);
 	
 	_minfreq->getValue (minfreq);
 	_maxfreq->getValue (maxfreq);
@@ -120,12 +141,35 @@ void FTmodRotate::modulate (nframes_t current_frame, fft_data * fftdata, unsigne
 
 	hzperbin = _sampleRate / (double) fftn;
 
-	// shiftval (bins) = deltasamples / (samp/sec) * (hz/sec) / (hz/bins)
+	// last_secs = _lastframe / (double) _sampleRate;
+	current_secs = current_frame / (double) _sampleRate;
 
-	// bins = sec * hz/sec 
+	int shiftval = 0;
 	
-	int shiftval = (int) (((current_frame - _lastframe) / (double) _sampleRate) * rate / hzperbin);
+	if (shape == "Sine")
+	{
+		currdev = (double) (FTutils::sine_wave (current_secs, (double) rate) * (depth * 0.5 / hzperbin));
 
+	} else if (shape == "Square")
+	{
+		currdev = (double) (FTutils::square_wave (current_secs, (double) rate) * (depth * 0.5 / hzperbin));
+
+	}
+	else if (shape == "Triangle")
+	{
+		currdev = (double) (FTutils::triangle_wave (current_secs, (double) rate) * (depth * 0.5 / hzperbin));
+
+	}
+	else {
+		return;
+	}
+
+
+	shiftval = (int) (currdev - _lastshift);		
+		
+	//cerr << "currdev: " << currdev << "  depth: " << depth << "  hzper: " << hzperbin << "  shift: " << shiftval << endl;
+
+	
 	if (current_frame != _lastframe && shiftval != 0)
 	{
 		// fprintf (stderr, "shift at %lu :  samps=%g  s*c=%g  s*e=%g \n", (unsigned long) current_frame, samps, (current_frame/samps), ((current_frame + nframes)/samps) );
@@ -198,5 +242,6 @@ void FTmodRotate::modulate (nframes_t current_frame, fft_data * fftdata, unsigne
 		}
 
 		_lastframe = current_frame;
+		_lastshift = (int) currdev;
 	}
 }

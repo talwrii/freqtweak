@@ -90,6 +90,11 @@ public:
 			return x;
 		}
 
+	/* these are not too cheap */
+	static double sine_wave     (double time, double freq_Hz);
+	static double square_wave   (double time, double freq_Hz);
+	static double triangle_wave (double time, double freq_Hz);
+
 	
 };
 

@@ -235,8 +235,6 @@ void FTmodulatorDialog::appendModGui(FTmodulatorI * mod, bool layout)
 	
 	_channelSizer->Add(modgui, 0, wxEXPAND|wxALL, 1);
 	
-	cerr << "add modulator: " << mod->getName() << endl;
-
 	if (layout) {
 		_channelScroller->SetClientSize(_channelScroller->GetClientSize());
 		_channelScroller->Layout();

@@ -23,6 +23,8 @@
 
 #include "FTmodRandomize.hpp"
 #include "FTmodRotate.hpp"
+#include "FTmodRotateLFO.hpp"
+#include "FTmodValueLFO.hpp"
 
 FTmodulatorManager * FTmodulatorManager::_instance = 0;
 
@@ -37,8 +39,15 @@ FTmodulatorManager::FTmodulatorManager()
 	FTmodulatorI * procmod = new FTmodRotate (samprate, fftn);
 	_prototypes.push_back (procmod);
 
+	procmod = new FTmodRotateLFO (samprate, fftn);
+	_prototypes.push_back (procmod);
+
+	procmod = new FTmodValueLFO (samprate, fftn);
+	_prototypes.push_back (procmod);
+	
 	 procmod = new FTmodRandomize (samprate, fftn);
 	_prototypes.push_back (procmod);
+
 	
 }
 

@@ -17,22 +17,22 @@
 **  
 */
 
-#ifndef __FTMODROTATE_HPP__
-#define __FTMODROTATE_HPP__
+#ifndef __FTMODROTATELFO_HPP__
+#define __FTMODROTATELFO_HPP__
 
 #include "FTmodulatorI.hpp"
 
-class FTmodRotate
+class FTmodRotateLFO
 	: public FTmodulatorI
 {
   public:
 
-	FTmodRotate(nframes_t samplerate, unsigned int fftn);
-	FTmodRotate (const FTmodRotate & other);
+	FTmodRotateLFO(nframes_t samplerate, unsigned int fftn);
+	FTmodRotateLFO (const FTmodRotateLFO & other);
 
-	virtual ~FTmodRotate();
+	virtual ~FTmodRotateLFO();
 
-	FTmodulatorI * clone() { return new FTmodRotate(*this); }
+	FTmodulatorI * clone() { return new FTmodRotateLFO(*this); }
 	void initialize();
 	
 	void modulate (nframes_t current_frame, fft_data * fftdata, unsigned int fftn, sample_t * timedata, nframes_t nframes);
@@ -43,10 +43,15 @@ class FTmodRotate
   protected:
 
 	Control * _rate;
+	Control * _depth;
+	Control * _lfotype;
 	Control * _minfreq;
 	Control * _maxfreq;
 	
 	nframes_t _lastframe;
+
+	int _lastshift;
+	
 	float * _tmpfilt;
 };
 
