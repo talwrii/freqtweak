@@ -72,7 +72,7 @@ class FTactiveBarGraph
 	void OnPaint ( wxPaintEvent &event);
 	void OnSize ( wxSizeEvent &event);
 	void OnMouseActivity ( wxMouseEvent &event );
-	void OnXscaleMenu (wxMenuEvent &event);
+	void OnXscaleMenu (wxCommandEvent &event);
 
 	void setBypassed (bool flag) { _bypassed = flag; Refresh(FALSE);}
 	bool getBypassed () { return _bypassed; }

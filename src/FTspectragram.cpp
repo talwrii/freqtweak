@@ -1020,7 +1020,7 @@ void FTspectragram::OnMouseActivity( wxMouseEvent &event)
 
 
 
-void FTspectragram::OnXscaleMenu (wxMenuEvent &event)
+void FTspectragram::OnXscaleMenu (wxCommandEvent &event)
 {
 	//wxMenuItem *item = (wxMenuItem *) event.GetEventObject();
 

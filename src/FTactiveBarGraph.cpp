@@ -2107,7 +2107,7 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 }
 
 
-void FTactiveBarGraph::OnXscaleMenu (wxMenuEvent &event)
+void FTactiveBarGraph::OnXscaleMenu (wxCommandEvent &event)
 {
 	//wxMenuItem *item = (wxMenuItem *) event.GetEventObject();
 

@@ -75,7 +75,7 @@ public:
 	void OnSize ( wxSizeEvent &event);
 	void OnMouseActivity ( wxMouseEvent &event );
 
-	void OnXscaleMenu (wxMenuEvent &event);
+	void OnXscaleMenu (wxCommandEvent &event);
 	
 	float powerLogScale(float yval);
 	
