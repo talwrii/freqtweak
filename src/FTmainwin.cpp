@@ -2560,7 +2560,7 @@ void FTmainwin::handlePathCount (wxCommandEvent &event)
 {
 	int newcnt = _pathCountChoice->GetSelection() + 1;
 
-	changePathCount (newcnt);
+	changePathCount (newcnt, true);
 }
 
 void FTmainwin::changePathCount (int newcnt, bool rebuild, bool ignorelink)

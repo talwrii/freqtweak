@@ -64,6 +64,15 @@ of all filters can be stored or loaded as presets.
     ** Limit --	This is very harsh brick wall limiter on a per-bin
 		basis.  It is not very pleasant, but can be interesting.
 
+
+    ** Compressor
+          This is a massively multiband compressor.  It will not
+          behave quite like a normal time-domain compressor because of
+          the inherent block processing of the FFT.  Each frequency
+          bin has its own compressor complete with Threshold, Ratio,
+          Attack/Release time, and makeup gain.  Again, this is *not*
+          suitable for mastering applications!
+
     ** Warp  --	  This one is a little different, both axes represent
 		  frequency, and the identity matrix is unaltered
 		  audio.  Changing the value (height) of a bin,
@@ -82,12 +91,11 @@ of all filters can be stored or loaded as presets.
       drivers so you'll need those too.
 
     * FFTW [www.fftw.org] -- for speedy FFT processing
-	(compiled as single-precision)
+	(compiled as single-precision) Supports v2 or v3.
 
     * wxWindows (wxGTK) [www.wxwindows.org] -- the GUI toolkit I've
-      chosen to use. It should work with the most recent 2.2.x and
-      2.3.x series. Why not GTK? I happen to know wx better at the moment...
-
+      chosen to use. It should work with the most 2.2.x, 2.3.x, and 2.4.x.
+     
 
 **** Misc Usage Tips ****
 

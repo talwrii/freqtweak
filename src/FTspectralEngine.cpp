@@ -175,6 +175,12 @@ FTspectralEngine::~FTspectralEngine()
 {
 	destroyState();
 
+	delete [] _inputPowerSpectra;
+        delete [] _outputPowerSpectra;
+	delete [] _runningInputPower;
+	delete [] _runningOutputPower;
+
+	
 	for (vector<FTprocI*>::iterator iter = _procModules.begin();
 	     iter != _procModules.end(); ++iter)
 	{
