@@ -118,6 +118,7 @@ enum WindowIds
 	
 	FT_MixLinkedButton,
 	FT_IOreconnectButton,
+	FT_IOdisconnectButton,
 	FT_IOnameText,
 };
 
@@ -132,6 +133,9 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 	EVT_MENU(FT_AboutMenu, FTmainwin::OnAbout)
 
 	EVT_IDLE(FTmainwin::OnIdle)
+
+	EVT_CLOSE(FTmainwin::OnClose)
+	
 	EVT_BUTTON(FT_InputButtonId, FTmainwin::handleInputButton)
 	EVT_BUTTON(FT_OutputButtonId, FTmainwin::handleOutputButton)
 	EVT_BUTTON(FT_FreqLinkId, FTmainwin::handleLinkButtons)
@@ -181,6 +185,7 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 
 	EVT_BUTTON(FT_MixLinkedButton, FTmainwin::handleLinkButtons)
 	EVT_BUTTON(FT_IOreconnectButton, FTmainwin::handleIOButtons)
+	EVT_BUTTON(FT_IOdisconnectButton, FTmainwin::handleIOButtons)
 	
 END_EVENT_TABLE()
 
@@ -365,6 +370,10 @@ void FTmainwin::buildGui()
 	
 	wxButton * reconnButton = new wxButton(iopanel, FT_IOreconnectButton, "Reconnect As");
 	ioSizer->Add (reconnButton, 0, wxALL|wxALIGN_CENTER, 2);
+
+	wxButton * disconnButton = new wxButton(iopanel, FT_IOdisconnectButton, "Disconnect");
+	ioSizer->Add (disconnButton, 0, wxALL|wxALIGN_CENTER, 2);
+
 	iopanel->SetAutoLayout(TRUE);
 	ioSizer->Fit( iopanel );  
 	iopanel->SetSizer(ioSizer);
@@ -2023,6 +2032,8 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 	if (source == _freqBinsChoice) {
 		int sel = _freqBinsChoice->GetSelection();
 		iosup->stopProcessing();
+
+		wxThread::Sleep(100);
 		
 		for (int i=0; i < _pathCount; i++) {
 			if (!_processPath[i]) continue;
@@ -2091,6 +2102,7 @@ void FTmainwin::handleIOButtons (wxCommandEvent &event)
 			fprintf(stderr, "Reconnecting as %s...\n", _ioNameText->GetValue().c_str());
 			
 			iosup->stopProcessing();
+			wxThread::Sleep(100);
 			iosup->close();
 			
 			iosup->setName (_ioNameText->GetValue().c_str());
@@ -2103,6 +2115,15 @@ void FTmainwin::handleIOButtons (wxCommandEvent &event)
 			updateDisplay();
 		}
 	}
+	else if (event.GetId() == FT_IOdisconnectButton)
+	{
+		if (iosup->isInited()) {
+			iosup->stopProcessing();
+			wxThread::Sleep(100);
+			iosup->close();
+		}
+	}
+
 }
 
 void FTmainwin::handlePathCount (wxCommandEvent &event)
@@ -2215,10 +2236,11 @@ void FTmainwin::handleMixSlider (wxCommandEvent &event)
 }
 
 
+
 void FTmainwin::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
+	cleanup();
 	// TRUE is to force the frame to close
-	FTioSupport::instance()->close();
 	Close(TRUE);
 }
 
@@ -2236,6 +2258,19 @@ void FTmainwin::OnIdle(wxIdleEvent &event)
 	if (_superSmooth) {
 		::wxWakeUpIdle();
 	}
+}
+
+void FTmainwin::OnClose(wxCloseEvent &event)
+{
+	cleanup();
+	event.Skip();
+}
+
+
+void FTmainwin::cleanup ()
+{
+	printf ("cleaning up\n");
+	FTioSupport::instance()->close();
 }
 
 void FTmainwin::checkEvents()

@@ -54,6 +54,7 @@ FTjackSupport::FTjackSupport(const char *name)
 
 FTjackSupport::~FTjackSupport()
 {
+	printf ("jack support destruct\n");
 	// init process path info
 	for (int i=0; i < FT_MAXPATHS; i++) {
 		if (_pathInfos[i]) {
@@ -62,7 +63,8 @@ FTjackSupport::~FTjackSupport()
 	}
 
 	if (_inited && _jackClient) {
-		jack_client_close ( _jackClient );
+		close();
+		//jack_client_close ( _jackClient );
 	}
 }
 
@@ -157,6 +159,8 @@ bool FTjackSupport::close()
 	if (_inited && _jackClient) {
 		stopProcessing();
 		jack_client_close ( _jackClient );
+		_jackClient = 0;
+		_inited = false;
 		return true;
 	}
 	return false;

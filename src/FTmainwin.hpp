@@ -55,7 +55,8 @@ class FTmainwin : public wxFrame
 	void OnQuit(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);
 	void OnIdle(wxIdleEvent & event);
-
+	void OnClose(wxCloseEvent &event);
+	
 	//void OnSize(wxSizeEvent &event);
 
 	
@@ -66,6 +67,8 @@ class FTmainwin : public wxFrame
 	void updatePosition(const wxString &freqstr, const wxString &valstr); 
 
 	void loadPreset (const wxString & name);
+
+	void cleanup ();
 	
   protected:
 

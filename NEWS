@@ -5,6 +5,14 @@ See the end for copying conditions.
 
 Please send freqtweak bug reports to freqtweak-user@lists.sourceforge.net .
 
+Version 0.4.5
+ * This time, I think I might have licked the changing FFT sizes problem!
+
+ * now uses the alsa_pcm conventions from JACK 0.40 for default connections
+
+ * added disconnect (from JACK) button to IO tab
+
+
 Version 0.4.4
  * Now deactivates processing while switching FFT sizes. This
    should prevent JACK from kicking us out here.
