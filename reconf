@@ -13,6 +13,7 @@ rm -f config.cache
 rm -f acconfig.h
 echo "- aclocal."
 #aclocal -I m4
+aclocal
 echo "- autoconf."
 autoconf
 echo "- acconfig."
