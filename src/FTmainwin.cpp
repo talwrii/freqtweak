@@ -196,7 +196,6 @@ FTmainwin::FTmainwin(int startpath, const wxString& title, const wxString& rcdir
 	  _configManager(rcdir)
 {
 	_eventTimer = new FTupdateTimer(this);
-	_graphUpdateTimer = new FTgraphUpdateTimer(this);
 
 	_rowItems = new wxWindow* [_rowCount];
 	
@@ -1241,12 +1240,12 @@ void FTmainwin::createPathStuff(int i)
 		tmpsizer = new wxStaticBoxSizer (box, wxVERTICAL);
 
 		tmpsizer2 = new wxBoxSizer (wxHORIZONTAL);
-		tmpsizer2->Add (_muteButton[i], 0.3, wxRIGHT, 5);
+		tmpsizer2->Add (_muteButton[i], 1, wxRIGHT, 5);
 		stattext = new wxStaticText(_lowerPanels[i], -1, "Dry", wxDefaultPosition, wxDefaultSize);
 		stattext->SetFont(buttFont);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 		_mixSlider[i] = new wxSlider(_lowerPanels[i], FT_MixSlider, 1000, 0, 1000);
-		tmpsizer2->Add (_mixSlider[i], 1, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
+		tmpsizer2->Add (_mixSlider[i], 2, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 		stattext = new wxStaticText(_lowerPanels[i], -1, "Wet", wxDefaultPosition, wxDefaultSize);
 		stattext->SetFont(buttFont);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
@@ -2004,8 +2003,6 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 		}
 		
 		//updateDisplay();
-		// set a timer
-		//_graphUpdateTimer->Start(250, TRUE);
 
 		updateGraphs(0, ALL_SPECMOD);
 	}

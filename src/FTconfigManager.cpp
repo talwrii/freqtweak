@@ -274,7 +274,7 @@ bool FTconfigManager::loadSettings (const char * name)
 				line.Trim(true);
 				line.Trim(false);
 			
-				if (line.IsEmpty() || line[0] == '#')
+				if (line.IsEmpty() || line.GetChar(0) == '#')
 				{
 					continue; // ignore
 				}
@@ -379,7 +379,7 @@ void FTconfigManager::loadFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 		line.Trim(true);
 		line.Trim(false);
 
-		if (line.IsEmpty() || line[0] == '#')
+		if (line.IsEmpty() || line.GetChar(0) == '#')
 		{
 			continue; // ignore
 		}

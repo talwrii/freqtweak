@@ -23,8 +23,39 @@ FREQTWEAK_VERSION=0.4
 AC_SUBST(FREQTWEAK_VERSION)
 
 
-AC_CHECK_LIB(fftw, fftw_create_plan)
-AC_CHECK_LIB(rfftw, rfftw_create_plan)
+# check for single precision convention first
+AC_CHECK_LIB(sfftw, fftw_create_plan)
+AC_CHECK_LIB(srfftw, rfftw_create_plan)
+AC_CHECK_LIB(srfftw, rfftw_create_plan,
+[
+have_fftw=yes
+],
+[
+have_fftw=no
+])
+
+if [[ "$have_fftw" = "no" ]] ; then
+    #    AC_MSG_ERROR("Could not find FFTW! Is it installed (www.fftw.org) ? ")
+
+  AC_CHECK_LIB(fftw, fftw_create_plan)
+  AC_CHECK_LIB(rfftw, rfftw_create_plan)
+
+  AC_CHECK_LIB(rfftw, rfftw_create_plan,
+  [ 
+  have_fftw=yes
+  ],
+  [
+  have_fftw=no
+  ])
+
+  if [[ "$have_fftw" = "no" ]] ; then
+        AC_MSG_ERROR("Could not find FFTW! Is it installed (www.fftw.org) ? ")
+  fi
+fi
+
+AC_CHECK_HEADERS(sfftw.h srfftw.h fftw.h rfftw.h)
+
+
 AC_CHECK_LIB(m,pow)
 
 
@@ -57,6 +88,11 @@ JACK_LIB="-L$jack_prefix/lib -ljack"
 have_jack=no
 ])
 fi
+
+if [[ "$have_jack" = "no" ]] ; then
+        AC_MSG_ERROR("Could not find jack! Is it installed (jackit.sf.net) ? Try using --with-jack=PREFIX")
+fi
+  
 
 LIBS="$LIBS $JACK_LIB"
 

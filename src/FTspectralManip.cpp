@@ -22,8 +22,20 @@
 #endif
 
 
+
+#ifdef HAVE_SFFTW_H
+#include <sfftw.h>
+#else
 #include <fftw.h>
+#endif
+
+#ifdef HAVE_SRFFTW_H
+#include <srfftw.h>
+#else
 #include <rfftw.h>
+#endif
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

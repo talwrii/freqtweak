@@ -20,8 +20,17 @@
 #ifndef __FTSPECTRALMANIP_HPP__
 #define __FTSPECTRALMANIP_HPP__
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
 
+
+#ifdef HAVE_SRFFTW_H
+#include <srfftw.h>
+#else
 #include <rfftw.h>
+#endif
+
 #include "FTutils.hpp"
 #include "FTtypes.hpp"
 

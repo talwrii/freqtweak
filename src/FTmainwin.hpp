@@ -39,10 +39,11 @@ class FTactiveBarGraph;
 class FTspectralManip;
 class FTspectrumModifier;
 
-class FTupdateTimer;
-class FTgraphUpdateTimer;
-class FTlinkMenu;
 class FTupdateToken;
+class FTupdateTimer;
+class FTlinkMenu;
+
+
 
 class FTmainwin : public wxFrame
 {
@@ -68,8 +69,6 @@ class FTmainwin : public wxFrame
 	
   protected:
 
-	friend FTupdateTimer;
-	friend FTlinkMenu;
 	
 	void buildGui();
 	void updatePlot(int plotnum);
@@ -256,7 +255,6 @@ class FTmainwin : public wxFrame
 	
 	
 	FTupdateTimer *_eventTimer;
-	FTgraphUpdateTimer *_graphUpdateTimer;
 	int _updateMS;
 	bool _superSmooth;
 	
@@ -272,6 +270,11 @@ class FTmainwin : public wxFrame
 	wxCheckBox *_superSmoothCheck;
 	
 	FTupdateToken * _updateTokens[FT_MAXPATHS];
+
+
+	friend class FTupdateTimer;
+	friend class FTlinkMenu;
+
 	
   private:
 	// any class wishing to process wxWindows events must use this macro
@@ -290,20 +293,6 @@ class FTupdateTimer
 	FTmainwin *mwin;
 };
 
-
-class FTgraphUpdateTimer
-	: public wxTimer
-{
-  public:
-	FTgraphUpdateTimer(FTmainwin * win) : wxTimer(), mwin(win), firsttime(false) {};
-
-	void Notify() {
-		mwin->updateGraphs(0, ALL_SPECMOD);
-	}
-
-	FTmainwin *mwin;
-	bool firsttime;
-};
 
 
 class FTlinkMenu
@@ -331,6 +320,7 @@ class FTlinkMenu
 	// any class wishing to process wxWindows events must use this macro
 //	DECLARE_EVENT_TABLE()
 };
+
 
 
 #endif

@@ -27,6 +27,9 @@
 #undef YOUR_OS
 
 
+/* Define to 1 if you have the <fftw.h> header file. */
+#undef HAVE_FFTW_H
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -42,8 +45,23 @@
 /* Define to 1 if you have the `rfftw' library (-lrfftw). */
 #undef HAVE_LIBRFFTW
 
+/* Define to 1 if you have the `sfftw' library (-lsfftw). */
+#undef HAVE_LIBSFFTW
+
+/* Define to 1 if you have the `srfftw' library (-lsrfftw). */
+#undef HAVE_LIBSRFFTW
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <rfftw.h> header file. */
+#undef HAVE_RFFTW_H
+
+/* Define to 1 if you have the <sfftw.h> header file. */
+#undef HAVE_SFFTW_H
+
+/* Define to 1 if you have the <srfftw.h> header file. */
+#undef HAVE_SRFFTW_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
