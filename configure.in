@@ -10,7 +10,7 @@
 
 AC_INIT(reconf)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freqtweak,0.4.2dev1)
+AM_INIT_AUTOMAKE(freqtweak,0.4.3)
 #LF_CONFIGURE_CC
 #AC_PROG_CXX
 LF_CONFIGURE_CXX
@@ -19,9 +19,11 @@ LF_SET_WARNINGS
 AC_PROG_RANLIB
 
 
-FREQTWEAK_VERSION=0.4.2dev1
+FREQTWEAK_VERSION=0.4.3
 
 AC_SUBST(FREQTWEAK_VERSION)
+
+
 
 
 use_fftw=yes
@@ -29,10 +31,14 @@ use_fftw=yes
 AC_ARG_WITH(fftw,[  --with-fftw=PFX        Prefix where fftw is installed (optional)],
  fftw_prefix="$withval", fftw_prefix="/usr/local") 
 
+
+AC_CHECK_LIB(m,pow)
+
+
 if test "$use_fftw" = "yes"
 then
 
-LDFLAGS="$LDFLAGS -L$fftw_prefix/lib"
+LDFLAGS="$LDFLAGS -L$fftw_prefix/lib -lm"
 JACK_CFLAGS="-I$fftw_prefix/include"
 
 CFLAGS="$CFLAGS $FFTW_CFLAGS"
@@ -74,7 +80,6 @@ fi
 # end fftw section
 
 
-AC_CHECK_LIB(m,pow)
 
 
 # jack stuff
