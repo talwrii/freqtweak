@@ -87,7 +87,7 @@ class FTspectralManip
 	void setUpdateToken (FTupdateToken *tok) { _updateToken = tok; }
 	FTupdateToken * getUpdateToken() { return _updateToken; }
 	
-	void setFFTsize (FFT_Size sz);
+	void setFFTsize (FFT_Size sz); // ONLY call when not processing
 	FFT_Size getFFTsize() { return (FFT_Size) _fftN; }
 
 	void setSampleRate (nframes_t rate) { _sampleRate = rate; }

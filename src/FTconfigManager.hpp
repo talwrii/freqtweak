@@ -40,7 +40,7 @@ class FTconfigManager
 
 	bool storeSettings (const char * name);
 
-	bool loadSettings (const char * name);
+	bool loadSettings (const char * name, bool restore_ports=false);
 
 	FTstringList * getSettingsNames();
 
@@ -52,7 +52,7 @@ class FTconfigManager
 	void loadFilterFiles(FTspectralManip *manip, wxString &dirname, int i);
 	void loadFilter (FTspectrumModifier *specmod, wxTextFile & tf);
 
-	void modifySetting (FTspectralManip *manip, int id, wxString &key, wxString &value);
+	void modifySetting (FTspectralManip *manip, int id, wxString &key, wxString &value, bool restoreports=false);
 	
 	wxString _basedir;
 

@@ -220,8 +220,6 @@ void FTspectralManip::setFFTsize (FTspectralManip::FFT_Size sz)
 	if ((int) sz != _fftN) {
 		_newfftN = sz;
 		_fftnChanged = false;
-		// the processing thread will check this
-		// and do the real work
 
 		_averages = (int) (_oversamp * _updateSpeed * 512/(float)_newfftN); // magic?
 

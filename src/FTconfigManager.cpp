@@ -230,7 +230,7 @@ bool FTconfigManager::storeSettings (const char * name)
 	return true;
 }
 
-bool FTconfigManager::loadSettings (const char * name)
+bool FTconfigManager::loadSettings (const char * name, bool restore_ports)
 {
 	if (strcmp (name, "") == 0) {
 		return false;
@@ -299,7 +299,7 @@ bool FTconfigManager::loadSettings (const char * name)
 					value = line.Mid(pos+1).Strip(wxString::both);
 					//printf ("key is %s, value is %s\n", key.c_str(), value.c_str());
 
-					modifySetting (manip, i, key, value);
+					modifySetting (manip, i, key, value, restore_ports);
 				}
 			
 			}
@@ -552,7 +552,7 @@ void FTconfigManager::writeFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 }
 
 
-void FTconfigManager::modifySetting (FTspectralManip *manip, int id, wxString &key, wxString &value)
+void FTconfigManager::modifySetting (FTspectralManip *manip, int id, wxString &key, wxString &value, bool restoreports)
 {
 
 	double fval;
@@ -699,7 +699,7 @@ void FTconfigManager::modifySetting (FTspectralManip *manip, int id, wxString &k
 	}
 
 	// io stuff
-	else if (key == "input_ports") {
+	else if (key == "input_ports" && restoreports) {
 		// value is comma separated list of port names
 		iosup->disconnectPathInput(id, NULL); // disconnect all
 
@@ -713,7 +713,7 @@ void FTconfigManager::modifySetting (FTspectralManip *manip, int id, wxString &k
 		}
 		
 	}
-	else if (key == "output_ports") {
+	else if (key == "output_ports"  && restoreports) {
 		// value is comma separated list of port names
 		iosup->disconnectPathOutput(id, NULL); // disconnect all
 

@@ -39,7 +39,7 @@ using namespace std;
 
 
 FTjackSupport::FTjackSupport(const char * name)
-	:  _inited(false), _jackClient(0), _activePathCount(0), _activated(false)
+	:  _inited(false), _jackClient(0), _activePathCount(0), _activated(false), _bypassed(false)
 {
 	// init process path info
 	for (int i=0; i < FT_MAXPATHS; i++) {
@@ -503,6 +503,15 @@ bool FTjackSupport::inAudioThread()
 	return false;
 }
 
+void FTjackSupport::setProcessingBypassed (bool val)
+{
+   if (_bypassed != val) {
+      // TODO: flag some sort of cross-fade ramp
+      _bypassed = val;
+   }
+}
+
+
 bool FTjackSupport::reinit (bool rebuild)
 {
 	// assume that activePathCount is in the previous state
@@ -569,7 +578,6 @@ int FTjackSupport::processCallback (jack_nframes_t nframes, void *arg)
 	FTjackSupport * jsup = (FTjackSupport *) FTioSupport::instance();
 	PathInfo * tmppath;
 
-	
 	// do processing for each path
 	for (int i=0; i < FT_MAXPATHS; i++)
 	{
@@ -578,11 +586,19 @@ int FTjackSupport::processCallback (jack_nframes_t nframes, void *arg)
 			
 			sample_t *in = (sample_t *) jack_port_get_buffer (tmppath->inputport, nframes);
 			sample_t *out = (sample_t *) jack_port_get_buffer (tmppath->outputport, nframes);
-			tmppath->procpath->processData(in, out, nframes);
+
+			if (jsup->_bypassed)
+			{
+				memset (out, 0, nframes * sizeof(sample_t));
+			}
+			else
+			{
+				tmppath->procpath->processData(in, out, nframes);
+			}
 			
 		}
 	}
-	
+
 	return 0;	
 }
 

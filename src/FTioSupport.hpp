@@ -79,7 +79,9 @@ class FTioSupport
 	virtual const char * getName() { return _name.c_str(); }
 
 	virtual bool inAudioThread() { return false; }
-	
+
+        virtual void setProcessingBypassed (bool val) = 0;
+    
 	enum IOtype
 	{
 		IO_JACK,

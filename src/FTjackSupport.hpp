@@ -82,6 +82,7 @@ class FTjackSupport
 	nframes_t getSampleRate() { return _sampleRate; }
 	bool getPortsChanged() { return _portsChanged; }
 
+        void setProcessingBypassed (bool val);
 	
   protected:
 
@@ -116,6 +117,7 @@ class FTjackSupport
 
 	bool _portsChanged;
 	bool _activated;
+        bool _bypassed;
 };
 
 

@@ -115,7 +115,9 @@ class FTmainwin : public wxFrame
 	void createPathStuff(int i);
 	void rebuildPresetCombo();
 
-	
+	void suspendProcessing();
+	void restoreProcessing();
+    
 	FTprocessPath * _processPath[FT_MAXPATHS];
 
 	int _startpaths;
@@ -298,6 +300,7 @@ class FTmainwin : public wxFrame
 	wxComboBox * _presetCombo;
 	wxChoice * _plotSpeedChoice;
 	wxCheckBox *_superSmoothCheck;
+	wxCheckBox *_restorePortsCheck;
 
 	wxChoice * _maxDelayChoice;
 	vector<float> _delayList;
@@ -307,6 +310,7 @@ class FTmainwin : public wxFrame
 	
 	FTupdateToken * _updateTokens[FT_MAXPATHS];
 
+        bool _bypassArray[FT_MAXPATHS];
 
 	friend class FTupdateTimer;
 	friend class FTlinkMenu;

@@ -138,6 +138,7 @@ enum WindowIds
 
 	FT_MaxDelayChoiceId,
 	FT_TempoSpinId,
+	FT_RestorePortCheckId
 };
 
 
@@ -315,6 +316,10 @@ void FTmainwin::buildGui()
 	loadButt->SetFont(buttFont);
 	configSizer->Add( loadButt, 0, wxALL|wxALIGN_CENTER, 2);
 
+	_restorePortsCheck = new wxCheckBox(configpanel, FT_RestorePortCheckId, "Restore Ports");
+	configSizer->Add( _restorePortsCheck, 0, wxALL|wxALIGN_CENTER, 2);
+
+	
 	configpanel->SetAutoLayout(TRUE);
 	configSizer->Fit( configpanel );  
 	configpanel->SetSizer(configSizer);
@@ -2321,16 +2326,8 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 	else if (source == _freqBinsChoice) {
 		int sel = _freqBinsChoice->GetSelection();
 
-		bool bypArray[FT_MAXPATHS];
-		
-		for (int i=0; i < _pathCount; i++) {
-			if (!_processPath[i]) continue;
-
-			bypArray[i] = _processPath[i]->getSpectralManip()->getBypassed();
-			_processPath[i]->getSpectralManip()->setBypassed(true);
-		}
-
-		wxThread::Sleep(200); // sleep to let the process callback get around to the beginning
+		// MUST bypass and wait until not working
+		suspendProcessing();
 		
 		for (int i=0; i < _pathCount; i++) {
 			if (!_processPath[i]) continue;
@@ -2353,12 +2350,8 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			_outputSpectragram[i]->setDataLength((unsigned int)_processPath[i]->getSpectralManip()->getFFTsize() >> 1);
 		}
 
-		for (int i=0; i < _pathCount; i++) {
-			if (!_processPath[i]) continue;
-
-			_processPath[i]->getSpectralManip()->setBypassed(bypArray[i]);
-		}
-
+		restoreProcessing();
+		
 		updateGraphs(0, ALL_SPECMOD);
 	}
 	else if (source == _overlapChoice) {
@@ -2410,18 +2403,8 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 		float maxdelay = _delayList[sel];
 
 		// MUST bypass and wait until not working
-
-		bool bypArray[FT_MAXPATHS];
+		suspendProcessing();
 		
-		for (int i=0; i < _pathCount; i++) {
-			if (!_processPath[i]) continue;
-
-			bypArray[i] = _processPath[i]->getSpectralManip()->getBypassed();
-			_processPath[i]->getSpectralManip()->setBypassed(true);
-		}
-
-		wxThread::Sleep(200); // sleep to let the process callback get around to the beginning
-
 		// set the max delay
 		for (int i=0; i < _pathCount; i++) {
 			if (!_processPath[i]) continue;
@@ -2430,12 +2413,7 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			_delayGraph[i]->setSpectrumModifier(_processPath[i]->getSpectralManip()->getDelayFilter());
 		}
 
-		// resotre bypass state
-		for (int i=0; i < _pathCount; i++) {
-			if (!_processPath[i]) continue;
-
-			_processPath[i]->getSpectralManip()->setBypassed(bypArray[i]);
-		}
+		restoreProcessing();
 
 		updateGraphs(0, DELAY_SPECMOD);
 		
@@ -2838,10 +2816,15 @@ void FTmainwin::handleLoadButton (wxCommandEvent &event)
 
 void FTmainwin::loadPreset (const wxString &name)
 {
-	_configManager.loadSettings ( name);
+	suspendProcessing();
+	
+	_configManager.loadSettings ( name, _restorePortsCheck->GetValue());
 
+	restoreProcessing();
+	
 	changePathCount ( FTioSupport::instance()->getActivePathCount() );
 
+	
 	_presetCombo->SetValue(name);
 	rebuildPresetCombo();
 
@@ -2883,6 +2866,43 @@ void FTmainwin::rebuildPresetCombo()
 	delete namelist;
 }
 
+void FTmainwin::suspendProcessing()
+{
+
+// 	for (int i=0; i < _pathCount; i++) {
+// 		if (!_processPath[i]) continue;
+		
+// 		_bypassArray[i] = _processPath[i]->getSpectralManip()->getBypassed();
+// 		_processPath[i]->getSpectralManip()->setBypassed(true);
+// 	}
+	FTioSupport::instance()->setProcessingBypassed (true);
+	
+	printf ("suspended before sleep\n");
+	
+	wxThread::Sleep(100); // sleep to let the process callback get around to the beginning
+	printf ("suspended after sleep\n");
+
+}
+
+void FTmainwin::restoreProcessing()
+{
+	
+	// restore bypass state
+// 	for (int i=0; i < _pathCount; i++) {
+// 		if (!_processPath[i]) continue;
+		
+// 		_processPath[i]->getSpectralManip()->setBypassed(_bypassArray[i]);
+// 	}
+
+	FTioSupport::instance()->setProcessingBypassed (false);
+	
+	printf ("restored\n");
+	
+}
+
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 FTlinkMenu::FTlinkMenu (wxWindow * parent, FTmainwin *win, FTspectralManip *specmanip, SpecModType stype)
 	: wxMenu(), _mwin(win), _specmanip(specmanip), _stype(stype)
