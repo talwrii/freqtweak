@@ -11,11 +11,11 @@
 AC_INIT(src/FTapp.cpp)
 
 
-BETA=
+BETA=dev
 
 FREQTWEAK_MAJOR_VERSION=0
 FREQTWEAK_MINOR_VERSION=6
-FREQTWEAK_MICRO_VERSION=1
+FREQTWEAK_MICRO_VERSION=2
 
 FREQTWEAK_VERSION=$FREQTWEAK_MAJOR_VERSION.$FREQTWEAK_MINOR_VERSION.${FREQTWEAK_MICRO_VERSION}${BETA}
 
@@ -47,7 +47,16 @@ export PKG_CONFIG_PATH
 dnl ==========
 dnl JACK stuff
 dnl ==========
-PKG_CHECK_MODULES(JACK, jack >= 0.40.0, have_jack=yes, have_jack=no)
+PKG_CHECK_MODULES(JACK, jack >= 0.80.0, have_jack=yes, have_jack=no)
+
+if test "x$have_jack" != "xno"
+then
+AC_CHECK_LIB(jack, jack_client_open, 
+		   [ AC_DEFINE([HAVE_JACK_CLIENT_OPEN], 1, [Have newer JACK connect call])], 
+		   [],
+		   [$JACK_LIBS])
+fi
+
 AC_SUBST(JACK_LIBS)
 AC_SUBST(JACK_CFLAGS)
 
@@ -287,22 +296,27 @@ dnl LIBS="$LIBS $JACK_LIB"
 
 #AC_MSG_CHECKING(for wxWindows)
 
-
 dnl wxwindows
-AC_PATH_PROG(WX_CONFIG1, wxgtk2-2.4-config, no, $PATH:/usr/local/bin )
+AC_PATH_PROG(WX_CONFIG1, wxgtk2-2.5-config, no, $PATH:/usr/local/bin )
 if [[ "$WX_CONFIG1" = "no" ]] ; then
 
-	AC_PATH_PROG(WX_CONFIG2, wxgtk-2.4-config, no, $PATH:/usr/local/bin )
+	AC_PATH_PROG(WX_CONFIG2, wxgtk2-2.4-config, no, $PATH:/usr/local/bin )
 	if [[ "$WX_CONFIG2" = "no" ]] ; then
 
-		AC_PATH_PROG(WX_CONFIG3, wx-config, no, $PATH:/usr/local/bin )
+		AC_PATH_PROG(WX_CONFIG3, wxgtk-2.4-config, no, $PATH:/usr/local/bin )
 		if [[ "$WX_CONFIG3" = "no" ]] ; then
-        		AC_MSG_ERROR("Could not find any wx-config scripts: is wxWindows installed?")
-		else	
+
+			AC_PATH_PROG(WX_CONFIG4, wx-config, no, $PATH:/usr/local/bin )
+			if [[ "$WX_CONFIG4" = "no" ]] ; then
+        			AC_MSG_ERROR("Could not find any wx-config scripts: is wxWindows installed?")
+			else	
+	   			WX_CONFIG=$WX_CONFIG4
+			fi
+		else
 	   		WX_CONFIG=$WX_CONFIG3
 		fi
 	else
-	   WX_CONFIG=$WX_CONFIG2
+		WX_CONFIG=$WX_CONFIG2
 	fi
 else	
    WX_CONFIG=$WX_CONFIG1
@@ -310,19 +324,11 @@ fi
 
 WX_LIBS="`$WX_CONFIG --libs`"
 
-#CPPFLAGS="$CPPFLAGS `$WX_CONFIG --cxxflags`"
-
 if $WX_CONFIG --cxxflags > /dev/null 2>&1 ; then
     WX_CFLAGS="`$WX_CONFIG --cxxflags`"
 else
     WX_CFLAGS="`$WX_CONFIG --cflags`"
 fi
-#wx_config_major_version=`$WX_CONFIG  --version | \
-#           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-#wx_config_minor_version=`$WX_CONFIG --version | \
-#           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-#wx_config_micro_version=`$WX_CONFIG  --version | \
-#           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
 
 
 #UNAME_MACHINE=`uname -m`

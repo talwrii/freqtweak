@@ -32,14 +32,14 @@ FTioSupport * FTioSupport::_instance = 0;
 
 FTioSupport::IOtype FTioSupport::_iotype = FTioSupport::IO_JACK;
 string FTioSupport::_defaultName;
-string FTioSupport::_defaultDir;
+string FTioSupport::_defaultServ;
 
 FTioSupport * FTioSupport::createInstance()
 {
 	// static method
 
 	if (_iotype == IO_JACK) {
-		return new FTjackSupport(_defaultName.c_str(), _defaultDir.c_str());
+		return new FTjackSupport(_defaultName.c_str(), _defaultServ.c_str());
 	}
 	else {
 		return 0;

@@ -49,7 +49,7 @@ FTjackSupport::FTjackSupport(const char * name, const char * dir)
 
 	_name = name;
 
-	_jackdir = dir;
+	_jackserv = dir;
 }
 
 FTjackSupport::~FTjackSupport()
@@ -74,11 +74,40 @@ FTjackSupport::~FTjackSupport()
  */
 bool FTjackSupport::init()
 {
-	char namebuf[100];
 
-	if (!_jackdir.empty()) {
-		jack_set_server_dir (_jackdir.c_str());
+#ifdef HAVE_JACK_CLIENT_OPEN
+	// TODO: use jack_client_open
+	jack_options_t options = JackNullOption;
+	jack_status_t status;
+	const char *server_name = NULL;
+
+	if (!_jackserv.empty()) {
+		server_name = _jackserv.c_str();
 	}
+	
+	// jack_client_name = client_name; /* might be reset below */
+	if (_name.empty()) {
+		_name = "freqtweak";
+	}
+	
+	_jackClient = jack_client_open (_name.c_str(), options, &status, server_name);
+	
+	if (!_jackClient) {
+		fprintf (stderr, "JACK Error: No good client name or JACK server %s not running?\n", _jackserv.c_str());
+		_inited = false;
+		return false;
+	}
+	
+	if (status & JackServerStarted) {
+		fprintf(stderr,"JACK server started\n");
+	}
+
+	if (status & JackNameNotUnique) {
+		_name = jack_get_client_name (_jackClient);
+	}
+
+#else
+	char namebuf[100];
 	
 	/* try to become a client of the JACK server */
 	if (_name.empty()) {
@@ -103,12 +132,15 @@ bool FTjackSupport::init()
 			}
 		}
 	}
-
+	
 	if (!_jackClient) {
 		fprintf (stderr, "JACK Error: No good client name or JACK server not running?\n");
 		_inited = false;
 		return false;
 	}
+
+#endif
+
 	
 	/* tell the JACK server to call `process()' whenever
 	   there is work to be done.

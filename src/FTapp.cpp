@@ -76,7 +76,7 @@ static const wxCmdLineEntryDesc cmdLineDesc[] =
 	  wxT("connect outputs to these jack ports (separate each channel with commas).\n")
 	      "\t\t\tDefaults to 'alsa_pcm:playback_1,...'" },
 	{ wxCMD_LINE_OPTION, wxT("n"), wxT("jack-name"), wxT("jack name.   default is freqtweak_1")},
-	{ wxCMD_LINE_OPTION, wxT("D"), wxT("tmpdir"), wxT("jack server tmp directory (should match jackd --tmpdir)")},
+	{ wxCMD_LINE_OPTION, wxT("S"), wxT("jack-server"), wxT("jack server name")},
 	{ wxCMD_LINE_OPTION, wxT("p"), wxT("preset"), wxT("load given preset initially")},
 	{ wxCMD_LINE_OPTION, wxT("r"), wxT("rc-dir"), wxT("what directory to use for run-control state. default is ~/.freqtweak")},
 	{ wxCMD_LINE_NONE }
@@ -252,8 +252,8 @@ bool FTapp::OnInit()
 		pcnt = (int) longval;
 	}
 
-	if (parser.Found (wxT("D"), &jackdir)) {
-	       FTioSupport::setDefaultDir ((const char *) jackdir.c_str());
+	if (parser.Found (wxT("S"), &jackdir)) {
+	       FTioSupport::setDefaultServer ((const char *) jackdir.c_str());
 	}
 	
 	if (parser.Found (wxT("n"), &jackname)) {

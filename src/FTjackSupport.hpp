@@ -118,7 +118,7 @@ class FTjackSupport
 	int _activePathCount;
 	//char _name[100];
 
-	string _jackdir;
+	string _jackserv;
 	
 	bool _portsChanged;
 	bool _activated;
