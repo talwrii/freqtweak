@@ -35,20 +35,24 @@ The current processing filters are described below in the order audio is
 processed in the chain. Any or all of the filters can be bypassed. The state
 of all filters can be stored or loaded as presets.
 
-    * Spectral Analysis -- Multicolor scrolling-raster spectragram, or energy
+    ** Spectral Analysis -- Multicolor scrolling-raster spectragram, or energy
       vs. freq line or bar plots... one shows pre-processed, another shows
       post-processed.
-    * EQ -- Your basic multi-band frequency attenuation. But you get an
+
+    ** EQ -- Your basic multi-band frequency attenuation. But you get an
       unhealthy number of bands...
-    * Pitch Scaling -- This is an interesting application of Sprengler's pitch
+
+    ** Pitch Scaling -- This is an interesting application of Sprengler's pitch
       scaling algorithm (used in Steve Harris' LADSPA plugin). If you keep all
       the bins at the same scale, it is equivalent to Steve's plugin, but when
       you start applying different scales per frequency bin, things quickly
       get weird.
-    * Gate -- This is a double filter where a given frequency band is allowed
+
+    ** Gate -- This is a double filter where a given frequency band is allowed
       to pass through (unaltered) if the power on that band is between two dB
       thresholds... otherwise its gain is clamped to 0.
-    * Delay -- This lets you delay the audio on a per frequency-bin basis
+
+    ** Delay -- This lets you delay the audio on a per frequency-bin basis
       yielding some pretty wild effects (or subtle, if you are careful). A
       feedback filter controls the feedback of the delay per bin (be careful
       with this one). This is basically what Native Instrument's Spektral-
@@ -59,27 +63,43 @@ of all filters can be stored or loaded as presets.
 
 **** Requirements ****
 
-    * JACK -- providing realtime low-latency audio interconnection and
-      delivery. JACK requires the ALSA Linux sound drivers so you'll need
-      those too.
-    * FFTW -- for speedy FFT processing (compiled as single-precision)
-    * wxWindows (wxGTK) -- the GUI toolkit I've chosen to use. It should work
-      with the most recent 2.2.x and 2.3.x series. Why not GTK? I happen to
-      know wx better at the moment...
+    * JACK [jackit.sf.net] -- providing realtime low-latency audio
+      interconnection and delivery. JACK requires the ALSA Linux sound
+      drivers so you'll need those too.
+
+    * FFTW [www.fftw.org] -- for speedy FFT processing
+	(compiled as single-precision)
+
+    * wxWindows (wxGTK) [www.wxwindows.org] -- the GUI toolkit I've
+      chosen to use. It should work with the most recent 2.2.x and
+      2.3.x series. Why not GTK? I happen to know wx better at the moment...
+
 
 **** Misc Usage Tips ****
 
     * Left button click/drag to draw filters. If Control is down, the y-axis
       is fixed at the last cursor location (to draw nice horizontal lines).
+
     * Right button drag to move filters around in space. The filters wrap
       around the left/right edges unless you hold down Control. Dragging with
       both left and right buttons down moves both primary and alternate
       together (on Gate).
+
     * Holding Shift modifies the alternate filter (on double filter graphs
       like Gate) for the previous operations.
+
     * Middle-button pops up frequency axis menu.
+
     * Ctrl-Alt right-click resets a filter to default values.
+
+    * Shift-Ctrl-Alt Left-Drag zooms in on the y axis.
+      Look at the status bar to see the values for the cursor
+      itself and the values of the filter at the cursor's
+      frequency.  Shift-Ctrl-Alt Right click-release resets
+      the Y-zoom to full.  	      
+
     * The B and BA buttons mean Bypass and Bypass All respectively.
+
     * The L and LA buttons mean Link and Link All respectively.
 
 

@@ -81,14 +81,17 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 
 	: wxPanel(parent, id, pos, size, style, name)
 	//, _topHeight(4), _bottomHeight(4), _leftWidth(4, _rightWidth(4)
-	, _specMod(0), _topSpecMod(0),  _mindb(50.0)
+	, _specMod(0), _topSpecMod(0)
+	,_mindb(-50.0), _maxdb(0.0), _absmindb(-50), _absmaxdb(0.0)
 	, _tmpfilt(0), _toptmpfilt(0)
 	, _barColor0("skyblue"), _barColor1("steelblue")
 	,  _barColor2("seagreen"), _barColor3("darkseagreen")
 	,_barColorDead("gray30")
 	,_tipColor(200,200,0)
 	, _penColor("blue"), _backingMap(0)
-	, _xScaleType(XSCALE_1X), _lastX(0), _mainwin(win)
+	, _xScaleType(XSCALE_1X), _lastX(0)
+	, _dragging(false), _zooming(false)
+	, _mainwin(win)
 {
 	SetBackgroundColour(*wxBLACK);
 
@@ -135,9 +138,16 @@ void FTactiveBarGraph::setSpectrumModifier (FTspectrumModifier *sm)
 	_specMod = sm;
 	_xscale = _width/(float)_specMod->getLength();
 
-	_min = _specMod->getMin();
-	_max = _specMod->getMax();
+	_min = _absmin = _specMod->getMin();
+	_max = _absmax = _specMod->getMax();
 
+ 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER)
+	{
+		_mindb = _absmindb;
+		_maxdb = _absmaxdb;
+	}
+
+	
 	if (_tmpfilt) delete [] _tmpfilt;
 	_tmpfilt = new float[_specMod->getLength()];
 	
@@ -149,9 +159,16 @@ void FTactiveBarGraph::setTopSpectrumModifier (FTspectrumModifier *sm)
 
 	// should be same as other one
 	_xscale = _width/(float)_topSpecMod->getLength();
-	_min = _topSpecMod->getMin();
-	_max = _topSpecMod->getMax();
+	_min = _absmin = _topSpecMod->getMin();
+	_max =  _absmax = _topSpecMod->getMax();
 
+ 	if (_topSpecMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER)
+	{
+		_mindb = _absmindb;
+		_maxdb = _absmaxdb;
+	}
+
+	
 	if (_toptmpfilt) delete [] _toptmpfilt;
 	_toptmpfilt = new float[_topSpecMod->getLength()];
 	
@@ -162,6 +179,34 @@ void FTactiveBarGraph::setXscale(XScaleType sc)
 {
 	_xScaleType = sc; 
 	Refresh(FALSE);
+}
+
+
+bool FTactiveBarGraph::setMinMax(float min, float max)
+{
+ 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER)
+	{
+		if (min >= _absmin && max <= _absmax) {
+			_min = min;
+			_max = max;
+			_mindb = valToDb(min);
+			_maxdb = valToDb(max);
+			
+			Refresh(FALSE);
+			return true;
+		}
+		Refresh(FALSE);
+		return false;
+	}
+	else if (min >= _absmin && max <= _absmax) {
+		_min = min;
+		_max = max;
+		Refresh(FALSE);
+		return true;
+	}
+
+	Refresh(FALSE);
+	return false;
 }
 
 
@@ -312,7 +357,7 @@ float FTactiveBarGraph::valDiffY(float val, int lasty, int newy)
 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER) {
 		// db scaled
 		float vdb = valToDb (val);
-		float ddb = (lasty-newy)/(float)_height * _mindb ;
+		float ddb = ((lasty-newy)/(float)_height) * (_maxdb - _mindb) ;
 
 		return dbToVal (vdb + ddb);
 	}
@@ -470,7 +515,7 @@ int FTactiveBarGraph::valToY(float val)
 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER) {
 		// db scale it
 		float db = valToDb(val);
-		y = (int) ( (db+ _mindb) / _mindb * _height);
+		y = (int) (( (db - _mindb) / (_maxdb - _mindb)) * _height);
 		//printf ("val=%g  db=%g  y=%d\n", val, db, y);
 
 	}
@@ -485,7 +530,7 @@ int FTactiveBarGraph::valToY(float val)
 
 float FTactiveBarGraph::yToDb(int y)
 {
-	return (_height - y)/(float)_height * _mindb - _mindb ;
+	return (((_height - y)/(float)_height) * (_maxdb-_mindb)) + _mindb ;
 }
 
 float FTactiveBarGraph::yToVal(int y)
@@ -611,6 +656,14 @@ void FTactiveBarGraph::OnPaint(wxPaintEvent & event)
 		}
 	}
 
+
+	if (_zooming) {
+		// draw xor'd box
+		backdc.SetLogicalFunction (wxINVERT);
+
+		backdc.DrawRectangle ( 0, _topzoomY, _width, _bottomzoomY - _topzoomY);
+
+	}
 	
 
 	
@@ -686,12 +739,11 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 			SetCursor(wxCURSOR_HAND);
 		}
 		CaptureMouse();
-		_dragging  = true;
+
 	}
 	else if (event.RightDown()) {
 		SetCursor(wxCURSOR_HAND);
 		CaptureMouse();
-		_dragging  = true;
 	}
 			
 
@@ -709,11 +761,38 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 		this->PopupMenu ( _xscaleMenu, pX, pY);
 
 	}
-	else if ((event.LeftDown() || (_dragging && event.Dragging() && event.LeftIsDown())) && !event.RightIsDown())
+	else if (!_dragging && event.LeftIsDown() && (_zooming || (event.ControlDown() && event.ShiftDown() && event.AltDown())))
+	{
+		// zooming related
+		if (event.LeftDown()) {
+			_zooming = true;
+			_firstY = _topzoomY = _bottomzoomY = pY;
+			Refresh(FALSE);
+		}
+		else if (event.LeftIsDown()) {
+			if (pY < _firstY) {
+				_bottomzoomY = _firstY;
+				_topzoomY = pY;
+			}
+			else {
+				_bottomzoomY = pY;
+				_topzoomY = _firstY;
+			}
+
+			if (_topzoomY < 0) _topzoomY = 0;
+			if (_bottomzoomY > _height) _bottomzoomY = _height;
+
+			Refresh(FALSE);
+			updatePositionLabels(pX, pY, true);
+		}
+		
+	}
+	else if ((event.LeftDown() || (_dragging && event.Dragging() && event.LeftIsDown())) && !event.RightIsDown() && !_zooming)
 	{
 		if (event.LeftDown()) {
 			_firstX = _lastX = pX;
 			_firstY = _lastY = pY;
+			_dragging = true;
 		}
 		
 		// modify spectrumModifier for bins
@@ -791,13 +870,14 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 		updatePositionLabels(pX, useY, true, specmod);
 
 	}
-	else if (event.RightDown() || (_dragging && event.Dragging() && event.RightIsDown()))
+	else if ((event.RightDown() || (_dragging && event.Dragging() && event.RightIsDown())) && !_zooming)
 	{
 		// shift entire contour around
 		if (event.RightDown()) {
 			_firstX = _lastX = pX;
 			_firstY = _lastY = pY;
 			SetCursor(wxCURSOR_HAND);
+			_dragging = true;
 		}
 
 		float * valueslist[2];
@@ -937,25 +1017,47 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 	}
 	else if (event.ButtonUp()  && !event.LeftIsDown() && !event.RightIsDown()) {
 		ReleaseMouse();
-		_dragging = false;
 		SetCursor(wxCURSOR_PENCIL);
+		_dragging = false;
 
-		if (event.RightUp() && event.ControlDown() && event.AltDown()) {
-			// reset filter
-			if (_specMod) {
-				_specMod->reset();
+		if (event.RightUp() && event.ControlDown() && event.AltDown())
+		{
+			if (event.ShiftDown())
+			{
+				// reset zoom
+				_zooming = false;
+				if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER)
+				{
+					_mindb = _absmindb;
+					_maxdb = _absmaxdb;
+					Refresh(FALSE);
+				}
+				else {
+					setMinMax (_absmin, _absmax);
+				}
 			}
-			if (_topSpecMod) {
-				_topSpecMod->reset();
+			else {
+				// reset filter
+				if (_specMod) {
+					_specMod->reset();
+				}
+				if (_topSpecMod) {
+					_topSpecMod->reset();
+				}
+				
+				Refresh(FALSE);
+				
+				_mainwin->updateGraphs(this, specm->getSpecModifierType());
+				updatePositionLabels(pX, pY, true);
 			}
-			
-			Refresh(FALSE);
-
-			_mainwin->updateGraphs(this, specm->getSpecModifierType());
-			updatePositionLabels(pX, pY, true);
-
 		}
-		
+		else if (_zooming)
+		{
+			// commit zoom
+			_zooming = false;
+			setMinMax ( yToVal (_bottomzoomY), yToVal (_topzoomY) );
+		}
+
 		event.Skip();
 	}
 	else if (event.Moving())

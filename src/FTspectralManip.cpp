@@ -48,6 +48,11 @@ const int FTspectralManip::_fftSizes[] = {
 };
 
 
+// in samples  (about 3 seconds at 44100)
+
+#define FT_MAX_DELAYSAMPLES (1 << 19)
+
+
 FTspectralManip::FTspectralManip()
 	: _fftN (512), _windowing(FTspectralManip::WINDOW_HANNING)
 	, _oversamp(4), _averages(8), _fftnChanged(false)
@@ -86,15 +91,17 @@ FTspectralManip::FTspectralManip()
 	_fftPlan = rfftw_create_plan(_fftN, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);		
 	_ifftPlan = rfftw_create_plan(_fftN, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);		
 
+	_sampleRate = FTioSupport::instance()->getSampleRate();
+
+	// in seconds
+	_maxDelay = ((FT_MAX_DELAYSAMPLES) / ((float)_sampleRate*sizeof(sample_t))) ; 
+	
 	// this is a big boy containing the frequency data frames over time
 	_frameFifo = new RingBuffer( (FT_MAX_DELAYSAMPLES) * sizeof(fftw_real) );
 	
 	// window init
 	createWindowVectors();
 
-	// in seconds
-	_sampleRate = FTioSupport::instance()->getSampleRate();
-	_maxDelay = (FT_MAX_DELAYSAMPLES) / (float)_sampleRate; 
 
 	
 	// create filters
@@ -737,10 +744,11 @@ void FTspectralManip::processDelay (FTprocessPath *procpath, fftw_real *data)
 		}
 		
 		// frames to shift
-		fshift = ((nframes_t)(_sampleRate * thisdelay)) / _fftN;
+		fshift = ((nframes_t)(_sampleRate * thisdelay * sizeof(sample_t))) / _fftN;
 		//nframes_t bshift = fshift * _fftN * sizeof(sample_t);
 		//printf ("bshift %Zd  wrvec[0]=%d\n", bshift, wrvec[0].len);
 		// byte offset to start of frame
+		//bshift = fshift * _fftN * sizeof(sample_t);
 		bshift = fshift * _fftN * sizeof(sample_t);
 
 

@@ -35,8 +35,6 @@ typedef jack_nframes_t nframes_t;
 #define FT_MAX_AVERAGES 128
 #define FT_MAX_OVERSAMP  16
 
-// in samples
-#define FT_MAX_DELAYSAMPLES (1 << 17)
 
 
 enum SpecModType {
@@ -61,6 +59,13 @@ enum XScaleType
 	XSCALE_LOGB, // pseudo-log scale with lower freqs having bigger bins
 };
 
+enum YScaleType
+{
+	YSCALE_1X, // 
+	YSCALE_2X, // 
+	YSCALE_3X, // 
+	YSCALE_4X, // 
+};
 
 
 #endif

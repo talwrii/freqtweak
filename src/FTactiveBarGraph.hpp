@@ -50,6 +50,12 @@ class FTactiveBarGraph
 	
 	void setXscale(XScaleType sc);
 	XScaleType getXscale() { return _xScaleType; }
+
+	bool setMinMax(float min, float max);
+	void getMinMax(float &min, float &max) { min=_min; max=_max; }
+
+	void setFixMin (bool flag);
+	bool getFixMin () { return _fixMin; }
 	
 	void OnPaint ( wxPaintEvent &event);
 	void OnSize ( wxSizeEvent &event);
@@ -89,10 +95,12 @@ class FTactiveBarGraph
 	FTspectrumModifier * _topSpecMod;
 
 	float _min, _max;
+	float _absmin, _absmax;
 	
 	float _xscale;
-
-	float _mindb;
+	
+	float _mindb, _maxdb;
+	float _absmindb, _absmaxdb;
 	
 	float *_tmpfilt, *_toptmpfilt;
 	
@@ -106,12 +114,17 @@ class FTactiveBarGraph
 	wxBitmap * _backingMap;
 
 	XScaleType _xScaleType;
+
+	bool _fixMin;
+	YScaleType _yScaleType;
 	
 	// mouse stuff
 	int _lastX, _lastY;
 	int _firstX, _firstY;
 	bool _dragging;
 	bool _firstCtrl;
+	bool _zooming;
+	int _topzoomY, _bottomzoomY;
 	
 	wxString _freqstr, _valstr;
 
