@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = autogen.sh configure ft_preset_convert.py freqtweak.1
-SUBDIRS =  src
+SUBDIRS =  src doc
 
 
 man_MANS = freqtweak.1

@@ -9,7 +9,8 @@ Version 0.5.3
  * reworked all string handling to be compatible with unicode
    versions of wxGTK
  * 64bit portability fixes
- 
+ * added usage help
+
 Version 0.5.2
  * fixed dialog closing problem, made them real windows
  * fixed compile problems for gcc 2.96
