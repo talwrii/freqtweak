@@ -140,8 +140,8 @@ void FTmodulatorGui::init()
 	bypassCheck->SetValue(_modulator->getBypassed());
 	topSizer->Add (bypassCheck, 0, wxTOP|wxBOTTOM|wxALIGN_CENTRE_VERTICAL, 2);
 	
-	wxButton * chanButton = new wxButton(this, ID_ChannelButton, wxT("Source..."), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
-	topSizer->Add (chanButton, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+// 	wxButton * chanButton = new wxButton(this, ID_ChannelButton, wxT("Source..."), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+// 	topSizer->Add (chanButton, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
 	
 	wxButton * attachButton = new wxButton(this, ID_AttachButton, wxT("Attach..."), wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
@@ -309,6 +309,7 @@ void FTmodulatorGui::init()
 				choice->Append (wxString::FromAscii((*citer).c_str()));
 			}
 			choice->SetStringSelection (wxString::FromAscii(currval.c_str()));
+
 			
 			rowsizer->Add (choice, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 

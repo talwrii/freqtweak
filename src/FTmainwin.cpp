@@ -2799,7 +2799,7 @@ void FTmainwin::OnModulatorDialog (wxCommandEvent &event)
 	// popup our modulator dialog
 	if (!_modulatorDialog) {
 		_modulatorDialog = new FTmodulatorDialog(this, -1, wxT("Modulations"));
-		_modulatorDialog->SetSize(400,350);
+		_modulatorDialog->SetSize(450,350);
 	}
 
 	//_modulatorDialog->refreshState();

@@ -279,14 +279,12 @@ void FTmodulatorDialog::onAddModulator (wxCommandEvent &ev)
 	
 	FTmodulatorI * protomod = FTmodulatorManager::instance()->getModuleByIndex(mobj->index);
 
-	cerr << "add modulator: " << (unsigned) protomod << " clicked chan: " << _clickedChannel <<  "  " << (unsigned) this << endl;
+	//cerr << "add modulator: " << (unsigned) protomod << " clicked chan: " << _clickedChannel <<  "  " << (unsigned) this << endl;
 	
 	if (protomod)
 	{
 		FTmodulatorI * mod = protomod->clone();
 		mod->initialize();
-
-		cerr << "mod added: " << mod->getName() << endl;
 
 		appendModGui (mod, true);
 		

@@ -57,7 +57,7 @@ void FTmodValueLFO::initialize()
 	_lfotype->_enumList.push_back("Sine");
 	_lfotype->_enumList.push_back("Triangle");
 	_lfotype->_enumList.push_back("Square");
-	_lfotype->setValue ("Sine");
+	_lfotype->setValue (string("Sine"));
 	_controls.push_back (_lfotype);
 
 	
@@ -217,11 +217,6 @@ void FTmodValueLFO::modulate (nframes_t current_frame, fft_data * fftdata, unsig
 			}
 			else {
 				continue;
-			}
-
-			if (pm->getModifierType() == FTspectrumModifier::GAIN_MODIFIER) {
-				// log scale it
-				//currdev = (20.0 * FTutils::fast_log10(val));
 			}
 			
 			lastshift = _lastshifts[sm];

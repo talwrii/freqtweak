@@ -45,6 +45,18 @@ void FTmodRandomize::initialize()
 	_rate->setValue (0.0f);
 	_controls.push_back (_rate);
 
+	_minval = new Control (Control::FloatType, "min_val", "Min Val", "%");
+	_minval->_floatLB = 0.0;
+	_minval->_floatUB = 100.0;
+	_minval->setValue (_minval->_floatLB);
+	_controls.push_back (_minval);
+
+	_maxval = new Control (Control::FloatType, "max_val", "Max Val", "%");
+	_maxval->_floatLB = 0.0;
+	_maxval->_floatUB = 100.0;
+	_maxval->setValue (_maxval->_floatUB);
+	_controls.push_back (_maxval);
+	
 	_minfreq = new Control (Control::FloatType, "min_freq", "Min Freq", "Hz");
 	_minfreq->_floatLB = 0.0;
 	_minfreq->_floatUB = _sampleRate / 2;
@@ -57,17 +69,6 @@ void FTmodRandomize::initialize()
 	_maxfreq->setValue (_maxfreq->_floatUB);
 	_controls.push_back (_maxfreq);
 
-	_minval = new Control (Control::FloatType, "min_val", "Min Val", "%");
-	_minval->_floatLB = 0.0;
-	_minval->_floatUB = 100.0;
-	_minval->setValue (_minval->_floatLB);
-	_controls.push_back (_minval);
-
-	_maxval = new Control (Control::FloatType, "max_val", "Max Val", "%");
-	_maxval->_floatLB = 0.0;
-	_maxval->_floatUB = 100.0;
-	_maxval->setValue (_maxval->_floatUB);
-	_controls.push_back (_maxval);
 	
 	
 	srand(0);

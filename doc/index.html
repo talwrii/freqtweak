@@ -72,6 +72,16 @@
 		</tr>
 		<tr bgcolor="#eeeeee">
 		  <td>
+		    Version 0.6.0 released -- 23 April 2004
+		    <font size=-1>
+		      -- added filter Modulators, Rotate, Rotate LFO,
+		         Value LFO, and Randomize
+		      -- minor bugfixes
+		    </font>
+		  </td>
+		</tr>
+		<tr bgcolor="#eeeeee">
+		  <td>
 		    Version 0.5.3 released -- 18 Sep 2003
 		    <font size=-1>
 		      -- reworked all string handling to be compatible with unicode
@@ -261,10 +271,65 @@
 			
 
 		    </ul>
+
+<p>
+		      
+ Modulators to an filter can be attached from the Modulations Window
+ (Control->Modulators...   Ctrl-M).  Add a modulator by clicking
+ on the Add Modulator... button and select from the choices.  To
+ attach a modulator to a filter, click on the Attach... button on the
+ modulator panel and pick a filter.  You can modulate many filters
+ simultaneously.   The text entry fields can be used to exactly set
+ the slider values, by pressing enter/return after entering the number.
+<p>
+	      
+ The following modulators are
+ currently implemented, with more to come soon.
+
+	    <ul>
+	      <li> <b>Rotate</b> -- <font size=-1>
+
+		  This will continually shift a filter horizontally at a constant
+            definable Rate, wrapping when it reaches the edge.  The edges
+            are definable with the Min and Max Freq controls.
+
+		  </font>
+		
+	      
+	      <li> <b>Rotate LFO</b> -- <font size=-1>
+
+             The same as the above, except the shifting rate oscillates via LFO
+            with its own Rate and Depth controls.  Currently there are sine, triangle,
+	    and square waveform shapes.  The frequency range that the modulator affects
+            is definable with the Min and Max Freq controls.
+		  </font>
+
+	      <li> <b>Value LFO</b> -- <font size=-1>
+		  
+            Shifts the values up and down with an LFO.  The depth control
+            here is percentage
+            of total value range.  The frequency range that the modulator affects
+            is definable with the Min and Max Freq controls.
+		  </font>
+
+	      <li> <b>Randomize</b> -- <font size=-1>
+		  Randomizes the bin values between the given value bounds
+            (as percentages of total range).  Again, the frequency range
+            that the modulator affects is definable with the Min and Max Freq controls.
+            
+		  </font>
+
+
+		    </ul>
+
+
 		  </td>
 		</tr>  
 	    </table>
 
+
+
+	    
 <p>
 	  <table border=0 width="100%" cellpadding=6 cellspacing=0>
 		<tr bgcolor="#bbbbbb">
@@ -296,7 +361,14 @@
 		It should work with the most recent 2.2.x and 2.3.x
 		and 2.4.x series.  I haven't tested with the 2.2.x in
 			a while though....
-	    </ul>
+
+	      <li><a href="http://libsigc.sourceforge.net/">libsigc++
+			  1.2</a>
+			-- this library is usually already on recent
+			systems, but if not get it and install it.
+
+
+		    </ul>
 		  </td>
 		</tr>  
 	    </table>
@@ -384,6 +456,7 @@
 
 	    <p>
 
+	      
 	    <table border=0 width="100%" cellpadding=6 cellspacing=0>
 		<tr bgcolor="#bbbbbb">
 		  <th align=left>
@@ -394,9 +467,8 @@
 		  <td>
 		    <font size=-1>
 	    <ul>
-	      <li> Automated filter modulation (via plugins?)
-	      <li> Plot performance optimizations (OpenGL?)
-	      <li> Whatever else the users want :)
+	      <li> MIDI/OSC control of filter and modulators
+	      <li> non-GUI version
 	      </ul>
 	    </font>
 		  </td>
@@ -420,7 +492,7 @@
 	      <font size=-1>
 	    <!-- Created: Wed Oct  9 17:02:31 EDT 2002 -->
 	    <!-- hhmts start -->
-Last modified: Thu Sep 18 21:19:47 EDT 2003
+Last modified: Fri Apr 23 22:25:25 EDT 2004
 <!-- hhmts end -->
 </font>
 	    <p>

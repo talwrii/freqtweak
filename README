@@ -88,6 +88,37 @@ of all filters can be stored or loaded as presets.
 		  (it affects both axes).
 
 
+ Modulators to an filter can be attached from the Modulations Window
+ (Control->Modulators...   Ctrl-M).  Add a modulator by clicking
+ on the Add Modulator... button and select from the choices.  To
+ attach a modulator to a filter, click on the Attach... button on the
+ modulator panel and pick a filter.  You can modulate many filters
+ simultaneously.   The text entry fields can be used to exactly set
+ the slider values, by pressing enter/return after entering the number.
+  
+ The following modulators are
+ currently implemented, with more to come soon.
+
+   ** Rotate  --  this will continually shift a filter horizontally at a constant
+            definable Rate, wrapping when it reaches the edge.  The edges
+            are definable with the Min and Max Freq controls.
+
+   ** Rotate LFO -- the same as the above, except the shifting rate oscillates via LFO
+            with its own Rate and Depth controls.  Currently there are sine, triangle,
+	    and square waveform shapes.  The frequency range that the modulator affects
+            is definable with the Min and Max Freq controls.
+
+   ** Value LFO -- shifts the values up and down with an LFO.  The depth control
+            here is percentage
+            of total value range.  The frequency range that the modulator affects
+            is definable with the Min and Max Freq controls.
+
+   ** Randomize --  randomizes the bin values between the given value bounds
+            (as percentages of total range).  Again, the frequency range
+            that the modulator affects is definable with the Min and Max Freq controls.
+            
+
+
 **** Requirements ****
 
     * JACK [jackit.sf.net] -- providing realtime low-latency audio
@@ -99,7 +130,10 @@ of all filters can be stored or loaded as presets.
 
     * wxWindows (wxGTK) [www.wxwindows.org] -- the GUI toolkit I've
       chosen to use. It should work with the most 2.2.x, 2.3.x, and 2.4.x.
-     
+
+    * libsigc++ 1.2  -- this library is usually already on recent systems
+          but can be found at [ http://libsigc.sourceforge.net/ ]
+
 
 **** Misc Usage Tips ****
 

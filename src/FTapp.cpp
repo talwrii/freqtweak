@@ -228,7 +228,7 @@ bool FTapp::OnInit()
 	parser.SetDesc(cmdLineDesc);
 	parser.SetLogo(wxT("FreqTweak ") +
 		       wxString::FromAscii (freqtweak_version) +
-		       wxT("\nCopyright 2002-2003 Jesse Chappell\n")
+		       wxT("\nCopyright 2002-2004 Jesse Chappell\n")
 		       wxT("FreqTweak comes with ABSOLUTELY NO WARRANTY\n")
 		       wxT("This is free software, and you are welcome to redistribute it\n")
 		       wxT("under certain conditions; see the file COPYING for details\n"));

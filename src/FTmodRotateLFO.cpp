@@ -58,7 +58,7 @@ void FTmodRotateLFO::initialize()
 	_lfotype->_enumList.push_back("Sine");
 	_lfotype->_enumList.push_back("Triangle");
 	_lfotype->_enumList.push_back("Square");
-	_lfotype->setValue ("Sine");
+	_lfotype->setValue (string("Sine"));
 	_controls.push_back (_lfotype);
 	
 	_minfreq = new Control (Control::FloatType, "min_freq", "Min Freq", "Hz");
