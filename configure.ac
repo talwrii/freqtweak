@@ -11,11 +11,11 @@
 AC_INIT(src/FTapp.cpp)
 
 
-BETA=
+BETA=dev
 
 FREQTWEAK_MAJOR_VERSION=0
-FREQTWEAK_MINOR_VERSION=5
-FREQTWEAK_MICRO_VERSION=3
+FREQTWEAK_MINOR_VERSION=6
+FREQTWEAK_MICRO_VERSION=0
 
 FREQTWEAK_VERSION=$FREQTWEAK_MAJOR_VERSION.$FREQTWEAK_MINOR_VERSION.${FREQTWEAK_MICRO_VERSION}${BETA}
 
@@ -51,6 +51,11 @@ PKG_CHECK_MODULES(JACK, jack >= 0.40.0, have_jack=yes, have_jack=no)
 AC_SUBST(JACK_LIBS)
 AC_SUBST(JACK_CFLAGS)
 
+
+dnl sigc++
+PKG_CHECK_MODULES(SIGCPP, sigc++-1.2 >= 0.14, have_sigc12=yes, have_sigc12=no)
+
+    
 
 AC_CHECK_LIB(m,pow)
 
@@ -160,7 +165,7 @@ AC_ARG_WITH(fftw,[  --with-fftw=PFX        Prefix where fftw is installed (optio
 
 
 AC_ARG_WITH(fftw3,[  --with-fftw3        Try to use fftw3 if installed (yes by default)],
- try_fftw3="$withval", fftw_prefix="yes") 
+ try_fftw3="$withval", try_fftw3="yes") 
 
 
 if test "x$try_fftw3" != "xno"
@@ -310,15 +315,15 @@ fi
 AC_ARG_ENABLE(debug,
       [  --enable-debug    not optimized and includes debug symbols],
       [ if test "x$enable_debug" != "xno" ; then
-	  CXXFLAGS="-g -Wall -D_REENTRANT $FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS"
+	  CXXFLAGS="-g -Wall -D_REENTRANT $FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS $SIGCPP_CFLAGS"
 	  CFLAGS="$CXXFLAGS"
         else
-	  CXXFLAGS="$FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS -Wall -D_REENTRANT $ARCH_CFLAGS"
+	  CXXFLAGS="$FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS $SIGCPP_CFLAGS -Wall -D_REENTRANT $ARCH_CFLAGS"
 	  CFLAGS="$CXXFLAGS"
 	fi
       ],
 	[
-	  CXXFLAGS="$FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS -Wall -D_REENTRANT $ARCH_CFLAGS"
+	  CXXFLAGS="$FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS $SIGCPP_CFLAGS -Wall -D_REENTRANT $ARCH_CFLAGS"
 	  CFLAGS="$CXXFLAGS"
         ]
 )
@@ -328,7 +333,7 @@ AC_ARG_ENABLE(debug,
 
 #CXXFLAGS="-g -Wall $FFTW_CFLAGS $JACK_CFLAGS $WX_CFLAGS $XML_CFLAGS"
 
-LIBS="$LIBS $FFTW_LIBS $JACK_LIBS $WX_LIBS $XML_LIBS"
+LIBS="$LIBS $FFTW_LIBS $JACK_LIBS $WX_LIBS $XML_LIBS $SIGCPP_LIBS"
 
 
 AC_SUBST(FREQTWEAK_MAJOR_VERSION)
