@@ -15,7 +15,7 @@ BETA=
 
 FREQTWEAK_MAJOR_VERSION=0
 FREQTWEAK_MINOR_VERSION=6
-FREQTWEAK_MICRO_VERSION=0
+FREQTWEAK_MICRO_VERSION=1
 
 FREQTWEAK_VERSION=$FREQTWEAK_MAJOR_VERSION.$FREQTWEAK_MINOR_VERSION.${FREQTWEAK_MICRO_VERSION}${BETA}
 
@@ -288,10 +288,26 @@ dnl LIBS="$LIBS $JACK_LIB"
 #AC_MSG_CHECKING(for wxWindows)
 
 
-AC_PATH_PROG(WX_CONFIG, wx-config, no, $PATH:/usr/local/bin )
-if [[ "$WX_CONFIG" = "no" ]] ; then
-        AC_MSG_ERROR("Could not find wx-config: is wxWindows installed? is wx-config in your path?")
+dnl wxwindows
+AC_PATH_PROG(WX_CONFIG1, wxgtk2-2.4-config, no, $PATH:/usr/local/bin )
+if [[ "$WX_CONFIG1" = "no" ]] ; then
+
+	AC_PATH_PROG(WX_CONFIG2, wxgtk-2.4-config, no, $PATH:/usr/local/bin )
+	if [[ "$WX_CONFIG2" = "no" ]] ; then
+
+		AC_PATH_PROG(WX_CONFIG3, wx-config, no, $PATH:/usr/local/bin )
+		if [[ "$WX_CONFIG3" = "no" ]] ; then
+        		AC_MSG_ERROR("Could not find any wx-config scripts: is wxWindows installed?")
+		else	
+	   		WX_CONFIG=$WX_CONFIG3
+		fi
+	else
+	   WX_CONFIG=$WX_CONFIG2
+	fi
+else	
+   WX_CONFIG=$WX_CONFIG1
 fi
+
 WX_LIBS="`$WX_CONFIG --libs`"
 
 #CPPFLAGS="$CPPFLAGS `$WX_CONFIG --cxxflags`"
