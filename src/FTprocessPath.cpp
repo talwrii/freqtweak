@@ -76,7 +76,7 @@ void FTprocessPath::processData (sample_t * inbuf, sample_t *outbuf, nframes_t n
 			_inputFifo->write ((char *) inbuf, sizeof(sample_t) * nframes);	
 		}
 		else {
-			fprintf(stderr, "BLAH! Can't write into input fifo!\n");
+			//fprintf(stderr, "BLAH! Can't write into input fifo!\n");
 		}
 		
 		// DO SPECTRAL PROCESSING
@@ -93,7 +93,7 @@ void FTprocessPath::processData (sample_t * inbuf, sample_t *outbuf, nframes_t n
 			}
 		}
 		else {
-			fprintf(stderr, "BLAH! Can't read enough data from output fifo!\n");
+			//fprintf(stderr, "BLAH! Can't read enough data from output fifo!\n");
 			if (_specManip->getMuted()) {
 				memset (outbuf, 0, sizeof(sample_t) * nframes);
 			}

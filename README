@@ -79,6 +79,7 @@ of all filters can be stored or loaded as presets.
 
     * Left button click/drag to draw filters. If Control is down, the y-axis
       is fixed at the last cursor location (to draw nice horizontal lines).
+      If Control *and* Alt are down you can draw nice arbitrary lines.
 
     * Right button drag to move filters around in space. The filters wrap
       around the left/right edges unless you hold down Control. Dragging with

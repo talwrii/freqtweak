@@ -37,7 +37,7 @@
 
 
 FTjackSupport::FTjackSupport(const char *name)
-	: _inited(false), _activePathCount(0)
+	: _inited(false), _activePathCount(0), _activated(false)
 {
 	// init process path info
 	for (int i=0; i < FT_MAXPATHS; i++) {
@@ -61,7 +61,7 @@ FTjackSupport::~FTjackSupport()
 		}
 	}
 
-	if (_inited) {
+	if (_inited && _jackClient) {
 		jack_client_close ( _jackClient );
 	}
 }
@@ -80,7 +80,8 @@ bool FTjackSupport::init()
 	}
 	
 	if ((_jackClient = jack_client_new (_name)) == 0) {
-		fprintf (stderr, "JACK Error: Either invalid name or JACK server not running?\n");
+		fprintf (stderr, "JACK Error: Either invalid name %s or JACK server not running?\n", _name);
+		_inited = false;
 		return false;
 	}
 
@@ -125,27 +126,35 @@ bool FTjackSupport::init()
 
 bool FTjackSupport::startProcessing()
 {
+	if (!_jackClient) return false;
+	
 	if (jack_activate (_jackClient)) {
 		fprintf (stderr, "Error: cannot activate jack client!\n");
 		return false;
 	}
 
+	_activated = true;
+	
 	return true;
 }
 
 bool FTjackSupport::stopProcessing()
 {
+	if (!_jackClient) return false;
+
 	if (jack_deactivate (_jackClient)) {
 		fprintf (stderr, "Error: cannot deactivate jack client!\n");
 		return false;
 	}
 
+	_activated = false;
+	
 	return true;
 }
 
 bool FTjackSupport::close()
 {
-	if (_inited) {
+	if (_inited && _jackClient) {
 		stopProcessing();
 		jack_client_close ( _jackClient );
 		return true;
@@ -156,7 +165,7 @@ bool FTjackSupport::close()
 
 FTprocessPath * FTjackSupport::setProcessPathActive (int index, bool active)
 {
-	if (!_inited) return 0;
+	if (!_inited || !_jackClient) return 0;
 
 	char nbuf[30];
 
@@ -249,6 +258,8 @@ const char * FTjackSupport::getOutputPortName(int index)
 
 bool FTjackSupport::connectPathInput (int index, const char *inname)
 {
+	if (!_jackClient) return false;
+	
 	if (index >=0 && index < FT_MAXPATHS && _pathInfos[index])
 	{
 		if (jack_connect (_jackClient, inname, jack_port_name(_pathInfos[index]->inputport))) {
@@ -257,6 +268,7 @@ bool FTjackSupport::connectPathInput (int index, const char *inname)
 			return false;
 		}
 
+		_pathInfos[index]->inconn_list.Add (inname);
 		return true;
 	}
 
@@ -265,6 +277,8 @@ bool FTjackSupport::connectPathInput (int index, const char *inname)
 
 bool FTjackSupport::connectPathOutput (int index, const char *outname)
 {
+	if (!_jackClient) return false;
+
 	if (index >=0 && index < FT_MAXPATHS && _pathInfos[index])
 	{
 		if (jack_connect (_jackClient, jack_port_name(_pathInfos[index]->outputport), outname)) {
@@ -272,6 +286,9 @@ bool FTjackSupport::connectPathOutput (int index, const char *outname)
 				 jack_port_name(_pathInfos[index]->outputport), outname);
 			return false;
 		}
+		
+		_pathInfos[index]->outconn_list.Add (outname);
+		return true;
 	}
 
 	return false;
@@ -280,6 +297,8 @@ bool FTjackSupport::connectPathOutput (int index, const char *outname)
 
 bool FTjackSupport::disconnectPathInput (int index, const char *inname)
 {
+	if (!_jackClient) return false;
+
 	if (index >=0 && index < FT_MAXPATHS && _pathInfos[index])
 	{
 		if (inname)
@@ -288,6 +307,7 @@ bool FTjackSupport::disconnectPathInput (int index, const char *inname)
 				fprintf (stderr, "cannot disconnect input port\n");
 				return false;
 			}
+			_pathInfos[index]->inconn_list.Delete(wxString(inname));
 			return true;
 		}
 		else {
@@ -299,6 +319,9 @@ bool FTjackSupport::disconnectPathInput (int index, const char *inname)
 				}
 				free(portnames);
 			}
+
+			_pathInfos[index]->inconn_list.Clear();
+
 			return true;
 		}
 	}
@@ -308,6 +331,7 @@ bool FTjackSupport::disconnectPathInput (int index, const char *inname)
 
 bool FTjackSupport::disconnectPathOutput (int index, const char *outname)
 {
+	if (!_jackClient) return false;
 	
 	if (index >=0 && index < FT_MAXPATHS && _pathInfos[index])
 	{
@@ -317,6 +341,7 @@ bool FTjackSupport::disconnectPathOutput (int index, const char *outname)
 				fprintf (stderr, "cannot disconnect output ports\n");
 				return false;
 			}
+			_pathInfos[index]->outconn_list.Delete(wxString(outname));
 			return true;
 		}
 		else {
@@ -328,6 +353,7 @@ bool FTjackSupport::disconnectPathOutput (int index, const char *outname)
 				}
 				free(portnames);
 			}
+			_pathInfos[index]->outconn_list.Clear();
 			return true;
 		}
 
@@ -341,6 +367,8 @@ const char ** FTjackSupport::getInputConnectablePorts (int index)
 {
 	const char ** portnames = NULL;
 
+	if (!_jackClient) return NULL;
+	
 	if (index >=0 && index < FT_MAXPATHS && _pathInfos[index])
 	{
 		//char regexstr[100];
@@ -356,6 +384,8 @@ const char ** FTjackSupport::getInputConnectablePorts (int index)
 const char ** FTjackSupport::getOutputConnectablePorts (int index)
 {
 	const char ** portnames = NULL;
+
+	if (!_jackClient) return NULL;
 
 	if (index >=0 && index < FT_MAXPATHS && _pathInfos[index])
 	{
@@ -373,6 +403,7 @@ const char ** FTjackSupport::getOutputConnectablePorts (int index)
 const char ** FTjackSupport::getConnectedInputPorts(int index)
 {
 	const char ** portnames = NULL;
+	if (!_jackClient) return NULL;
 
 	if (index >=0 && index < FT_MAXPATHS && _pathInfos[index])
 	{
@@ -381,6 +412,13 @@ const char ** FTjackSupport::getConnectedInputPorts(int index)
 		//snprintf(regexstr, 99, "^(%s)", jack_port_name (_pathInfos[index]->inputport) );
 		
 		portnames = jack_port_get_connections( _pathInfos[index]->inputport);
+
+		_pathInfos[index]->inconn_list.Clear();
+		if (portnames) {
+			for (int i=0; portnames[i]; i++) {
+				_pathInfos[index]->inconn_list.Add (portnames[i]);
+			}			
+		}
 	}
 
 	return portnames;
@@ -389,6 +427,7 @@ const char ** FTjackSupport::getConnectedInputPorts(int index)
 const char ** FTjackSupport::getConnectedOutputPorts(int index)
 {
 	const char ** portnames = NULL;
+	if (!_jackClient) return NULL;
 
 	if (index >=0 && index < FT_MAXPATHS && _pathInfos[index])
 	{
@@ -397,12 +436,76 @@ const char ** FTjackSupport::getConnectedOutputPorts(int index)
 		//snprintf(regexstr, 99, "^(%s)", jack_port_name (_pathInfos[index]->inputport) );
 		
 		portnames = jack_port_get_connections( _pathInfos[index]->outputport);
+
+		_pathInfos[index]->outconn_list.Clear();
+		if (portnames) {
+			for (int i=0; portnames[i]; i++) {
+				_pathInfos[index]->outconn_list.Add (portnames[i]);
+			}			
+		}
 	}
 
 	return portnames;
 }
 
 
+bool FTjackSupport::reinit (bool rebuild)
+{
+	// assume that activePathCount is in the previous state
+	// assume that the _pathInfos contain valid lists of connected ports
+	// and active flags
+
+	//printf ("reinit\n");
+	if (!_jackClient) return false;
+
+	
+	for (int i=0; i < FT_MAXPATHS; i++)
+	{
+		if (_pathInfos[i] && _pathInfos[i]->active) {
+			if (rebuild) {
+				_pathInfos[i]->active = false;
+				setProcessPathActive (i, true);
+			}
+			
+			// reconnect to ports
+			wxStringList inlist = _pathInfos[i]->inconn_list; // copy			
+			_pathInfos[i]->inconn_list.Clear();
+			
+			wxStringListNode *node = inlist.GetFirst();
+			while (node)
+			{
+				wxString port = node->GetData();
+				// only do it if the port is not one of ours
+				// those interconnected ports within ourself are added
+				// only once below
+				if ( ! jack_port_is_mine ( _jackClient,
+							  jack_port_by_name(_jackClient, port.c_str())) )
+				{
+					//fprintf(stderr, "reconnecting to input: %s\n", port.c_str());
+					connectPathInput ( i, port );
+				}
+				
+				node = node->GetNext();
+			}
+
+			wxStringList outlist = _pathInfos[i]->outconn_list; // copy
+			_pathInfos[i]->outconn_list.Clear();
+			
+			node = outlist.GetFirst();
+			while (node)
+			{
+				wxString port = node->GetData();
+				//fprintf(stderr, "reconnecting to output: %s\n", port.c_str());
+				connectPathOutput ( i, port );
+				
+				node = node->GetNext();
+			}
+		}
+	}
+	
+	return true;
+}
+	     
 
 
 /** static callbacks **/
@@ -462,17 +565,18 @@ void FTjackSupport::jackShutdown (void *arg)
 
 	fprintf (stderr, "Jack shut us down!\n");
 
-	for (int i=0; i < FT_MAXPATHS; i++)
-	{
-		if (jsup->_pathInfos[i]) {
-		   jsup->_pathInfos[i]->active = false;
+	jsup->_inited = false;
+	jsup->_jackClient = 0;
+	
+	/*
+	//jsup->close();
+	fprintf (stderr, "Trying to reconnect....\n");
+	if (jsup->init()) {
+		if (jsup->startProcessing()) {
+			jsup->reinit ();
 		}
 	}
-	
-	jsup->_inited = false;
-	jsup->_activePathCount = 0;
-
-	// reconnect?
+	*/
 }
 
 // This isn't in use yet.

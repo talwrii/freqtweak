@@ -209,10 +209,11 @@ void FTspectralManip::setId (int id)
 
 void FTspectralManip::setFFTsize (FTspectralManip::FFT_Size sz)
 {
+	// THIS MUST NOT BE CALLED WHILE WE ARE ACTIVATED!
 	
 	if ((int) sz != _fftN) {
 		_newfftN = sz;
-		_fftnChanged = true;
+		_fftnChanged = false;
 		// the processing thread will check this
 		// and do the real work
 
@@ -227,7 +228,8 @@ void FTspectralManip::setFFTsize (FTspectralManip::FFT_Size sz)
 		_scaleFilter->setLength(_newfftN/2);
 		_gateFilter->setLength(_newfftN/2);
 		_inverseGateFilter->setLength(_newfftN/2);
-		
+
+		reinitPlan(0);
 	}
 
 }
@@ -318,12 +320,6 @@ nframes_t FTspectralManip::getLatency()
  */
 void FTspectralManip::processNow (FTprocessPath *procpath)
 {
-	if (_fftnChanged) {
-		reinitPlan(procpath);
-		_fftnChanged = false;
-
-	}
-
 	int i;
 	int osamp = _oversamp;
 	int step_size = _fftN / osamp;

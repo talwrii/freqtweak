@@ -35,7 +35,9 @@ class FTioSupport
 	virtual ~FTioSupport() {};
 
 	virtual bool init() = 0;
+	virtual bool reinit(bool rebuild=true) = 0;
 
+	virtual bool isInited() = 0;
 	
 	//virtual bool setProcessPath(FTprocessPath *ppath, int index) = 0;
 	virtual FTprocessPath * getProcessPath(int index) = 0;
@@ -65,6 +67,10 @@ class FTioSupport
 	virtual nframes_t getSampleRate() = 0;
 
 	virtual bool getPortsChanged() = 0;
+
+	virtual void setName (const char *name);
+	virtual const char * getName() { return _name; }
+
 	
 	enum IOtype
 	{
@@ -78,7 +84,7 @@ class FTioSupport
 	// singleton retrieval
 	static FTioSupport * instance() { if (!_instance) _instance = createInstance(); return _instance; }
 
-	static void setDefaultName (const char *name) { _name = name; }
+	static void setDefaultName(const char *name) { _defaultName = name; }
 	
   protected:
 
@@ -87,7 +93,9 @@ class FTioSupport
 	static IOtype _iotype;
 	
 	static FTioSupport * createInstance();
-	static const char * _name;
+	static const char * _defaultName;
+	
+	char _name[100];
 };
 
 

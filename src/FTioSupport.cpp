@@ -21,22 +21,30 @@
 #include <config.h>
 #endif
 
+#include <stdio.h>
+
 #include "FTioSupport.hpp"
 #include "FTjackSupport.hpp"
 
 FTioSupport * FTioSupport::_instance = 0;
 
 FTioSupport::IOtype FTioSupport::_iotype = FTioSupport::IO_JACK;
-const char * FTioSupport::_name = 0;
+const char * FTioSupport::_defaultName = 0;
 
 FTioSupport * FTioSupport::createInstance()
 {
 	// static method
 
 	if (_iotype == IO_JACK) {
-		return new FTjackSupport(_name);
+		return new FTjackSupport(_defaultName);
 	}
 	else {
 		return 0;
 	}
+}
+
+
+void FTioSupport::setName (const char *name)
+{
+	snprintf(_name, sizeof(_name), "%s", name);
 }

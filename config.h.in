@@ -27,6 +27,9 @@
 #undef YOUR_OS
 
 
+/* Define to 1 if you have the <fcntl.h> header file. */
+#undef HAVE_FCNTL_H
+
 /* Define to 1 if you have the <fftw.h> header file. */
 #undef HAVE_FFTW_H
 
@@ -51,14 +54,32 @@
 /* Define to 1 if you have the `srfftw' library (-lsrfftw). */
 #undef HAVE_LIBSRFFTW
 
+/* Define to 1 if your system has a working `malloc' function. */
+#undef HAVE_MALLOC
+
+/* Define to 1 if you have the `memmove' function. */
+#undef HAVE_MEMMOVE
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `memset' function. */
+#undef HAVE_MEMSET
+
+/* Define to 1 if you have the `mkdir' function. */
+#undef HAVE_MKDIR
+
+/* Define to 1 if you have the `pow' function. */
+#undef HAVE_POW
 
 /* Define to 1 if you have the <rfftw.h> header file. */
 #undef HAVE_RFFTW_H
 
 /* Define to 1 if you have the <sfftw.h> header file. */
 #undef HAVE_SFFTW_H
+
+/* Define to 1 if you have the `sqrt' function. */
+#undef HAVE_SQRT
 
 /* Define to 1 if you have the <srfftw.h> header file. */
 #undef HAVE_SRFFTW_H
@@ -84,6 +105,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the <values.h> header file. */
+#undef HAVE_VALUES_H
+
 /* Name of package */
 #undef PACKAGE
 
@@ -102,11 +126,24 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* Define as the return type of signal handlers (`int' or `void'). */
+#undef RETSIGTYPE
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* Version number of package */
 #undef VERSION
+
+/* Define to empty if `const' does not conform to ANSI C. */
+#undef const
+
+/* Define as `__inline' if that's what the C compiler calls it, or to nothing
+   if it is not supported. */
+#undef inline
+
+/* Define to `unsigned' if <sys/types.h> does not define. */
+#undef size_t
 /* This is the bottom section */
 
 // This file defines portability work-arounds for various proprietory

@@ -96,6 +96,8 @@ class FTmainwin : public wxFrame
 
 	void handleStoreButton (wxCommandEvent &event);
 	void handleLoadButton (wxCommandEvent &event);
+
+	void handleIOButtons (wxCommandEvent &event);
 	
 	void rowpanelScrollSize();
 
@@ -115,6 +117,7 @@ class FTmainwin : public wxFrame
 	wxChoice * _freqScaleChoice;
 	wxSlider * _timescaleSlider;
 	wxChoice * _pathCountChoice;
+	wxTextCtrl * _ioNameText;
 	
 	// array of spectragrams
 	FTspectragram * _inputSpectragram[FT_MAXPATHS];

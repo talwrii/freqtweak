@@ -117,6 +117,8 @@ enum WindowIds
 	FT_PlotSuperSmoothId,
 	
 	FT_MixLinkedButton,
+	FT_IOreconnectButton,
+	FT_IOnameText,
 };
 
 
@@ -178,6 +180,7 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 	EVT_BUTTON(FT_LoadButton, FTmainwin::handleLoadButton)
 
 	EVT_BUTTON(FT_MixLinkedButton, FTmainwin::handleLinkButtons)
+	EVT_BUTTON(FT_IOreconnectButton, FTmainwin::handleIOButtons)
 	
 END_EVENT_TABLE()
 
@@ -349,6 +352,25 @@ void FTmainwin::buildGui()
 	plotpanel->SetSizer(plotSizer);
 
 	ctrlbook->AddPage ( (wxNotebookPage *) plotpanel, "Plots" , false);
+	
+
+	// IO page
+	wxPanel * iopanel = new wxPanel (ctrlbook, -1);
+	wxBoxSizer *ioSizer = new wxBoxSizer(wxHORIZONTAL);
+
+	stattext =  new wxStaticText(iopanel, -1, "JACK-Name");
+	ioSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
+	_ioNameText = new wxTextCtrl (iopanel, FT_IOnameText, "", wxDefaultPosition, wxSize(150,-1));
+	ioSizer->Add (_ioNameText, 0, wxALL|wxALIGN_CENTER, 2);
+	
+	wxButton * reconnButton = new wxButton(iopanel, FT_IOreconnectButton, "Reconnect As");
+	ioSizer->Add (reconnButton, 0, wxALL|wxALIGN_CENTER, 2);
+	iopanel->SetAutoLayout(TRUE);
+	ioSizer->Fit( iopanel );  
+	iopanel->SetSizer(ioSizer);
+	
+	ctrlbook->AddPage ( (wxNotebookPage *) iopanel, "I/O" , false);
+	
 	
 	
 	mainsizer->Add ( ctrlbook, 0, wxALL|wxEXPAND, 2 );
@@ -1468,7 +1490,9 @@ void FTmainwin::updateDisplay()
 		}
 	}
 
-
+	_ioNameText->SetValue (iosup->getName());
+	
+	
 	// reset timer just in case
 	_updateMS = 10; // start small
 	_eventTimer->Stop();
@@ -1993,15 +2017,21 @@ void FTmainwin::handleLabelButtons (wxCommandEvent &event)
 void FTmainwin::handleChoices (wxCommandEvent &event)
 {
 	wxObject *source = event.GetEventObject();
+
+	FTioSupport * iosup = FTioSupport::instance();
 	
 	if (source == _freqBinsChoice) {
 		int sel = _freqBinsChoice->GetSelection();
+		iosup->stopProcessing();
+		
 		for (int i=0; i < _pathCount; i++) {
 			if (!_processPath[i]) continue;
 
 			_processPath[i]->getSpectralManip()->setFFTsize( (FTspectralManip::FFT_Size) (unsigned)_freqBinsChoice->GetClientData(sel) );
 		}
-		
+
+		iosup->startProcessing();
+		iosup->reinit(false);
 		//updateDisplay();
 
 		updateGraphs(0, ALL_SPECMOD);
@@ -2048,6 +2078,31 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 		}
 	}
 	
+}
+
+void FTmainwin::handleIOButtons (wxCommandEvent &event)
+{
+	FTioSupport *iosup = FTioSupport::instance();
+
+	if (event.GetId() == FT_IOreconnectButton)
+	{
+		if (! iosup->isInited() || (_ioNameText->GetValue() != iosup->getName()))
+		{
+			fprintf(stderr, "Reconnecting as %s...\n", _ioNameText->GetValue().c_str());
+			
+			iosup->stopProcessing();
+			iosup->close();
+			
+			iosup->setName (_ioNameText->GetValue().c_str());
+			if (iosup->init()) {
+				if (iosup->startProcessing()) {
+					iosup->reinit();
+				}
+			}
+
+			updateDisplay();
+		}
+	}
 }
 
 void FTmainwin::handlePathCount (wxCommandEvent &event)

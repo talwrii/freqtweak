@@ -47,6 +47,14 @@
 #include "FTprocessPath.hpp"
 #include "FTspectralManip.hpp"
 
+
+#ifdef HAVE_SFFTW_H
+#include <sfftw.h>
+#else
+#include <fftw.h>
+#endif
+
+
 // Create a new application object: this macro will allow wxWindows to create
 // the application object during program execution (it's better than using a
 // static object for many reasons) and also declares the accessor function
@@ -106,6 +114,12 @@ bool FTapp::OnInit()
 	
 	SetExitOnFrameDelete(TRUE);
 
+	if (sizeof(sample_t) != sizeof(fftw_real)) {
+		fprintf(stderr, "FFTW Mismatch!  You need to build FreqTweak against a single-precision\n");
+		fprintf(stderr, "  FFTW library.  See the INSTALL file for instructions.\n");  		
+		return FALSE;
+	}
+	
 	// use stderr as log
 	wxLog *logger=new wxLogStderr();
 	logger->SetTimestamp(NULL);
@@ -180,7 +194,7 @@ bool FTapp::OnInit()
 	}
 
 	if (parser.Found ("n", &jackname)) {
-		FTioSupport::setDefaultName (jackname);
+	       FTioSupport::setDefaultName (jackname);
 	}
 
 	parser.Found ("r", &rcdir);
@@ -189,6 +203,7 @@ bool FTapp::OnInit()
 	
 	// initialize jack support
 	FTioSupport * iosup = FTioSupport::instance();
+
 	if (!iosup->init()) {
 		fprintf(stderr, "Error connecting to jack!\n");
 		return FALSE;

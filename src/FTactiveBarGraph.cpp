@@ -822,12 +822,12 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 		}
 		
 		int leftx, rightx;
-		int sign;
-		
+		int sign, linesign = 0;
+
 		if (_lastX <= pX) {
 			leftx = _lastX;
 			rightx = pX;
-			sign = 1;
+			sign  = 1;
 		}
 		else {
 			leftx = pX;
@@ -835,8 +835,10 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 			sign = -1;
 		}
 		
+		
 		// compute values to modify
 		int frombin, tobin, fromi, toi;
+
 		xToBinRange(leftx, fromi, toi);
 		frombin = fromi;
 		xToBinRange(rightx, fromi, toi);
@@ -847,9 +849,10 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 
 		int useY = pY;
 		
-		if (event.ControlDown()) {
+		if (event.ControlDown() && !event.AltDown()) {
 			if (_firstCtrl) {
 				_firstY = pY;
+				_firstX = pX;
 				_firstCtrl = false;
 			}
 			useY = _firstY;
@@ -868,30 +871,110 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 		}
 		else {
 			_firstCtrl = true;
-
+			
 			if (useY < 0) useY = 0;
 			else if (useY > _height) useY = _height;
 
-			// do linear interpolation between lasty and usey
-			float adj = (_lastY - useY) / (float)(1 + tobin-frombin);
-			//printf ("adjust is %g   useY=%d  lasty=%d\n", adj, useY, _lastY);
-			float curradj = 0;
-			float leftY;
-			
-			if (sign > 0) {
-				leftY = _lastY;
-			}
-			else {
-				leftY = useY;
-			}
-			
-			for ( i=frombin; i<=tobin; i++)
+			if (event.ControlDown() && event.AltDown())
 			{
-				values[i] = yToVal((int) (leftY - sign*curradj));
-				//values[i] = (((_height - useY) / (float)_height)) * (_max-_min) + _min;
-				//printf ("i=%d  values %g\n", i, values[i]);
-				curradj += adj;
+				if (_firstX <= pX) {
+					leftx = _firstX;
+					rightx = pX;
+					linesign = 1;
+				}
+				else {
+					leftx = pX;
+					rightx = _firstX;
+					linesign = -1;
+				}
 			}
+
+			float leftY, rightY;
+
+			if (sign != linesign)
+			{
+				if (sign > 0) {
+					leftY = _lastY;
+					rightY = useY;
+				}
+				else {
+					leftY = useY;
+					rightY = _lastY;
+				}
+
+
+//				if (specmod->getModifierType() != FTspectrumModifier::GAIN_MODIFIER)
+				{
+					float rightval = yToVal(rightY);
+					float leftval = yToVal(leftY);
+					float slope = (rightval - leftval) / (float)(1+tobin-frombin);				
+					
+					int n = 0;
+					for ( i=frombin; i<=tobin; i++, n++)
+					{
+						values[i] = leftval + slope * n;
+					}
+				}
+// 				else {
+// 					// do linear interpolation between firsty and usey
+// 					float slope = (rightY - leftY) / (float)(1+tobin-frombin);				
+// 					//printf ("adjust is %g   useY=%d  lasty=%d\n", adj, useY, _lastY);
+
+// 					int n=0;
+// 					for ( i=frombin; i<=tobin; i++, n++)
+// 					{
+// 						values[i] = yToVal((int) (leftY + slope*n));
+// 					}
+
+// 				}
+
+			}
+			
+			if (event.ControlDown() && event.AltDown())
+			{
+				
+				xToBinRange(leftx, fromi, toi);
+				frombin = fromi;
+				xToBinRange(rightx, fromi, toi);
+				tobin = toi;
+
+				
+				if (linesign > 0) {
+					leftY = _firstY;
+					rightY = useY;
+				}
+				else {
+					leftY = useY;
+					rightY = _firstY;
+				}
+				
+
+				//if (specmod->getModifierType() != FTspectrumModifier::GAIN_MODIFIER)
+				{
+					float rightval = yToVal(rightY);
+					float leftval = yToVal(leftY);
+					float slope = (rightval - leftval) / (float)(1+tobin-frombin);				
+					
+					int n = 0;
+					for ( i=frombin; i<=tobin; i++, n++)
+					{
+						values[i] = leftval + slope * n;
+					}
+				}
+// 				else {
+// 					// do linear interpolation between firsty and usey
+// 					float slope = (rightY - leftY) / (float)(1+tobin-frombin);				
+// 					//printf ("adjust is %g   useY=%d  lasty=%d\n", adj, useY, _lastY);
+
+// 					int n=0;
+// 					for ( i=frombin; i<=tobin; i++, n++)
+// 					{
+// 						values[i] = yToVal((int) (leftY + slope*n));
+// 					}
+
+// 				}
+			}			
+			
 		}
 		
 		

@@ -10,7 +10,7 @@
 
 AC_INIT(reconf)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(freqtweak,0.4.3)
+AM_INIT_AUTOMAKE(freqtweak,0.4.4)
 #LF_CONFIGURE_CC
 #AC_PROG_CXX
 LF_CONFIGURE_CXX
@@ -18,21 +18,38 @@ LF_HOST_TYPE
 LF_SET_WARNINGS
 AC_PROG_RANLIB
 
+AC_C_CONST
+AC_C_INLINE
+AC_FUNC_MALLOC
+AC_PROG_AWK
+AC_PROG_LN_S
+AC_TYPE_SIGNAL
+AC_TYPE_SIZE_T
 
-FREQTWEAK_VERSION=0.4.3
+FREQTWEAK_VERSION=0.4.4
 
 AC_SUBST(FREQTWEAK_VERSION)
 
 
 
+AC_CHECK_LIB(m,pow)
 
+AC_CHECK_FUNCS([memmove])
+AC_CHECK_FUNCS([memset])
+AC_CHECK_FUNCS([mkdir])
+AC_CHECK_FUNCS([pow])
+AC_CHECK_FUNCS([sqrt])
+
+AC_CHECK_HEADERS([fcntl.h])
+AC_CHECK_HEADERS([values.h])
+
+# FFTW section
 use_fftw=yes
 
 AC_ARG_WITH(fftw,[  --with-fftw=PFX        Prefix where fftw is installed (optional)],
  fftw_prefix="$withval", fftw_prefix="/usr/local") 
 
 
-AC_CHECK_LIB(m,pow)
 
 
 if test "$use_fftw" = "yes"
@@ -72,9 +89,47 @@ if [[ "$have_fftw" = "no" ]] ; then
   if [[ "$have_fftw" = "no" ]] ; then
         AC_MSG_ERROR('Could not find FFTW! Is it installed?  www.fftw.org  ')
   fi
+
+  cat > mytest.$ac_ext <<EOF
+#include <fftw.h>
+EOF
+
+
+else
+
+cat > mytest.$ac_ext <<EOF
+#include <sfftw.h>
+EOF
+
 fi
 
 AC_CHECK_HEADERS(sfftw.h srfftw.h fftw.h rfftw.h)
+
+AC_MSG_CHECKING([if FFTW is actually float precision])
+cat >> mytest.$ac_ext <<EOF
+
+int main(int argc,char **argv)
+{
+   return (sizeof(float) != sizeof(fftw_real));
+}
+
+EOF
+
+$CXX -o mytest $CFLAGS $CPPFLAGS mytest.$ac_ext >&5
+if ./mytest ; then
+AC_MSG_RESULT(yes)
+else
+AC_MSG_RESULT(no)
+AC_MSG_ERROR([
+==========================================================================
+ERROR: FreqTweak needs an FFTW library compiled with float precision
+  Try rebuilding and installing FFTW with the following configure options:
+      --enable-float --enable-type-prefix 
+==========================================================================
+])
+fi
+
+rm -f ./mytest ./mytest.$ac_ext
 
 fi
 # end fftw section

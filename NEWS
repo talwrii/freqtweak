@@ -3,7 +3,21 @@ freqtweak -- History of visible changes.
 Copyright (C) 2002, Jesse Chappell <jesse@essej.net>
 See the end for copying conditions.
 
-Please send freqtweak bug reports to freqtweak-users@lists.sourceforge.net .
+Please send freqtweak bug reports to freqtweak-user@lists.sourceforge.net .
+
+Version 0.4.4
+ * Now deactivates processing while switching FFT sizes. This
+   should prevent JACK from kicking us out here.
+
+ * Added ability to reconnect to JACK with a different basename,
+   or just reconnect if we are kicked out.
+
+ * Control-Alt left mouse draws arbitrary straight lines between
+   initial click and current cursor.
+
+ * More configure checks to ensure compiling against the float version
+   of FFTW.
+
 
 Version 0.4.3
  * This time, I think the main configuration problem people were having

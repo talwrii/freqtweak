@@ -29,6 +29,8 @@
 #include "FTtypes.hpp"
 #include "FTioSupport.hpp"
 
+#include <wx/list.h>
+
 class FTprocessPath;
 
 
@@ -41,7 +43,10 @@ class FTjackSupport
 	virtual ~FTjackSupport();
 
 	bool init();
+	bool reinit(bool rebuild=true);
 
+	bool isInited() { return _inited; }
+	
 	//bool setProcessPath(FTprocessPath *ppath, int index);
 	FTprocessPath * setProcessPathActive(int index, bool flag);
 
@@ -72,7 +77,7 @@ class FTjackSupport
     
 	nframes_t getSampleRate() { return _sampleRate; }
 	bool getPortsChanged() { return _portsChanged; }
-	
+
 	
   protected:
 
@@ -95,15 +100,19 @@ class FTjackSupport
 		jack_port_t * inputport;
 		jack_port_t * outputport;
 		bool active;
+
+		wxStringList inconn_list;
+		wxStringList outconn_list;
 	};
 
 	// FIXME: use real data structure
 	PathInfo* _pathInfos[FT_MAXPATHS];
 
 	int _activePathCount;
-	char _name[100];
+	//char _name[100];
 
 	bool _portsChanged;
+	bool _activated;
 };
 
 
