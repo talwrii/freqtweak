@@ -91,6 +91,10 @@ FTconfigManager::~FTconfigManager()
 
 bool FTconfigManager::storeSettings (const char * name)
 {
+	if (strcmp (name, "") == 0) {
+		return false;
+	}
+		
 	// directory to store settings
 	wxString dirname(wxString::Format("%s/presets/%s", _basedir.c_str(), name));
 

@@ -103,6 +103,22 @@ of all filters can be stored or loaded as presets.
     * The L and LA buttons mean Link and Link All respectively.
 
 
+****  Here is an example of using freqtweak with an alsaplayer feeding it
+      and output going to speakers (alsa_pcm:out_?) without using a JACK patchbay:
+ 
+   Start freqtweak first with this command line:
+      freqtweak -i none,none -n ft  &
+
+   [ you will see some jack errors, ignore them.. they are intentional ]
+
+   Start alsaplayer like so:
+
+     alsaplayer -o jack -d ft:in_1,ft:in_2  &
+
+
+
+
+
 **** TODO ****
 
     * Fix known bugs

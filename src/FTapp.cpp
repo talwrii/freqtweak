@@ -198,7 +198,7 @@ bool FTapp::OnInit()
 	
 	// Create the main application window
 	_mainwin = new FTmainwin(pcnt, "FreqTweak", rcdir,
-				 wxPoint(100, 100), wxSize(649, 606));
+				 wxPoint(100, 100), wxDefaultSize);
 
 	
 	// Show it and tell the application that it's our main window

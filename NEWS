@@ -5,6 +5,15 @@ See the end for copying conditions.
 
 Please send freqtweak bug reports to freqtweak-users@lists.sourceforge.net .
 
+Version 0.4.3
+ * This time, I think the main configuration problem people were having
+   fixed.
+
+ * Fixed empty preset Load and Store bugs
+
+ * Added 4096 freq bin mode at Steve Harris' request.
+
+
 Version 0.4.2
  * Didn't fix problem before... now it should be :)
 
