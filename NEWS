@@ -3,7 +3,11 @@ freqtweak -- History of visible changes.
 Copyright (C) 2002, Jesse Chappell <jesse@essej.net>
 See the end for copying conditions.
 
-Please send freqtweak bug reports to jesse@essej.net.
+Please send freqtweak bug reports to freqtweak-users@lists.sourceforge.net .
+
+Version 0.4.2
+ * Didn't fix problem before... now it should be :)
+
 
 Version 0.4.1
  * Fixed problem with wxWindows version inconsistencies related
