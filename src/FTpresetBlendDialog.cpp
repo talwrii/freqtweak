@@ -44,7 +44,7 @@ enum {
 };
 
 
-BEGIN_EVENT_TABLE(FTpresetBlendDialog, wxDialog)
+BEGIN_EVENT_TABLE(FTpresetBlendDialog, wxFrame)
 	EVT_CLOSE(FTpresetBlendDialog::onClose)
 
 	
@@ -69,7 +69,7 @@ FTpresetBlendDialog::FTpresetBlendDialog(FTmainwin * parent, FTconfigManager *co
 					 long style,
 					 const wxString& name )
 
-	: wxDialog(parent, id, title, pos, size, style, name),
+	: wxFrame(parent, id, title, pos, size, style, name),
 	  _mainwin(parent), _justResized(false), _namewidth(85),
 	  _configMan(confman)
 {

@@ -43,6 +43,7 @@ class FTspectrumModifier
 		FREQ_MODIFIER,
 		DB_MODIFIER,
 		SEMITONE_MODIFIER,
+		POS_DB_MODIFIER,
 		// must be last!
 		NULL_MODIFIER, 
 	};

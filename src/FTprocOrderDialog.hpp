@@ -33,14 +33,14 @@ class FTmainwin;
 
 class wxListCtrl;
 
-class FTprocOrderDialog : public wxDialog
+class FTprocOrderDialog : public wxFrame
 {
   public:
 	// ctor(s)
 	FTprocOrderDialog(FTmainwin * parent, wxWindowID id, const wxString& title,
 			  const wxPoint& pos = wxDefaultPosition,
 			  const wxSize& size = wxSize(400,600),
-			  long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER,
+			  long style = wxDEFAULT_FRAME_STYLE,
 			  const wxString& name = "ProcOrderDialog");
 
 

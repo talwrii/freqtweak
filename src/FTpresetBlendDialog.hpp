@@ -36,7 +36,7 @@ class FTpresetBlender;
 class FTspectrumModifier;
 
 class FTpresetBlendDialog
-	: public wxDialog
+	: public wxFrame
 {
 
   public:
@@ -44,7 +44,7 @@ class FTpresetBlendDialog
 	FTpresetBlendDialog(FTmainwin * parent, FTconfigManager * confman, wxWindowID id, const wxString & title,
 			    const wxPoint& pos = wxDefaultPosition,
 			    const wxSize& size = wxSize(400,600),
-			    long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER,
+			    long style = wxDEFAULT_FRAME_STYLE,
 			    const wxString& name = "PresetBlend");
 
 	virtual ~FTpresetBlendDialog();

@@ -27,6 +27,7 @@
 #include "FTprocPitch.hpp"
 #include "FTprocLimit.hpp"
 #include "FTprocWarp.hpp"
+#include "FTprocCompressor.hpp"
 
 FTdspManager * FTdspManager::_instance = 0;
 
@@ -55,6 +56,9 @@ FTdspManager::FTdspManager()
 	procmod = new FTprocWarp (samprate, fftn);
  	_prototypes.push_back (procmod);
 
+	procmod = new FTprocCompressor (samprate, fftn);
+ 	_prototypes.push_back (procmod);
+	
 }
 
 FTdspManager::~FTdspManager()

@@ -24,6 +24,7 @@
 #include "FTtypes.hpp"
 
 #include <list>
+#include <string>
 using namespace std;
 
 class FTprocI;

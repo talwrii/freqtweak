@@ -1277,7 +1277,12 @@ void FTactiveBarGraph::recalculate()
 		_maxstr = wxString::Format("%.1f", _max);
 		_minstr = wxString::Format("%.1f", _min);
 	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::RATIO_MODIFIER) {
 
+		_maxstr = wxString::Format("%.0f", _max);
+		_minstr = wxString::Format("%.0f", _min);
+		
+	}
 
 	
 	

@@ -46,7 +46,7 @@ enum {
 };
 
 
-BEGIN_EVENT_TABLE(FTprocOrderDialog, wxDialog)
+BEGIN_EVENT_TABLE(FTprocOrderDialog, wxFrame)
 	EVT_CLOSE(FTprocOrderDialog::onClose)
 
 	EVT_BUTTON(ID_UpButton, FTprocOrderDialog::onTargetButtons)
@@ -73,7 +73,7 @@ FTprocOrderDialog::FTprocOrderDialog(FTmainwin * parent, wxWindowID id,
 				     long style,
 				     const wxString& name )
 
-	: wxDialog(parent, id, title, pos, size, style, name),
+	: wxFrame(parent, id, title, pos, size, style, name),
 	  _mainwin(parent)
 {
 

@@ -25,6 +25,9 @@
 #include <string.h>
 #include <stdint.h>
 
+#include <algorithm>
+using namespace std;
+
 #include "FTspectrumModifier.hpp"
 #include "FTtypes.hpp"
 
