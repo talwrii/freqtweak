@@ -103,11 +103,11 @@ void FTprocCompressor::initialize()
 	// create filter
 
 	_thresh_filter = new FTspectrumModifier("Comp Thresh", "compressor_thresh", 0, FTspectrumModifier::DB_MODIFIER, COMPRESS_SPECMOD, _fftN/2, 0.0);
-	_thresh_filter->setRange(-40.0, 0.0);
+	_thresh_filter->setRange(-60.0, 0.0);
 	_filterlist.push_back (_thresh_filter);
 
 	_ratio_filter = new FTspectrumModifier("Comp Ratio", "compressor_ratio", 1, FTspectrumModifier::RATIO_MODIFIER, COMPRESS_SPECMOD, _fftN/2, 1.0);
-	_ratio_filter->setRange(1.0, 60.0);
+	_ratio_filter->setRange(1.0, 20.0);
 	_filterlist.push_back (_ratio_filter);
 
 	_release_filter = new FTspectrumModifier("Comp A/R", "compressor_release", 2, FTspectrumModifier::TIME_MODIFIER, COMPRESS_SPECMOD, _fftN/2, 0.2);
@@ -120,7 +120,7 @@ void FTprocCompressor::initialize()
 
 
 	_makeup_filter = new FTspectrumModifier("Comp Makeup", "compressor_makeup", 3, FTspectrumModifier::DB_MODIFIER, COMPRESS_SPECMOD, _fftN/2, 0.0);
-	_makeup_filter->setRange(0.0, 24.0);
+	_makeup_filter->setRange(0.0, 32.0);
 	_filterlist.push_back (_makeup_filter);
 
 	// state
@@ -264,7 +264,7 @@ void FTprocCompressor::process (fftw_real *data, unsigned int fftn)
 		ga = _as[f_round(att  * (float)(A_TBL-1))];
 		gr = _as[f_round(rel * (float)(A_TBL-1))];
 		rs = (rat - 1.0f) / rat;
-		mug = db2lin(LIMIT(makeup[i], 0.0f, 24.0f));
+		mug = db2lin(LIMIT(makeup[i], 0.0f, 32.0f));
 		knee_min = db2lin(thresh - knee);
 		knee_max = db2lin(thresh + knee);
 		ef_a = ga * 0.25f;
