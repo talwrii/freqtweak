@@ -93,6 +93,7 @@ FTapp::FTapp()
 
 static void onTerminate(int arg)
 {
+	//::wxGetApp().getMainwin()->cleanup();
 	::wxGetApp().getMainwin()->Close(TRUE);
 
 	::wxGetApp().ExitMainLoop();
@@ -168,7 +169,7 @@ bool FTapp::OnInit()
 	else {
 		// connect default ports
 		for (int id=0; id < pcnt; id++) {
-			inputports[id] = wxString::Format ("alsa_pcm:in_%d", id+1);				
+			inputports[id] = wxString::Format ("alsa_pcm:capture_%d", id+1);				
 		}
 	}
 
@@ -189,7 +190,7 @@ bool FTapp::OnInit()
 	else {
 		// connect default ports
 		for (int id=0; id < pcnt; id++) {
-			outputports[id] = wxString::Format ("alsa_pcm:out_%d", id+1);
+			outputports[id] = wxString::Format ("alsa_pcm:playback_%d", id+1);
 		}
 	}
 
