@@ -17,6 +17,11 @@
 **  
 */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+
 #include "FThelpWindow.hpp"
 
 FThelpWindow::FThelpWindow(wxWindow * parent, wxWindowID id, const wxString & title,
@@ -53,8 +58,19 @@ void FThelpWindow::init()
 	const int sizes[] = {7, 8, 10, 12, 16, 22, 30};
 	
 	_htmlWin->SetFonts(wxT(""), wxT(""), sizes);
-	_htmlWin->SetPage(wxT("Help information to be included here soon. In the meantime, please see http://freqtweak.sf.net"));
+
+	wxString helppath = wxString(wxT(HELP_HTML_PATH)) + wxFileName::GetPathSeparator() + wxString(wxT("usagehelp.html")); 
 	
+	if (wxFile::Access(helppath, wxFile::read))
+	{
+		_htmlWin->LoadPage(helppath);
+	}
+	else {
+		_htmlWin->SetPage(wxString(wxT("Help information could not be found at ") + helppath +
+				  wxT(" . If you can't get it, please see http://freqtweak.sf.net")));
+				  
+	}
+		
 	this->SetSizeHints(200,100);
-	this->SetSize(400,200);
+	this->SetSize(600,400);
 }

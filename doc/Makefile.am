@@ -8,3 +8,10 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+docdir = $(datadir)/${PACKAGE}/help
+
+doc_DATA = \
+	usagehelp.html
+
+EXTRA_DIST = \
+	usagehelp.html

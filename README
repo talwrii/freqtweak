@@ -39,8 +39,12 @@ of all filters can be stored or loaded as presets.
       vs. freq line or bar plots... one shows pre-processed, another shows
       post-processed.
 
-    ** EQ -- Your basic multi-band frequency attenuation. But you get an
-      unhealthy number of bands...
+    ** EQ Cut/Boost -- Your basic multi-band frequency
+      attenuation. But you get an unhealthy number of bands... Note
+      that this EQ is not intended for mastering purposes, it allows
+      for (and doesn't protect against) highly irregular
+      filtering. Two versions, one does only frequency gain cut, the
+      other boost.
 
     ** Pitch Scaling -- This is an interesting application of Sprengler's pitch
       scaling algorithm (used in Steve Harris' LADSPA plugin). If you keep all
