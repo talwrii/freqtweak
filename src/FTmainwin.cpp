@@ -2332,6 +2332,18 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			if (!_processPath[i]) continue;
 
 			_processPath[i]->getSpectralManip()->setFFTsize( (FTspectralManip::FFT_Size) (unsigned)_freqBinsChoice->GetClientData(sel) );
+
+			// reset all the activeplots
+			_freqGraph[i]->setSpectrumModifier(_freqGraph[i]->getSpectrumModifier());
+			_freqGraph[i]->setTopSpectrumModifier(_freqGraph[i]->getTopSpectrumModifier());
+			_scaleGraph[i]->setSpectrumModifier(_scaleGraph[i]->getSpectrumModifier());
+			_scaleGraph[i]->setTopSpectrumModifier(_scaleGraph[i]->getTopSpectrumModifier());
+			_gateGraph[i]->setSpectrumModifier(_gateGraph[i]->getSpectrumModifier());
+			_gateGraph[i]->setTopSpectrumModifier(_gateGraph[i]->getTopSpectrumModifier());
+			_delayGraph[i]->setSpectrumModifier(_delayGraph[i]->getSpectrumModifier());
+			_delayGraph[i]->setTopSpectrumModifier(_delayGraph[i]->getTopSpectrumModifier());
+			_feedbackGraph[i]->setSpectrumModifier(_feedbackGraph[i]->getSpectrumModifier());
+			_feedbackGraph[i]->setTopSpectrumModifier(_feedbackGraph[i]->getTopSpectrumModifier());
 		}
 
 		for (int i=0; i < _pathCount; i++) {

@@ -137,7 +137,6 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogbXscale, "logB Scale"));
 
 	// grid choices can't be determined until we get a specmod
-	
 }
 
 FTactiveBarGraph::~FTactiveBarGraph()
@@ -151,7 +150,12 @@ FTactiveBarGraph::~FTactiveBarGraph()
 
 void FTactiveBarGraph::setSpectrumModifier (FTspectrumModifier *sm)
 {
+
 	_specMod = sm;
+	if (sm == 0) {
+		return;
+	}
+
 	_xscale = _width/(float)_specMod->getLength();
 
 	_min = _absmin = _specMod->getMin();
@@ -186,6 +190,10 @@ void FTactiveBarGraph::setTopSpectrumModifier (FTspectrumModifier *sm)
 {
 	_topSpecMod = sm;
 
+	if (sm == 0) {
+	   return;
+	}
+	
 	// should be same as other one
 	_xscale = _width/(float)_topSpecMod->getLength();
 	_min = _absmin = _topSpecMod->getMin();
@@ -862,8 +870,7 @@ void FTactiveBarGraph::OnPaint(wxPaintEvent & event)
 	wxPaintDC dc(this);
 	
 	wxMemoryDC backdc;
-	if (_backingMap)
-		backdc.SelectObject(*_backingMap);
+	backdc.SelectObject(*_backingMap);
 
 	
 	int bincnt = _specMod->getLength();
@@ -911,6 +918,7 @@ void FTactiveBarGraph::OnPaint(wxPaintEvent & event)
 	}
 	*/
 
+	
 	for (int i=0; i < bincnt; i++ )
 	{
 		int yu=0 , yl = _height;
@@ -1611,7 +1619,7 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 		for (int n = 0; n < 2 && valueslist[n]; n++)
 		{
 			values = valueslist[n];
-
+			
 			if (shiftbins < 0) {
 				// shiftbins is NEGATIVE shift left
 
@@ -1635,8 +1643,6 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 						values[i] = _tmpfilt[j];
 					}
 				}
-
-			
 			}
 			else if (shiftbins > 0) {
 
@@ -1662,8 +1668,6 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 						values[i] = _tmpfilt[j];
 					}
 				}
-
-
 			}
 			else {
 				// no bin shift just values
@@ -1673,10 +1677,12 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 			}
 
 		}
+
 		
 		Refresh(FALSE);
 		_mainwin->updateGraphs(this, specm->getSpecModifierType());
-			
+
+		
 		if (shiftbins != 0) {
 			_lastX = pX;
 		}

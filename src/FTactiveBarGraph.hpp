@@ -193,7 +193,7 @@ class FTactiveBarGraph
 	// tempo for time only
 	int _tempo;
 	unsigned int _beatscutoff;
-	
+
 private:
 	// any class wishing to process wxWindows events must use this macro
 	DECLARE_EVENT_TABLE()	
