@@ -82,6 +82,7 @@ class FTjackSupport
 	bool inAudioThread();
     
 	nframes_t getSampleRate() { return _sampleRate; }
+	nframes_t getTransportFrame();
 	bool getPortsChanged() { return _portsChanged; }
 
         void setProcessingBypassed (bool val);

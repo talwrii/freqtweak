@@ -55,7 +55,9 @@
 #include "FTioSupport.hpp"
 #include "FTupdateToken.hpp"
 #include "FTprocI.hpp"
+#include "FTmodulatorI.hpp"
 
+using namespace PBD;
 
 const int FTspectralEngine::_windowStringCount = 4;
 const char * FTspectralEngine::_windowStrings[] = {
@@ -192,16 +194,15 @@ FTspectralEngine::~FTspectralEngine()
 void FTspectralEngine::getProcessorModules (vector<FTprocI *> & modules)
 {
 	modules.clear();
-	
-	for (vector<FTprocI*>::iterator iter = _procModules.begin();
-	     iter != _procModules.end(); ++iter)
-	{
-		modules.push_back (*iter);
-	}
+
+	LockMonitor pmlock(_procmodLock, __LINE__, __FILE__);
+	modules.insert (modules.begin(), _procModules.begin(), _procModules.end());
 }
 
 FTprocI * FTspectralEngine::getProcessorModule ( unsigned int num)
 {
+	LockMonitor (_procmodLock, __LINE__, __FILE__);
+	
 	if (num < _procModules.size()) {
 		return _procModules[num];
 	}
@@ -212,6 +213,8 @@ FTprocI * FTspectralEngine::getProcessorModule ( unsigned int num)
 void FTspectralEngine::insertProcessorModule (FTprocI * procmod, unsigned int index)
 {
 	if (!procmod) return;
+
+	LockMonitor pmlock(_procmodLock, __LINE__, __FILE__);
 	
 	vector<FTprocI*>::iterator iter = _procModules.begin();
 
@@ -230,6 +233,8 @@ void FTspectralEngine::appendProcessorModule (FTprocI * procmod)
 {
 	if (!procmod) return;
 
+	LockMonitor (_procmodLock, __LINE__, __FILE__);
+	
 	procmod->setOversamp (_oversamp);
 	procmod->setFFTsize (_fftN);
 	procmod->setSampleRate (_sampleRate);
@@ -240,6 +245,7 @@ void FTspectralEngine::appendProcessorModule (FTprocI * procmod)
 void FTspectralEngine::moveProcessorModule (unsigned int from, unsigned int to)
 {
 	// both indexes refer to current positions within the list
+	LockMonitor pmlock(_procmodLock, __LINE__, __FILE__);
 	
 	vector<FTprocI*>::iterator iter = _procModules.begin();
 
@@ -274,6 +280,8 @@ void FTspectralEngine::moveProcessorModule (unsigned int from, unsigned int to)
 
 void FTspectralEngine::removeProcessorModule (unsigned int index, bool destroy)
 {
+	LockMonitor pmlock(_procmodLock, __LINE__, __FILE__);
+	
 	if (index >= _procModules.size()) return;
 
 	vector<FTprocI*>::iterator iter = _procModules.begin();
@@ -294,6 +302,8 @@ void FTspectralEngine::removeProcessorModule (unsigned int index, bool destroy)
 
 void FTspectralEngine::clearProcessorModules (bool destroy)
 {
+	LockMonitor pmlock(_procmodLock, __LINE__, __FILE__);
+	
 	vector<FTprocI*>::iterator iter = _procModules.begin();
 
 	if (destroy) {
@@ -305,8 +315,165 @@ void FTspectralEngine::clearProcessorModules (bool destroy)
 	_procModules.clear();
 }
 
+void FTspectralEngine::getModulators (vector<FTmodulatorI *> & modules)
+{
+	modules.clear();
+
+	LockMonitor pmlock(_modulatorLock, __LINE__, __FILE__);
+	modules.insert (modules.begin(), _modulators.begin(), _modulators.end());
+}
+
+FTmodulatorI * FTspectralEngine::getModulator ( unsigned int num)
+{
+	LockMonitor (_modulatorLock, __LINE__, __FILE__);
+	
+	if (num < _modulators.size()) {
+		return _modulators[num];
+	}
+
+	return 0;
+}
+
+void FTspectralEngine::insertModulator (FTmodulatorI * procmod, unsigned int index)
+{
+	if (!procmod) return;
+
+	{
+		LockMonitor pmlock(_modulatorLock, __LINE__, __FILE__);
+		
+		vector<FTmodulatorI*>::iterator iter = _modulators.begin();
+		
+		for (unsigned int n=0; n < index && iter!=_modulators.end(); ++n) {
+			++iter;
+		}
+		
+		procmod->setFFTsize (_fftN);
+		procmod->setSampleRate (_sampleRate);
+		
+		_modulators.insert (iter, procmod);
+	}
+	
+	ModulatorAdded (procmod); // emit
+}
+
+void FTspectralEngine::appendModulator (FTmodulatorI * procmod)
+{
+	if (!procmod) return;
+
+	{
+		LockMonitor (_modulatorLock, __LINE__, __FILE__);
+		
+		procmod->setFFTsize (_fftN);
+		procmod->setSampleRate (_sampleRate);
+		
+		_modulators.push_back (procmod);
+	}
+	
+	ModulatorAdded (procmod); // emit
+
+}
+
+void FTspectralEngine::moveModulator (unsigned int from, unsigned int to)
+{
+	// both indexes refer to current positions within the list
+	LockMonitor pmlock(_modulatorLock, __LINE__, __FILE__);
+	
+	vector<FTmodulatorI*>::iterator iter = _modulators.begin();
+
+	for (unsigned int n=0; n < from && iter!=_modulators.end(); ++n) {
+		++iter;
+	}
+
+	if (iter == _modulators.end())
+		return;
+
+	// remove from
+	FTmodulatorI * fproc = (*iter);
+	_modulators.erase (iter);
+
+	iter = _modulators.begin();
+	
+	if (to >= from) {
+		// need to go one less
+		for (unsigned int n=0; n < to && iter!=_modulators.end(); ++n) {
+			++iter;
+		}
+	}
+	else {
+		for (unsigned int n=0; n < to && iter!=_modulators.end(); ++n) {
+			++iter;
+		}
+	}
+
+	_modulators.insert (iter, fproc);
+	
+}
+
+void FTspectralEngine::removeModulator (unsigned int index, bool destroy)
+{
+	LockMonitor pmlock(_modulatorLock, __LINE__, __FILE__);
+	
+	if (index >= _modulators.size()) return;
+
+	vector<FTmodulatorI*>::iterator iter = _modulators.begin();
+
+	for (unsigned int n=0; n < index && iter!=_modulators.end(); ++n) {
+		++iter;
+	}
+	if (iter == _modulators.end())
+		return;
+
+	if (destroy) {
+		FTmodulatorI * proc = (*iter);
+
+		delete proc;
+	}
+	
+	_modulators.erase(iter);
+}
+
+void FTspectralEngine::removeModulator (FTmodulatorI * procmod, bool destroy)
+{
+	{
+		LockMonitor pmlock(_modulatorLock, __LINE__, __FILE__);
+		
+		for (vector<FTmodulatorI*>::iterator iter = _modulators.begin();
+		     iter != _modulators.end(); ++iter)
+		{
+			if (procmod == *iter) {
+				
+				_modulators.erase(iter);
+
+				break;
+			}
+		}
+	}
+	
+	if (destroy) {
+		delete procmod;
+	}
+}
+
+
+void FTspectralEngine::clearModulators (bool destroy)
+{
+	LockMonitor pmlock(_modulatorLock, __LINE__, __FILE__);
+	
+	vector<FTmodulatorI*>::iterator iter = _modulators.begin();
+
+	if (destroy) {
+		for (; iter != _modulators.end(); ++iter) {
+			delete (*iter);
+		}
+	}
+
+	_modulators.clear();
+}
+
+
 void FTspectralEngine::setId (int id)
 {
+	LockMonitor pmlock(_procmodLock, __LINE__, __FILE__);
 	_id = id;
 	// set the id of all our filters
 
@@ -320,6 +487,7 @@ void FTspectralEngine::setId (int id)
 void FTspectralEngine::setFFTsize (FTspectralEngine::FFT_Size sz)
 {
 	// THIS MUST NOT BE CALLED WHILE WE ARE ACTIVATED!
+	//LockMonitor pmlock(_fftLock, __LINE__, __FILE__);
 	
 	if ((int) sz != _fftN)
 	{
@@ -351,6 +519,8 @@ void FTspectralEngine::setOversamp (int osamp)
 	_currOutAvgIndex = 0;
 	_avgReady = false;
 
+	LockMonitor pmlock(_procmodLock, __LINE__, __FILE__);
+	
 	// set it in all the modules
 	for (vector<FTprocI*>::iterator iter = _procModules.begin();
 	     iter != _procModules.end(); ++iter)
@@ -378,8 +548,11 @@ void FTspectralEngine::setUpdateSpeed (UpdateSpeed speed)
 void FTspectralEngine::setMaxDelay(float secs)
 {
 	// THIS MUST NOT BE CALLED WHILE WE ARE ACTIVATED!
+	
 	if (secs <= 0.0) return;
 
+	LockMonitor pmlock(_procmodLock, __LINE__, __FILE__);
+	
 	_maxDelay = secs;
 	
 	for (vector<FTprocI*>::iterator iter = _procModules.begin();
@@ -403,7 +576,7 @@ nframes_t FTspectralEngine::getLatency()
  * Main FFT processing done here
  *  this is called from the i/o thread
  */
-void FTspectralEngine::processNow (FTprocessPath *procpath)
+bool FTspectralEngine::processNow (FTprocessPath *procpath)
 {
 	int i;
 	int osamp = _oversamp;
@@ -411,7 +584,10 @@ void FTspectralEngine::processNow (FTprocessPath *procpath)
         int latency = _fftN - step_size;
 	float * win = _mWindows[_windowing];
 
+	
+	nframes_t current_frame = FTioSupport::instance()->getTransportFrame();
 
+	
 	// do we have enough data for next frame (oversampled)?
 	while (procpath->getInputFifo()->read_space() >= (step_size * sizeof(sample_t)))
 	{
@@ -439,16 +615,32 @@ void FTspectralEngine::processNow (FTprocessPath *procpath)
 		computeAverageInputPower (_outwork);
 
 
-		// do processing in order with each processing module
-		
-		for (vector<FTprocI*>::iterator iter = _procModules.begin();
-		     iter != _procModules.end(); ++iter)
+		// do modulation in order with each modulator
 		{
-			// do it in place
-			(*iter)->process (_outwork,  _fftN);
-
+			TentativeLockMonitor modlock(_modulatorLock, __LINE__, __FILE__);
+			if (modlock.locked()) {
+			
+				for (vector<FTmodulatorI*>::iterator iter = _modulators.begin();
+				     iter != _modulators.end(); ++iter)
+				{
+					(*iter)->modulate (current_frame, _outwork, _fftN, _inwork, _fftN);
+				}
+			}
 		}
-		// at the end the good data is in tempin
+		
+		// do processing in order with each processing module
+		{
+			TentativeLockMonitor pmlock(_procmodLock, __LINE__, __FILE__);
+			if (pmlock.locked()) {
+			
+				for (vector<FTprocI*>::iterator iter = _procModules.begin();
+				     iter != _procModules.end(); ++iter)
+				{
+					// do it in place
+					(*iter)->process (_outwork,  _fftN);
+				}
+			}
+		}
 		
 		// compute running mag^2 buffer for output
 		computeAverageOutputPower (_outwork);
@@ -494,6 +686,8 @@ void FTspectralEngine::processNow (FTprocessPath *procpath)
  			_avgReady = false;
  		}
 	}
+
+	return true;
 }
 
 
@@ -501,7 +695,6 @@ void FTspectralEngine::processNow (FTprocessPath *procpath)
 
 void FTspectralEngine::computeAverageInputPower (fft_data *fftbuf)
 {
-	float power;
 	int fftn2 = _fftN / 2;
 
 	if (_averages > 1) {
@@ -549,7 +742,6 @@ void FTspectralEngine::computeAverageInputPower (fft_data *fftbuf)
 
 void FTspectralEngine::computeAverageOutputPower (fft_data *fftbuf)
 {
-	float power;
 	int fftn2 = (_fftN+1) / 2;
 
 	if (_averages > 1) {

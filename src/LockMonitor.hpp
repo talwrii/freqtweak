@@ -15,7 +15,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    $Id: LockMonitor.hpp,v 1.1 2004/04/13 01:17:54 essej Exp $
+    $Id: LockMonitor.hpp,v 1.2 2004/04/22 08:16:16 essej Exp $
 */
 
 #ifndef __pbd_lockmonitor_h__
@@ -69,15 +69,15 @@ class LockMonitor
 #ifdef DEBUG_LOCK_MONITOR
 			unsigned long long when;
 			when = get_cycles();
-			cerr << when << " lock " << &lock << " at " << line << " in " << file << endl;
+			std::cerr << when << " lock " << &lock << " at " << line << " in " << file << std::endl;
 #endif
 			lock.lock ();
 #ifdef DEBUG_LOCK_MONITOR
 			when = get_cycles();
-			cerr << '\t' << when 
+			std::cerr << '\t' << when 
 			     << " locked at " 
 			     << &lock << " at " 
-			     << line << " in " << file << endl;
+			     << line << " in " << file << std::endl;
 #endif
 		}
 	
@@ -105,17 +105,17 @@ class TentativeLockMonitor
 #ifdef DEBUG_LOCK_MONITOR
 			unsigned long long when;
 			when = get_cycles();
-			cerr << when << " tentative lock " << &lock << " at " << line << " in " << file << endl;
+			std::cerr << when << " tentative lock " << &lock << " at " << line << " in " << file << std::endl;
 #endif
 			_locked = (lock.trylock() == 0);
 
 #ifdef DEBUG_LOCK_MONITOR
 			when = get_cycles();
-			cerr << '\t' << when << ' ' 
+			std::cerr << '\t' << when << ' ' 
 			     << _locked 
 			     << " at " 
 			     << &lock << " at " 
-			     << line << " in " << file << endl;
+			     << line << " in " << file << std::endl;
 #endif
 		}
 

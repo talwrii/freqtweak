@@ -43,7 +43,7 @@ void FTmodRandomize::initialize()
 	_rate = new Control (Control::FloatType, "Rate", "Hz");
 	_rate->_floatLB = 0.0;
 	_rate->_floatUB = 20.0;
-	_rate->setValue (5.0f);
+	_rate->setValue (0.0f);
 	_controls.push_back (_rate);
 
 	srand(0);

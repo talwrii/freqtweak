@@ -38,7 +38,7 @@ FTspectrumModifier::FTspectrumModifier(const string &name, const string &configN
 				       FTspectrumModifier::ModifierType mtype, SpecModType smtype, int length, float initval)
 	:  _modType(mtype), _specmodType(smtype), _name(name), _configName(configName), _group(group),
 	   _values(0), _length(length), _linkedTo(0), _initval(initval),
-	   _id(0), _bypassed(false), _extra_node(0)
+	   _id(0), _bypassed(false), _dirty(false), _extra_node(0)
 
 {
 	_values = new float[FT_MAX_FFT_SIZE/2];

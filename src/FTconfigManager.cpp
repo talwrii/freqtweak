@@ -40,6 +40,9 @@
 #include "FTioSupport.hpp"
 #include "FTprocessPath.hpp"
 #include "FTdspManager.hpp"
+#include "FTmodulatorManager.hpp"
+#include "FTprocI.hpp"
+#include "FTmodulatorI.hpp"
 #include "version.h"
 
 #include "xml++.hpp"
@@ -694,7 +697,15 @@ bool FTconfigManager::loadSettings (const std::string &name, bool restore_ports,
 				fprintf (stderr, "channel outputs node not found in %s!\n", configfname.c_str()); 
 			}
 		}		
-		
+
+// 		// TEMPORARY
+// 		FTprocI * firstproc = engine->getProcessorModule(0);
+// 		if (firstproc) {
+// 			FTmodulatorI * modul = FTmodulatorManager::instance()->getModuleByConfigName("Shift")->clone();
+// 			modul->initialize();
+// 			modul->addSpecMod (firstproc->getFilter(0));
+// 			engine->appendModulator(modul);
+// 		}
 	}
 
 	if (!ignore_iosup)
@@ -735,8 +746,8 @@ bool FTconfigManager::loadSettings (const std::string &name, bool restore_ports,
 			source->link (dest);
 		}
 	}
-		
-
+	
+	
 	return true;
 }
 

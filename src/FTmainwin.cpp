@@ -46,6 +46,7 @@ using namespace std;
 #include "FTspectragram.hpp"
 #include "FTioSupport.hpp"
 #include "FTprocessPath.hpp"
+#include "FTprocI.hpp"
 #include "FTspectralEngine.hpp"
 #include "FTactiveBarGraph.hpp"
 #include "FTportSelectionDialog.hpp"
@@ -54,6 +55,7 @@ using namespace std;
 #include "FTupdateToken.hpp"
 #include "FTprocOrderDialog.hpp"
 #include "FTpresetBlendDialog.hpp"
+#include "FTmodulatorDialog.hpp"
 #include "FThelpWindow.hpp"
 
 #include "version.h"
@@ -78,6 +80,7 @@ enum WindowIds
 	FT_AboutMenu,
 	FT_ProcModMenu,
 	FT_PresetBlendMenu,
+	FT_ModulatorMenu,
 	FT_HelpTipsMenu,
 	FT_InputButtonId,
 	FT_OutputButtonId,
@@ -146,6 +149,7 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 	EVT_MENU(FT_HelpTipsMenu, FTmainwin::OnAbout)
 	EVT_MENU(FT_ProcModMenu, FTmainwin::OnProcMod)
 	EVT_MENU(FT_PresetBlendMenu, FTmainwin::OnPresetBlend)
+	EVT_MENU(FT_ModulatorMenu, FTmainwin::OnModulatorDialog)
 
 	
 	EVT_IDLE(FTmainwin::OnIdle)
@@ -211,16 +215,17 @@ FTmainwin::FTmainwin(int startpath, const wxString& title, const wxString& rcdir
 	: wxFrame((wxFrame *)NULL, -1, title, pos, size), _startpaths(startpath),
 	  _inspecShown(true), _outspecShown(true), _linkedMix(true),
 
-	  _updateMS(10), _superSmooth(false),
+	  _updateMS(10), _superSmooth(false), _refreshMS(200),
 	  _pathCount(startpath),
 	  _configManager(static_cast<const char *> (rcdir.fn_str())),
-	  _procmodDialog(0), _blendDialog(0),
+	  _procmodDialog(0), _blendDialog(0), _modulatorDialog(0),
 	  _titleFont(10, wxDEFAULT, wxNORMAL, wxBOLD),
 	  _titleAltFont(10, wxDEFAULT, wxSLANT, wxBOLD),
 	  _buttFont(10, wxDEFAULT, wxNORMAL, wxNORMAL)
 	  
 {
 	_eventTimer = new FTupdateTimer(this);
+	_refreshTimer = new FTrefreshTimer(this);
 
 	
 	for (int i=0; i < FT_MAXPATHS; i++) {
@@ -269,6 +274,7 @@ void FTmainwin::buildGui()
 	wxMenu *menuFile = new wxMenu(wxT(""), wxMENU_TEAROFF);
 
 	menuFile->Append(FT_ProcModMenu, wxT("&DSP Modules...\tCtrl-P"), wxT("Configure DSP modules"));
+	menuFile->Append(FT_ModulatorMenu, wxT("&Modulators...\tCtrl-M"), wxT("Configure Modulations"));
 	menuFile->Append(FT_PresetBlendMenu, wxT("Preset &Blend...\tCtrl-B"), wxT("Blend multiple presets"));
 
 	menuFile->AppendSeparator();	
@@ -793,6 +799,9 @@ void FTmainwin::buildGui()
 	
 	
 	_eventTimer->Start(_updateMS, FALSE);
+
+	_refreshTimer->Start(_refreshMS, FALSE);
+
 }
 
 
@@ -1909,7 +1918,7 @@ void FTmainwin::doRemoveRow (wxWindow * source)
 	   
 	if (itemi >= 0)
 	{
-		suspendProcessing();
+		//suspendProcessing();
 		
 		FTioSupport * iosup = FTioSupport::instance();
 		// do this for every active process path
@@ -1926,7 +1935,12 @@ void FTmainwin::doRemoveRow (wxWindow * source)
 		}
 
 		rebuildDisplay(false);
-		restoreProcessing();
+		//restoreProcessing();
+
+		if (_procmodDialog && _procmodDialog->IsShown()) {
+			_procmodDialog->refreshState();
+		}
+		
 	}
 }
 
@@ -2780,6 +2794,20 @@ void FTmainwin::OnPresetBlend (wxCommandEvent &event)
 }
 
 
+void FTmainwin::OnModulatorDialog (wxCommandEvent &event)
+{
+	// popup our modulator dialog
+	if (!_modulatorDialog) {
+		_modulatorDialog = new FTmodulatorDialog(this, -1, wxT("Modulations"));
+		_modulatorDialog->SetSize(500,350);
+	}
+
+	//_modulatorDialog->refreshState();
+
+	_modulatorDialog->Show(true);
+}
+
+
 void FTmainwin::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
 	// TRUE is to force the frame to close
@@ -2840,10 +2868,16 @@ void FTmainwin::checkEvents()
 				// auto calibrate
 				_eventTimer->Stop();
 				_eventTimer->Start(++_updateMS, FALSE);
-				//printf("%d\n", _updateMS);
+				// printf("%d\n", _updateMS);
 			}
 		}
 	}
+}
+
+void FTmainwin::checkRefreshes()
+{
+	// TODO smartness
+	updateGraphs(0, ALL_SPECMOD, true);
 }
 
 void FTmainwin::updatePlot (int plotid)
@@ -2854,7 +2888,7 @@ void FTmainwin::updatePlot (int plotid)
 		const float *inpower = engine->getRunningInputPower();
 		_inputSpectragram[plotid]->plotNextData(inpower, engine->getFFTsize() >> 1);
 	}
-	
+
 	if (_outspecSash->IsShown()) {
 		const float *outpower = engine->getRunningOutputPower();
 		_outputSpectragram[plotid]->plotNextData(outpower, engine->getFFTsize() >> 1);
@@ -2863,7 +2897,7 @@ void FTmainwin::updatePlot (int plotid)
 }
 
 
-void FTmainwin::updateGraphs(FTactiveBarGraph *exclude, SpecModType smtype)
+void FTmainwin::updateGraphs(FTactiveBarGraph *exclude, SpecModType smtype, bool  refreshonly)
 {
 	for (int i=0; i < _pathCount; i++)
 	{
@@ -2882,17 +2916,49 @@ void FTmainwin::updateGraphs(FTactiveBarGraph *exclude, SpecModType smtype)
 			vector<FTspectrumModifier *> filts;
 			pm->getFilters (filts);
 			int lastgroup = -1;
+			bool infirst = true;
 			
 			for (unsigned int m=0; m < filts.size(); ++m)
 			{
-				if (filts[m]->getGroup() == lastgroup) {
-					continue; // first will do
+
+				if (rowcnt >= _rowSashes.size()) {
+					done = true;
+					break;
 				}
+
+				if (filts[m]->getGroup() == lastgroup) {
+					infirst = false;
+					if (!refreshonly) {
+						//cerr << "first will do" << endl;
+						rowcnt++;
+						continue; // first will do
+					}
+				}
+				else  {
+					infirst = true;
+				}
+				
 				lastgroup = filts[m]->getGroup();
+
+				// prevent too many updates
+				if ((!_rowSashes[rowcnt]->IsShown()) ||
+				    (refreshonly && !filts[m]->getDirty())) {
+					if (infirst) {
+						rowcnt++;
+					}
+					//cerr << "skipping " << filts[m]->getName() << " dirty: " << filts[m]->getDirty() << " refre: " << refreshonly<<  endl;
+					continue;
+				}
 				
 				if (smtype == ALL_SPECMOD)
 				{
-					_barGraphs[rowcnt][i]->recalculate();
+					//printf ("refreshing %08x\n", (unsigned) _barGraphs[rowcnt][i]);
+					if (refreshonly) {
+						_barGraphs[rowcnt][i]->Refresh(FALSE);
+					}
+					else {
+						_barGraphs[rowcnt][i]->recalculate();
+					}
 				}
 				else if (filts[m]->getSpecModifierType() == smtype
 				    && _barGraphs[rowcnt][i] != exclude)
@@ -2902,8 +2968,10 @@ void FTmainwin::updateGraphs(FTactiveBarGraph *exclude, SpecModType smtype)
 					//done = true;
 					//break;
 				}
-				
-				rowcnt++;
+
+				if (infirst) {
+					rowcnt++;
+				}
 			}
 			if (done) break;
 		}
@@ -2966,6 +3034,10 @@ void FTmainwin::loadPreset (const wxString &name, bool uselast)
 			_procmodDialog->refreshState();
 		}
 
+		if (_modulatorDialog && _modulatorDialog->IsShown()) {
+			// _modulatorDialog->refreshState();
+		}
+		
 		if (_blendDialog && _blendDialog->IsShown()) {
 			_blendDialog->refreshState(name, true, wxT(""), true);
 		}

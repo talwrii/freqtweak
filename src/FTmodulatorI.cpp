@@ -29,13 +29,15 @@ using namespace std;
 using namespace PBD;
 
 FTmodulatorI::FTmodulatorI(string name, nframes_t samplerate, unsigned int fftn)
-	: _inited(false), _name(name), _confname("UNNAMED"), _userName(""), _bypassed(false),
+	: _inited(false), _name(name), _confname("UNNAMED"), _userName("Unnamed"), _bypassed(false),
 	  _sampleRate(samplerate), _fftN(fftn)
 {
 }
 
 FTmodulatorI::~FTmodulatorI()
 {
+	clearSpecMods();
+	GoingAway(this); // emit
 }
 
 void FTmodulatorI::goingAway(FTspectrumModifier * ft)
@@ -52,6 +54,7 @@ void FTmodulatorI::addSpecMod (FTspectrumModifier * specmod)
 
 	if (find(_specMods.begin(), _specMods.end(), specmod) == _specMods.end())
 	{
+		
 		_specMods.push_back (specmod);
 	}
 }
@@ -61,11 +64,17 @@ void FTmodulatorI::removeSpecMod (FTspectrumModifier * specmod)
 	if (!specmod) return;
 	LockMonitor pmlock(_specmodLock, __LINE__, __FILE__);
 	_specMods.remove (specmod);
+	specmod->setDirty(false);
 }
 
 void FTmodulatorI::clearSpecMods ()
 {
 	LockMonitor pmlock(_specmodLock, __LINE__, __FILE__);
+
+	for (SpecModList::iterator iter = _specMods.begin(); iter != _specMods.end(); ++iter)
+	{
+		(*iter)->setDirty(false);
+	}
 	_specMods.clear();
 }
 
@@ -73,4 +82,11 @@ void FTmodulatorI::getSpecMods (SpecModList & mods)
 {
 	LockMonitor pmlock(_specmodLock, __LINE__, __FILE__);
 	mods.insert (mods.begin(), _specMods.begin(), _specMods.end());
+}
+
+bool FTmodulatorI::hasSpecMod (FTspectrumModifier *specmod)
+{
+	LockMonitor pmlock(_specmodLock, __LINE__, __FILE__);
+
+	return (find(_specMods.begin(), _specMods.end(), specmod) != _specMods.end());
 }

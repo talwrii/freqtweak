@@ -35,6 +35,8 @@
 #include <string>
 using namespace std;
 
+#include "FTtypes.hpp"
+#include "FTspectrumModifier.hpp"
 
 // Limit a value to be l<=v<=u
 #define LIMIT(v,l,u) ((v)<(l)?(l):((v)>(u)?(u):(v)))
@@ -42,9 +44,6 @@ using namespace std;
 // to handle denormals
 #define FLUSH_TO_ZERO(fv) (((*(unsigned int*)&(fv))&0x7f800000)==0)?0.0f:(fv)
 
-typedef float fft_data;
-
-#include "FTspectrumModifier.hpp"
 
 class FTprocI
 {

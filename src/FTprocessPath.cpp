@@ -27,6 +27,7 @@
 #include "FTprocessPath.hpp"
 #include "FTdspManager.hpp"
 #include "FTspectralEngine.hpp"
+#include "FTprocI.hpp"
 #include "RingBuffer.hpp"
 
 FTprocessPath::FTprocessPath()
@@ -65,6 +66,7 @@ void FTprocessPath::initSpectralEngine()
 		newmod->initialize();
 		_specEngine->appendProcessorModule (newmod);
 	}
+
 }
 
 
@@ -80,6 +82,7 @@ void FTprocessPath::setId (int id)
 
 void FTprocessPath::processData (sample_t * inbuf, sample_t *outbuf, nframes_t nframes)
 {
+	bool good;
 	
 	if (_specEngine->getBypassed())
 	{
@@ -102,11 +105,11 @@ void FTprocessPath::processData (sample_t * inbuf, sample_t *outbuf, nframes_t n
 		}
 		
 		// DO SPECTRAL PROCESSING
-		_specEngine->processNow (this);
+		good = _specEngine->processNow (this);
 		
 		
 		// copy data from fifo at read pointer into outbuf
-		if (_outputFifo->read_space() >= (nframes * sizeof(sample_t)))
+		if (good && _outputFifo->read_space() >= (nframes * sizeof(sample_t)))
 		{
 			_outputFifo->read ((char *) outbuf, sizeof(sample_t) * nframes);	
 

@@ -44,9 +44,11 @@ class FTspectrumModifier;
 
 class FTupdateToken;
 class FTupdateTimer;
+class FTrefreshTimer;
 class FTlinkMenu;
 class FTprocOrderDialog;
 class FTpresetBlendDialog;
+class FTmodulatorDialog;
 
 BEGIN_DECLARE_EVENT_TYPES()
    DECLARE_EVENT_TYPE( FT_EVT_TITLEMENU_COMMAND, 9000)
@@ -122,7 +124,7 @@ class FTmainwin : public wxFrame
 	
 
 	void updateDisplay();
-	void updateGraphs(FTactiveBarGraph *exclude, SpecModType smtype);
+	void updateGraphs(FTactiveBarGraph *exclude, SpecModType smtype, bool refreshonly=false);
 
 	void updatePosition(const wxString &freqstr, const wxString &valstr); 
 
@@ -150,6 +152,7 @@ class FTmainwin : public wxFrame
 	void buildGui();
 	void updatePlot(int plotnum);
 	void checkEvents();
+	void checkRefreshes();
 
 	
 	// per path handlers
@@ -180,6 +183,7 @@ class FTmainwin : public wxFrame
 
 	void OnProcMod (wxCommandEvent &event);
 	void OnPresetBlend (wxCommandEvent &event);
+	void OnModulatorDialog (wxCommandEvent &event);
 
 	void handleTitleMenuCmd (FTtitleMenuEvent & ev);
 	
@@ -401,7 +405,9 @@ class FTmainwin : public wxFrame
 	FTupdateTimer *_eventTimer;
 	int _updateMS;
 	bool _superSmooth;
-	
+
+	FTrefreshTimer *_refreshTimer;
+	int _refreshMS;
 
 	vector<wxWindow *> _rowItems;
 	//wxWindow ** _rowItems;
@@ -427,7 +433,8 @@ class FTmainwin : public wxFrame
 
 	FTprocOrderDialog * _procmodDialog;
 	FTpresetBlendDialog * _blendDialog;
-
+	FTmodulatorDialog *   _modulatorDialog;
+	
 	int _bwidth;
 	int _labwidth;
 	int _bheight;
@@ -440,6 +447,7 @@ class FTmainwin : public wxFrame
 	vector<FTtitleMenuEvent *> _pendingTitleEvents;
 	
 	friend class FTupdateTimer;
+	friend class FTrefreshTimer;
 	friend class FTlinkMenu;
 	friend class FTgridMenu;
 	
@@ -456,6 +464,17 @@ class FTupdateTimer
 	FTupdateTimer(FTmainwin *win) : mwin(win) {}
 
 	void Notify() { mwin->checkEvents(); }
+
+	FTmainwin *mwin;
+};
+
+class FTrefreshTimer
+	: public wxTimer
+{
+  public:
+	FTrefreshTimer(FTmainwin *win) : mwin(win) {}
+
+	void Notify() { mwin->checkRefreshes(); }
 
 	FTmainwin *mwin;
 };

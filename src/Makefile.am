@@ -1,3 +1,4 @@
+
 # Copyright (C) 2002 Jesse Chappell <jesse@essej.net>
 #  
 # This file is free software; as a special exception the author gives
@@ -81,7 +82,19 @@ freqtweak_SOURCES = \
 	FTprocBoost.cpp \
 	FTprocBoost.hpp \
 	FThelpWindow.cpp \
-	FThelpWindow.hpp
-
-
+	FThelpWindow.hpp \
+	FTmodulatorI.cpp \
+	FTmodulatorI.hpp \
+	FTmodulatorManager.cpp \
+	FTmodulatorManager.hpp \
+	FTmodulatorDialog.cpp \
+	FTmodulatorDialog.hpp \
+	FTmodulatorGui.cpp \
+	FTmodulatorGui.hpp \
+	FTmodRandomize.cpp \
+	FTmodRandomize.hpp \
+	FTmodShift.cpp \
+	FTmodShift.hpp \
+	LockMonitor.hpp \
+	cycles.h
 

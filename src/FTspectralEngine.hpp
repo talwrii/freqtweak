@@ -40,7 +40,10 @@
 
 #include "FTutils.hpp"
 #include "FTtypes.hpp"
-#include "FTprocI.hpp"
+#include "LockMonitor.hpp"
+
+#include <sigc++/sigc++.h>
+
 
 #include <vector>
 using namespace std;
@@ -50,6 +53,8 @@ class FTprocessPath;
 class RingBuffer;
 class FTspectrumModifier;
 class FTupdateToken;
+class FTmodulatorI;
+class FTprocI;
 
 class FTspectralEngine
 
@@ -58,7 +63,7 @@ class FTspectralEngine
 	FTspectralEngine();
 	virtual ~FTspectralEngine();
 	
-	void processNow (FTprocessPath *procpath);
+	bool processNow (FTprocessPath *procpath);
 
 	enum FFT_Size
 	{
@@ -150,14 +155,29 @@ class FTspectralEngine
 	void moveProcessorModule (unsigned int from, unsigned int to);
 	void removeProcessorModule (unsigned int index, bool destroy=true);
 	void clearProcessorModules (bool destroy=true);
-	
 	void getProcessorModules (vector<FTprocI *> & modules);
 	FTprocI * getProcessorModule ( unsigned int num);
+
+	// modulator handling
+	void insertModulator (FTmodulatorI * procmod, unsigned int index);
+	void appendModulator (FTmodulatorI * procmod);
+	void moveModulator (unsigned int from, unsigned int to);
+	void removeModulator (unsigned int index, bool destroy=true);
+	void removeModulator (FTmodulatorI * procmod, bool destroy=true);
+	void clearModulators (bool destroy=true);
+	void getModulators (vector<FTmodulatorI *> & modules);
+	FTmodulatorI * getModulator ( unsigned int num);
+
+	SigC::Signal1<void, FTmodulatorI *> ModulatorAdded;
+
+
 	
 	static const char ** getWindowStrings() { return (const char **) _windowStrings; }
 	static const int getWindowStringsCount() { return _windowStringCount; }
 	static const int * getFFTSizes() { return (const int *) _fftSizes; }
 	static const int getFFTSizeCount() { return _fftSizeCount; }
+
+
 	
 protected:
 
@@ -182,6 +202,12 @@ protected:
 
 	// the processing modules
 	vector<FTprocI *> _procModules;
+	PBD::NonBlockingLock _procmodLock;
+
+	// the modulators
+	vector<FTmodulatorI *> _modulators;
+	PBD::NonBlockingLock _modulatorLock;
+
 	
 	// fft size (thus frame length)
         int _fftN;
@@ -201,6 +227,8 @@ protected:
 	int _newfftN;
 	bool _fftnChanged;
 
+	PBD::NonBlockingLock _fftLock;
+	
 	// space for average input power buffer
 	// elements = _fftN/2 * MAX_AVERAGES * MAX_OVERSAMP 
 	fft_data * _inputPowerSpectra;

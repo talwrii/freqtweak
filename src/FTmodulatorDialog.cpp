@@ -22,6 +22,7 @@
 #endif
 
 #include <wx/wx.h>
+
 #include <wx/listctrl.h>
 #include <iostream>
 using namespace std;
@@ -35,6 +36,10 @@ using namespace std;
 #include "FTmodulatorI.hpp"
 #include "FTprocessPath.hpp"
 #include "FTspectralEngine.hpp"
+#include "FTmodulatorGui.hpp"
+
+#include <sigc++/sigc++.h>
+using namespace SigC;
 
 enum {
 	ID_AddButton=8000,
@@ -46,20 +51,21 @@ enum {
 
 
 enum {
-	ID_AddModulatorBase = 9000
+	ID_AddModulatorBase = 9000,
+	ID_AddModulatorChannelBase = 9100,
+	ID_AddModulatorChannelMax = 9110
 };
 
 BEGIN_EVENT_TABLE(FTmodulatorDialog, wxFrame)
 
 	EVT_CLOSE(FTmodulatorDialog::onClose)
-
+	EVT_IDLE(FTmodulatorDialog::OnIdle)
 	
 	EVT_SIZE (FTmodulatorDialog::onSize)
 	EVT_PAINT (FTmodulatorDialog::onPaint)
 
-	EVT_LIST_ITEM_SELECTED(ID_ChannelList, FTmodulatorDialog::onItemSelected)			
-	EVT_LIST_ITEM_RIGHT_CLICK(ID_ChannelList, FTmodulatorDialog::onItemRightClick)
-	
+
+	EVT_COMMAND_RANGE(ID_AddModulatorChannelBase, ID_AddModulatorChannelMax, wxEVT_COMMAND_BUTTON_CLICKED, FTmodulatorDialog::onAddButton)
 	
 END_EVENT_TABLE()
 
@@ -72,7 +78,7 @@ FTmodulatorDialog::FTmodulatorDialog(FTmainwin * parent, wxWindowID id,
 				     const wxString& name )
 
 	: wxFrame(parent, id, title, pos, size, style, name),
-	 _clickedMod(0), _clickedChannel(-1), _mainwin(parent)
+	 _clickedChannel(-1), _mainwin(parent)
 {
 
 	init();
@@ -97,11 +103,11 @@ void FTmodulatorDialog::onPaint(wxPaintEvent &ev)
 
 		_justResized = false;
 
-		for (int i=0; i < _channelCount; ++i)
-		{
-			_channelLists[i]->GetClientSize(&width, &height);
-			_channelLists[i]->SetColumnWidth(0, width);
-		}
+// 		for (int i=0; i < _channelCount; ++i)
+// 		{
+// 			_channelLists[i]->GetClientSize(&width, &height);
+// 			_channelLists[i]->SetColumnWidth(0, width);
+// 		}
 		
 	}
 	ev.Skip();
@@ -120,6 +126,8 @@ void FTmodulatorDialog::init()
 	
 	FTprocessPath * procpath;
 	_channelCount = 0;
+
+	int addbuttid = ID_AddModulatorChannelBase;
 	
 	for (int i=0; i < iosup->getActivePathCount(); ++i)
 	{
@@ -128,24 +136,30 @@ void FTmodulatorDialog::init()
 		
 		wxBoxSizer * sourceSizer = new wxBoxSizer(wxVERTICAL);
 
+		wxBoxSizer * rowsizer = new wxBoxSizer(wxHORIZONTAL);
 		statText = new wxStaticText (this, -1, wxString::Format(wxT("%s %d"), wxT("Channel"), i+1),  wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
-		sourceSizer->Add(statText, 0, wxALL|wxEXPAND|wxALIGN_CENTRE_VERTICAL|wxALIGN_CENTRE, 3);
-		
-		
-		_channelLists[i] = new wxListCtrl (this, ID_ChannelList, wxDefaultPosition, wxSize(-1,200), wxLC_REPORT|wxSUNKEN_BORDER|wxLC_SINGLE_SEL);
-		_channelLists[i]->InsertColumn(0, wxT("Modulators"));
+		rowsizer->Add(statText, 0, wxALL|wxALIGN_CENTRE_VERTICAL|wxALIGN_CENTRE, 3);
 
-		// we want to get his mouse up events
-		Connect( ID_ChannelList,  wxEVT_RIGHT_UP,
-				     (wxObjectEventFunction) (wxEventFunction) (wxMouseEventFunction)
-				     &FTmodulatorDialog::onRightClick,
-				     (wxObject *) _channelCount);
-
+		rowsizer->Add(1,-1, 1);
 		
-		sourceSizer->Add (_channelLists[i], 1, wxEXPAND|wxALL, 2);
+		wxButton *addButt = new wxButton(this, addbuttid, wxT("Add..."));
+		rowsizer->Add (addButt, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+		
+		sourceSizer->Add (rowsizer, 0, wxEXPAND|wxALIGN_CENTRE|wxALIGN_CENTRE_VERTICAL, 2);
+		
+		_channelScrollers[i] = new wxScrolledWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSUNKEN_BORDER);
+		_channelScrollers[i]->SetScrollRate (10, 30);
+		_channelSizers[i] = new wxBoxSizer(wxVERTICAL);
 
-		_chanlistSizer->Add (sourceSizer, 1, wxEXPAND|wxALL, 4);
+		_channelScrollers[i]->SetSizer(_channelSizers[i]);
+		_channelScrollers[i]->SetAutoLayout(true);
+		
+		sourceSizer->Add (_channelScrollers[i], 1, wxEXPAND|wxALL, 2);
+
+		_chanlistSizer->Add (sourceSizer, 1, wxEXPAND|wxALL, 2);
 		_channelCount++;
+
+		addbuttid++;
 	}		
 
 
@@ -153,12 +167,6 @@ void FTmodulatorDialog::init()
 	
 	wxMenuItem * item;
 	_popupMenu = new wxMenu();
-
-	_editMenuItem = new wxMenuItem(_popupMenu, ID_EditMenuItem, wxT("Edit..."));
-
-	_removeMenuItem = new wxMenuItem(_popupMenu, ID_RemoveMenuItem, wxT("Remove"));
-
-	_popupMenu->AppendSeparator();
 
 	int itemid = ID_AddModulatorBase;
 
@@ -195,10 +203,7 @@ void FTmodulatorDialog::init()
 
 void FTmodulatorDialog::refreshState()
 {
-
-	wxListItem item;
-	item.SetColumn(0);
-	item.SetMask (wxLIST_MASK_TEXT|wxLIST_MASK_DATA);
+	// first time only
 	
 	FTioSupport * iosup = FTioSupport::instance();
 
@@ -210,26 +215,42 @@ void FTmodulatorDialog::refreshState()
 		if (procpath) {
 			
 			FTspectralEngine *engine = procpath->getSpectralEngine();
-			
-			_channelLists[i]->DeleteAllItems();
-			
-			// init channel list
-			vector<FTmodulatorI*> modlist;
-			engine->getModulators (modlist);
 
-			int n=0;
-			for (vector<FTmodulatorI*>::iterator iter=modlist.begin(); iter != modlist.end(); ++iter)
-			{
-				FTmodulatorI * mod = (*iter);
+			engine->ModulatorAdded.connect( bind (slot (*this, &FTmodulatorDialog::onModulatorAdded), i));
+			
+// 			_channelLists[i]->DeleteAllItems();
+			
+// 			// init channel list
+ 			vector<FTmodulatorI*> modlist;
+			modlist.clear();
+ 			engine->getModulators (modlist);
+
+ 			int n=0;
+ 			for (vector<FTmodulatorI*>::iterator iter=modlist.begin(); iter != modlist.end(); ++iter)
+ 			{
+ 				FTmodulatorI * mod = (*iter);
+				FTmodulatorGui *modgui = new FTmodulatorGui(engine, mod, _channelScrollers[i], -1);
+
+				mod->GoingAway.connect ( bind (slot (*this, &FTmodulatorDialog::onModulatorDeath), i));
 				
-				item.SetText (wxString::FromAscii (mod->getName().c_str()));
-				item.SetData ((unsigned) mod);
-				item.SetId (n++);
+				_modulatorGuis[mod] = modgui;
+
+				_channelSizers[i]->Add(modgui, 0, wxEXPAND|wxALL, 1);
+
+				cerr << "add modulator: " << mod->getName() << "  channel: " << i << endl;
 				
-				_channelLists[i]->InsertItem(item);
-			}
+// 				item.SetText (wxString::FromAscii (mod->getName().c_str()));
+// 				item.SetData ((unsigned) mod);
+// 				item.SetId (n++);
+				
+// 				_channelLists[i]->InsertItem(item);
+ 			}
+
+			_channelSizers[i]->Layout();
+			_channelScrollers[i]->SetScrollRate(10,30);
 		}
 	}
+
 
 // 	if (_lastSelected >= 0 && _lastSelected < _targetList->GetItemCount()) {
 // 		_targetList->SetItemState (_lastSelected, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
@@ -253,90 +274,17 @@ void FTmodulatorDialog::onClose(wxCloseEvent & ev)
 }
 
 
-void FTmodulatorDialog::onItemSelected (wxListEvent &ev)
+void FTmodulatorDialog::onAddButton (wxCommandEvent &ev)
 {
-	wxObject *source = ev.GetEventObject(); 
+	wxWindow * source = (wxWindow *) ev.GetEventObject();
 
-	for (int i=0; i < _channelCount; ++i)
-	{
-		if (source == _channelLists[i]) {
-
-			FTmodulatorI * mod = (FTmodulatorI *) ev.GetData();
-			if (mod) {
-				cerr << "Item selected " << mod->getName() << endl;
-
-			}
-			
-		}
-		else {
-			// deselect all
-			int itemi = -1;
-			for ( ;; )
-			{
-				itemi = _channelLists[i]->GetNextItem(itemi, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-				if ( itemi == -1 )
-					break;
-				_channelLists[i]->SetItemState(itemi, 0, wxLIST_STATE_SELECTED);
-			}
-		}
-	}
-
-	ev.Skip();
-}
-
-void FTmodulatorDialog::onRightClick (wxMouseEvent &ev)
-{
-	int channum = (int) ev.m_callbackUserData;
-
-	cerr << "On reigt click: " << channum << endl;
+	_clickedChannel = ev.GetId() - ID_AddModulatorChannelBase;
 	
-	// popup basic menu
-// 	_clickedChannel = channum;
-// 	_channelLists[channum]->PopupMenu(_popupMenu, 0, 0);
-
-// 	_clickedChannel = -1;
+	
+	wxRect pos = source->GetRect();
+	PopupMenu(_popupMenu, pos.x, pos.y + pos.height);
+				
 }
-
-
-void FTmodulatorDialog::onItemRightClick (wxListEvent &ev)
-{
-	wxObject *source = ev.GetEventObject(); 
-
-	for (int i=0; i < _channelCount; ++i)
-	{
-		if (source == _channelLists[i]) {
-
-			// _channelLists[i]->SetItemState(ev.GetIndex(), 1, wxLIST_STATE_SELECTED);
-			
-			FTmodulatorI * mod = (FTmodulatorI *) ev.GetData();
-			if (mod) {
-
-				_clickedMod = mod;
-				_clickedChannel = i;
-				
-				// add stuff to menu
-				_popupMenu->Insert (0, _removeMenuItem);
-				_popupMenu->Insert (0, _editMenuItem);
-
-				wxPoint pos = ::wxGetMousePosition();
-				pos = _channelLists[i]->ScreenToClient(pos);
-				
-				cerr << "Item Right Clicked: " << mod->getName() << "  " << _clickedChannel << "  " << (unsigned) this << endl;
-
-				_channelLists[i]->PopupMenu(_popupMenu, pos.x, pos.y - 12);
-				
-				_clickedMod  = 0;
-				// _clickedChannel = -1;
-				_popupMenu->Remove (_editMenuItem);
-				_popupMenu->Remove (_removeMenuItem);
-			}
-
-			break;
-		}
-	}
-	ev.Skip();
-}
-
 
 void FTmodulatorDialog::onAddModulator (wxCommandEvent &ev)
 {
@@ -353,57 +301,68 @@ void FTmodulatorDialog::onAddModulator (wxCommandEvent &ev)
 			FTspectralEngine *engine = procpath->getSpectralEngine();
 			cerr << "add modulator for real: " << _clickedChannel <<  endl;
 
-			engine->appendModulator (protomod->clone());
-
-			refreshState();
-		}
-	}
-}
-
-
-/*
-void FTmodulatorDialog::onAddButton(wxCommandEvent & ev)
-{
-	// append selected procmods from source
-//
-	wxListItem item;
-	item.SetColumn(0);
-	item.SetMask (wxLIST_MASK_TEXT|wxLIST_MASK_DATA);
-	
-	
-	long itemi = -1;
-	bool didsomething = false;
-
-	for ( ;; )
-	{
-		itemi = _sourceList->GetNextItem(itemi,
-					     wxLIST_NEXT_ALL,
-					     wxLIST_STATE_SELECTED);
-		if ( itemi == -1 )
-			break;
-
-		FTprocI * proc = (FTprocI *) _sourceList->GetItemData(itemi); 
-
-		if (proc) {
-			item.SetText (wxString::FromAscii (proc->getName().c_str()));
-			item.SetData ((unsigned)proc);
-			item.SetId (_targetList->GetItemCount());
+			FTmodulatorI * newmod = protomod->clone();
+			newmod->initialize();
 			
-			_targetList->InsertItem(item);
+			engine->appendModulator (newmod);
 
-			_actions.push_back (ModAction (proc, -1 , _targetList->GetItemCount(), false));
-
-			didsomething = true;
-		}
-	}	
-
-	if (didsomething) {
-		if (_autoCheck->GetValue()) {
-			onCommit(ev);
-		}
-		else {
-			_modifiedText->SetLabel (wxT("* modified *"));
+			// refreshState();
 		}
 	}
 }
-*/
+
+
+void FTmodulatorDialog::OnIdle(wxIdleEvent &ev)
+{
+
+	if (_deadGuis.size() > 0) {
+
+		for (list<FTmodulatorGui*>::iterator iter = _deadGuis.begin(); iter != _deadGuis.end(); ++iter) {
+			(*iter)->Destroy();
+		}
+		
+		_deadGuis.clear();
+	}
+
+	ev.Skip();
+}
+
+void FTmodulatorDialog::onModulatorDeath (FTmodulatorI * mod, int channel)
+{
+	cerr << "mod death: " << mod->getName() << " for channel: " << channel << endl;
+
+	if (_modulatorGuis.find (mod) != _modulatorGuis.end())
+	{
+		cerr << "deleting modgui" << endl;
+		FTmodulatorGui * modgui = _modulatorGuis[mod];
+		_channelSizers[channel]->Remove (modgui);
+		modgui->Show(false);
+		_channelSizers[channel]->Layout();
+		_channelScrollers[channel]->SetScrollbars(1,1,10,30);
+
+		_deadGuis.push_back(modgui);
+		_modulatorGuis.erase(mod);
+
+		::wxWakeUpIdle();
+	}
+}
+
+void FTmodulatorDialog::onModulatorAdded (FTmodulatorI * mod, int channel)
+{
+	FTprocessPath * procpath = FTioSupport::instance()->getProcessPath (channel);
+	if (procpath) {
+		FTspectralEngine *engine = procpath->getSpectralEngine();
+
+		cerr << "mod added: " << mod->getName() << endl;
+		
+		FTmodulatorGui *modgui = new FTmodulatorGui(engine, mod, _channelScrollers[channel], -1);
+		
+		mod->GoingAway.connect ( bind (slot (*this, &FTmodulatorDialog::onModulatorDeath), channel));
+		
+		_modulatorGuis[mod] = modgui;
+		
+		_channelSizers[channel]->Add(modgui, 0, wxEXPAND|wxALL, 1);
+		_channelSizers[channel]->Layout();
+		_channelScrollers[channel]->SetScrollbars(1,1,10,30);
+	}
+}

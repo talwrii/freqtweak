@@ -43,8 +43,8 @@ class FTmodShift
   protected:
 
 	Control * _rate;
-	Control * _dimension;
-
+	Control * _minfreq;
+	Control * _maxfreq;
 	
 	nframes_t _lastframe;
 	float * _tmpfilt;

@@ -44,7 +44,7 @@ public:
 	
 protected:
 
-	bool _updated;
+	volatile bool _updated;
 	bool _ignore;
 };
 

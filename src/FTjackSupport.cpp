@@ -501,6 +501,18 @@ const char ** FTjackSupport::getPhysicalOutputPorts()
 	return portnames;
 }
 
+nframes_t FTjackSupport::getTransportFrame()
+{
+	if (!_jackClient) return 0;
+
+	if (jack_transport_query (_jackClient, 0) == JackTransportRolling) {
+		return jack_get_current_transport_frame (_jackClient);
+	}
+	else {
+		return jack_frame_time (_jackClient);
+	}
+}
+
 
 bool FTjackSupport::inAudioThread()
 {
@@ -589,7 +601,9 @@ int FTjackSupport::processCallback (jack_nframes_t nframes, void *arg)
 
 			if (jsup->_bypassed)
 			{
-				memset (out, 0, nframes * sizeof(sample_t));
+				if (in != out) {
+					memcpy (out, in, nframes * sizeof(sample_t));
+				}
 			}
 			else
 			{

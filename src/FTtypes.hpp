@@ -20,11 +20,16 @@
 #ifndef __FTTYPES_HPP__
 #define __FTTYPES_HPP__
 
+#include <inttypes.h>
 
-#include <jack/jack.h>
+// these should match jack's types but we'll avoid the include
+// for now
 
-typedef jack_default_audio_sample_t sample_t;
-typedef jack_nframes_t nframes_t;
+typedef float sample_t;
+typedef uint32_t nframes_t;
+
+typedef float fft_data;
+
 
 
 #define FT_MAXPATHS 4

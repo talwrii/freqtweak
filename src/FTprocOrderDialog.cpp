@@ -271,7 +271,7 @@ void FTprocOrderDialog::onAutoCheck (wxCommandEvent &ev)
 
 void FTprocOrderDialog::onCommit(wxCommandEvent & ev)
 {
-	_mainwin->suspendProcessing();
+	//_mainwin->suspendProcessing();
 
 	FTioSupport * iosup = FTioSupport::instance();
 	// do this for every active process path
@@ -313,7 +313,7 @@ void FTprocOrderDialog::onCommit(wxCommandEvent & ev)
 	// rebuild UI parts
 	_mainwin->rebuildDisplay(false);
 
-	_mainwin->restoreProcessing();
+	// _mainwin->restoreProcessing();
 
 	refreshState();
 }

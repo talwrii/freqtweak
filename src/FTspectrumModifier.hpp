@@ -91,6 +91,24 @@ class FTspectrumModifier
 
 	void setBypassed (bool flag) { _bypassed = flag; }
 	bool getBypassed () { return _bypassed; }
+
+	void setDirty (bool val) { _dirty = val; }
+	// this is as close of a test-and-set as I need
+	bool getDirty (bool tas=false, bool val=false)
+		{
+			if (_linkedTo) {
+				return _linkedTo->getDirty(false);
+			}
+				
+			if (_dirty) {
+				if (tas) {
+					_dirty = val;
+				}
+				return true;
+			}
+			return false;
+		}
+
 	
 	// resets all bins to constructed value
 	void reset();
@@ -137,7 +155,8 @@ class FTspectrumModifier
 
 	int _id;
 	bool _bypassed;
-
+	bool _dirty;
+	
 	list<Listener *> _listenerList;
 
 	XMLNode * _extra_node;

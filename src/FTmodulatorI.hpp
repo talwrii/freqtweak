@@ -23,6 +23,8 @@
 #include "FTtypes.hpp"
 #include <string>
 #include <list>
+#include <sigc++/sigc++.h>
+
 
 #include "LockMonitor.hpp"
 #include "FTspectrumModifier.hpp"
@@ -49,7 +51,8 @@ class FTmodulatorI
 	virtual void removeSpecMod (FTspectrumModifier * specmod);
 	virtual void clearSpecMods ();
 	virtual void getSpecMods (SpecModList & mods);
-
+	virtual bool hasSpecMod (FTspectrumModifier *specmod);
+	
 	virtual std::string getUserName() { return _userName; }
 	virtual void setUserName (std::string username) { _userName = username; }
 
@@ -61,6 +64,11 @@ class FTmodulatorI
 	virtual nframes_t getSampleRate() { return _sampleRate; }
 
 	virtual const string & getConfName() { return _confname; }
+
+
+	SigC::Signal1<void, FTmodulatorI *> GoingAway;
+
+
 	
 	class Control
 	{
@@ -77,6 +85,7 @@ class FTmodulatorI
 		
 		Type getType() { return _type; }
 		std::string getName() { return _name; }
+		std::string getUnits() { return _units; }
 		
 		inline bool getValue(bool & val);
 		inline bool getValue(int & val);
@@ -100,7 +109,7 @@ class FTmodulatorI
 		float _floatLB, _floatUB;
 		std::list<std::string> _enumList;
 
-		friend class FTmodulatorI;
+		friend class FTmodulatorI;		
 		
 	protected:
 

@@ -1020,12 +1020,13 @@ float FTactiveBarGraph::snapValue(float val)
 
 void FTactiveBarGraph::OnPaint(wxPaintEvent & event)
 {
-	//printf ("ActiveBarGraph::OnPaint  xscale=%g\n", _xscale);
 	if (!_backingMap || !_specMod) {
 		event.Skip();
 		return;
 	}
-	       
+
+	//printf ("ActiveBarGraph::OnPaint  xscale=%g\n", _xscale);
+	
 	//Clear();
 	wxPaintDC dc(this);
 	
@@ -1092,7 +1093,7 @@ void FTactiveBarGraph::OnPaint(wxPaintEvent & event)
 		int leftx, rightx;
 		binToXRange(i, leftx, rightx);
 
-		// printf ("%08x:  %d  %d\n", (unsigned) this, leftx, y);
+		//printf ("%08x:  %d  %d\n", (unsigned) this, leftx, rightx);
 
 		// main bar
 		if (_bypassed) {
@@ -1844,7 +1845,7 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 			if (shiftbins < 0) {
 				// shiftbins is NEGATIVE shift left
 
-			// store first shiftbins
+				// store first shiftbins
 				for (i=0; i < -shiftbins; i++) {
 					_tmpfilt[i] = valDiffY (values[i],  _lastY, pY);
 				}

@@ -41,16 +41,31 @@ void FTmodShift::initialize()
 	_lastframe = 0;
 	
 	_rate = new Control (Control::FloatType, "Rate", "Units/sec");
-	_rate->_floatLB = 0.0;
+	_rate->_floatLB = -1000.0;
 	_rate->_floatUB = 1000.0;
-	_rate->setValue (500.0f);
+	_rate->setValue (0.0f);
 	_controls.push_back (_rate);
 
-	_dimension = new Control (Control::EnumType, "Axis", "");
-	_dimension->_enumList.push_back("Frequency");
-	_dimension->setValue ("Frequency");
-	_controls.push_back (_dimension);
+	_minfreq = new Control (Control::FloatType, "Min Freq", "Hz");
+	_minfreq->_floatLB = 0.0;
+	_minfreq->_floatUB = _sampleRate / 2;
+	_minfreq->setValue (_minfreq->_floatLB);
+	_controls.push_back (_minfreq);
 
+	_maxfreq = new Control (Control::FloatType, "Max Freq", "Hz");
+	_maxfreq->_floatLB = 0.0;
+	_maxfreq->_floatUB = _sampleRate / 2;
+	_maxfreq->setValue (_maxfreq->_floatUB);
+	_controls.push_back (_maxfreq);
+
+	
+	
+// 	_dimension = new Control (Control::EnumType, "Target", "");
+// 	_dimension->_enumList.push_back("Frequency");
+// 	_dimension->_enumList.push_back("Value");
+// 	_dimension->setValue ("Frequency");
+// 	_controls.push_back (_dimension);
+	
 	_tmpfilt = new float[_fftN];
 	
 	_inited = true;
@@ -65,7 +80,8 @@ FTmodShift::~FTmodShift()
 	_controls.clear();
 
 	delete _rate;
-	delete _dimension;
+	delete _minfreq;
+	delete _maxfreq;
 }
 
 void FTmodShift::setFFTsize (unsigned int fftn)
@@ -91,9 +107,17 @@ void FTmodShift::modulate (nframes_t current_frame, fft_data * fftdata, unsigned
 	float * filter;
 	int len;
 	int i,j;
+	float minfreq, maxfreq;
+	int minbin, maxbin;
 	
 	_rate->getValue (rate);
+	_minfreq->getValue (minfreq);
+	_maxfreq->getValue (maxfreq);
 
+	if (minfreq >= maxfreq) {
+		return;
+	}
+	
 	int shiftval = (int) (((current_frame - _lastframe) / (double) _sampleRate) * rate);
 	
 	if (current_frame != _lastframe && shiftval != 0)
@@ -109,24 +133,53 @@ void FTmodShift::modulate (nframes_t current_frame, fft_data * fftdata, unsigned
 			filter = sm->getValues();
 			sm->getRange(lb, ub);
 			len = (int) sm->getLength();
-			int shiftbins = shiftval % len;
+			minbin = (int) ((minfreq*2/ _sampleRate) * len);
+			maxbin = (int) ((maxfreq*2/ _sampleRate) * len);
 
-			// fprintf(stderr, "shifting %d at %lu\n", shiftbins, (unsigned long) current_frame);
-			
-			
-			// shiftbins is POSITIVE, shift right
-			// store last shiftbins
-			for (i=len-shiftbins; i < len; i++) {
-				_tmpfilt[i] = filter[i];
+			len = maxbin - minbin;
+
+			if (len <= 0) {
+				continue;
 			}
 			
+			int shiftbins = (abs(shiftval) % len) * (shiftval > 0 ? 1 : -1);
+
+
 			
-			for ( i=len-1; i >= shiftbins; i--) {
-				filter[i] = filter[i-shiftbins];
+			// fprintf(stderr, "shifting %d  %d:%d  at %lu\n", shiftbins, minbin, maxbin, (unsigned long) current_frame);
+			
+			if (shiftbins > 0) {
+				// shiftbins is POSITIVE, shift right
+				// store last shiftbins
+				for (i=maxbin-shiftbins; i < maxbin; i++) {
+					_tmpfilt[i] = filter[i];
+				}
+				
+				
+				for ( i=maxbin-1; i >= minbin + shiftbins; i--) {
+					filter[i] = filter[i-shiftbins];
+				}
+				
+				for (j=maxbin-shiftbins, i=minbin; i < minbin + shiftbins; i++, j++) {
+					filter[i] = _tmpfilt[j];
+				}
 			}
+			else if (shiftbins < 0) {
+				// shiftbins is NEGATIVE, shift left
+				// store last shiftbins
+
+				// store first shiftbins
+				for (i=minbin; i < minbin-shiftbins; i++) {
+					_tmpfilt[i] = filter[i];
+				}
 			
-			for (j=len-shiftbins, i=0; i < shiftbins; i++, j++) {
-				filter[i] = _tmpfilt[j];
+				for (i=minbin; i < maxbin + shiftbins; i++) {
+					filter[i] = filter[i-shiftbins];
+				}
+
+				for (j=minbin, i=maxbin+shiftbins; i < maxbin; i++, j++) {
+					filter[i] = _tmpfilt[j];
+				}
 			}
 			
 			

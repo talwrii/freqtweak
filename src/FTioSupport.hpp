@@ -72,7 +72,9 @@ class FTioSupport
 
 	
 	virtual nframes_t getSampleRate() = 0;
+	virtual nframes_t getTransportFrame() = 0;
 
+	
 	virtual bool getPortsChanged() = 0;
 
 	virtual void setName (const string & name);
@@ -94,8 +96,8 @@ class FTioSupport
 	// singleton retrieval
 	static FTioSupport * instance() { if (!_instance) _instance = createInstance(); return _instance; }
 
-	static void setDefaultName(const char *name) { _defaultName = name; }
-	static void setDefaultDir(const char *dir) { _defaultDir = dir; }
+	static void setDefaultName(const string & name) { _defaultName = name; }
+	static void setDefaultDir(const string & dir) { _defaultDir = dir; }
 	
   protected:
 

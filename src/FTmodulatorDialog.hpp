@@ -21,20 +21,20 @@
 #define __FTMODULATORDIALOG_HPP__
 
 
+#include <map>
 #include <list>
-using namespace std;
 
 #include <wx/wx.h>
+#include <sigc++/object.h>
 
 #include "FTtypes.hpp"
 
 class FTprocI;
 class FTmainwin;
 class FTmodulatorI;
+class FTmodulatorGui;
 
-class wxListCtrl;
-
-class FTmodulatorDialog : public wxFrame
+class FTmodulatorDialog : public wxFrame, public SigC::Object
 {
   public:
 	// ctor(s)
@@ -47,11 +47,14 @@ class FTmodulatorDialog : public wxFrame
 
 	virtual ~FTmodulatorDialog();
 
-	void refreshState();
+	void OnIdle(wxIdleEvent &ev);
 	
  protected:
 
 	void init();
+
+
+	void refreshState();
 	
 	void onClose(wxCloseEvent & ev);
 	void onCommit(wxCommandEvent & ev);
@@ -59,28 +62,32 @@ class FTmodulatorDialog : public wxFrame
 	void onSize(wxSizeEvent &ev);
 	void onPaint(wxPaintEvent &ev);
 
-	void onItemSelected (wxListEvent &ev);
-	void onRightClick (wxMouseEvent &ev);
-	void onItemRightClick (wxListEvent &ev);
-
 	void onAddModulator (wxCommandEvent &ev);
+	void onAddButton (wxCommandEvent &ev);
+
+	void onModulatorDeath (FTmodulatorI * mod, int channel);
+
+	void onModulatorAdded (FTmodulatorI * mod, int channel);
 	
 	// void onAutoCheck (wxCommandEvent &ev);
 
-	wxListCtrl * _channelLists[FT_MAXPATHS];
+	wxScrolledWindow * _channelScrollers[FT_MAXPATHS];
+	wxBoxSizer * _channelSizers[FT_MAXPATHS];
+	
 	int  _channelCount;
 	
 	wxBoxSizer * _chanlistSizer;
 
+	
 	wxMenu * _popupMenu;
-	wxMenuItem * _editMenuItem;
-	wxMenuItem * _removeMenuItem;
 
-	FTmodulatorI * _clickedMod;
         int _clickedChannel;
 	
 	FTmainwin * _mainwin;
 
+	std::map<FTmodulatorI*, FTmodulatorGui*> _modulatorGuis;
+
+	std::list<FTmodulatorGui *> _deadGuis;
 
 	bool _justResized;
 	int _lastSelected;
