@@ -58,7 +58,7 @@ void FTportSelectionDialog::init()
 	
 	wxBoxSizer * mainsizer = new wxBoxSizer(wxVERTICAL);
 	_listBox = new wxListBox(this, wxNewId(), wxDefaultPosition, wxDefaultSize,
-					    0, NULL, wxLB_EXTENDED);
+					    0, NULL, wxLB_MULTIPLE);
 
 
 	
@@ -122,7 +122,8 @@ void FTportSelectionDialog::update()
 			for (int i=0; connports[i]; i++) {
 				int n = _listBox->FindString(connports[i]);
 				//printf ("connport = %s  find is %d\n", connports[i], n);
-				_listBox->SetSelection (n, TRUE);
+				if (n >= 0)
+				   _listBox->SetSelection (n, TRUE);
 			}
 			free(connports);
 		}
