@@ -13,7 +13,7 @@ Version 0.4.4
    or just reconnect if we are kicked out.
 
  * Control-Alt left mouse draws arbitrary straight lines between
-   initial click and current cursor.
+   initial click and current cursor.  Also smoothed regular drawing.
 
  * More configure checks to ensure compiling against the float version
    of FFTW.
