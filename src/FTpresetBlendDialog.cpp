@@ -372,7 +372,7 @@ void FTpresetBlendDialog::onCombo(wxCommandEvent &ev)
 }
 
 
-void FTpresetBlendDialog::onSliders(wxCommandEvent &ev)
+void FTpresetBlendDialog::onSliders(wxScrollEvent &ev)
 {
 
 	wxSlider * source = (wxSlider *) ev.GetEventObject();

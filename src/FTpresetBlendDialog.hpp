@@ -63,7 +63,7 @@ class FTpresetBlendDialog
 	void onSize(wxSizeEvent &ev);
 	void onPaint(wxPaintEvent &ev);
 
-	void onSliders(wxCommandEvent &ev);
+	void onSliders(wxScrollEvent &ev);
 	void onCombo(wxCommandEvent &ev);
 	
 	wxBoxSizer * _procSizer;
