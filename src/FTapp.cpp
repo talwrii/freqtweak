@@ -71,10 +71,10 @@ static const wxCmdLineEntryDesc cmdLineDesc[] =
 	{ wxCMD_LINE_OPTION, wxT("c"), wxT("channels"), wxT("# processing channels (1-4) default is 2"), wxCMD_LINE_VAL_NUMBER },
 	{ wxCMD_LINE_OPTION, wxT("i"), wxT("inputs"),
 	  wxT("connect inputs from these jack ports (separate each channel with commas).\n")
-	      "\t\t\t  Defaults to 'alsa_pcm:capture_1,..." },
+	      "\t\t\tDefaults to 'alsa_pcm:capture_1,..." },
 	{ wxCMD_LINE_OPTION, wxT("o"), wxT("outputs"),
 	  wxT("connect outputs to these jack ports (separate each channel with commas).\n")
-	      "\t\t\t  Defaults to 'alsa_pcm:playback_1,...'" },
+	      "\t\t\tDefaults to 'alsa_pcm:playback_1,...'" },
 	{ wxCMD_LINE_OPTION, wxT("n"), wxT("jack-name"), wxT("jack name.   default is freqtweak_1")},
 	{ wxCMD_LINE_OPTION, wxT("D"), wxT("tmpdir"), wxT("jack server tmp directory (should match jackd --tmpdir)")},
 	{ wxCMD_LINE_OPTION, wxT("p"), wxT("preset"), wxT("load given preset initially")},
@@ -226,11 +226,12 @@ bool FTapp::OnInit()
 	
 	wxCmdLineParser parser(argc, argv);
 	parser.SetDesc(cmdLineDesc);
-	parser.SetLogo(wxString::Format(wxT("FreqTweak %s\n%s%s%s%s"), freqtweak_version,
-					"Copyright 2002-2003 Jesse Chappell\n",
-					"FreqTweak comes with ABSOLUTELY NO WARRANTY\n",
-					"This is free software, and you are welcome to redistribute it\n",
-					"under certain conditions; see the file COPYING for details\n"));
+	parser.SetLogo(wxT("FreqTweak ") +
+		       wxString::FromAscii (freqtweak_version) +
+		       wxT("\nCopyright 2002-2003 Jesse Chappell\n")
+		       wxT("FreqTweak comes with ABSOLUTELY NO WARRANTY\n")
+		       wxT("This is free software, and you are welcome to redistribute it\n")
+		       wxT("under certain conditions; see the file COPYING for details\n"));
 
 	int ret = parser.Parse();
 

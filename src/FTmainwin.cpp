@@ -830,14 +830,18 @@ void FTmainwin::pushProcRow(FTspectrumModifier *specmod)
 	wxButton *labbutt = new FTtitleButton(this, false, rpanel, FT_LabelBase, wxString::FromAscii (name.c_str()),
 					 wxDefaultPosition, wxSize(_labwidth,_bheight));
 	labbutt->SetFont(_titleFont);
-	labbutt->SetToolTip(wxString::Format(wxT("Hide %s\nRight-click for menu"), name.c_str()));
+	labbutt->SetToolTip(wxString(wxT("Hide ")) + 
+			    wxString::FromAscii (name.c_str()) +
+			    wxT("\nRight-click for menu"));
 	_labelButtons.push_back (labbutt);
 			
 	// alt label button
 	wxButton * altlab  = new FTtitleButton(this, true, _rowPanel, FT_LabelBase, wxString::FromAscii (name.c_str()),
 					  wxDefaultPosition, wxSize(_labwidth,_bheight));
 	altlab->SetFont(_titleAltFont);
-	altlab->SetToolTip(wxString::Format(wxT("Show %s\nRight-click for menu"), name.c_str()));
+	altlab->SetToolTip(wxString(wxT("Show ")) +
+			   wxString::FromAscii (name.c_str()) +
+			   wxT("\nRight-click for menu"));
 	altlab->Show(false);
 	wxLayoutConstraints * constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -2307,8 +2311,7 @@ void FTmainwin::handleIOButtons (wxCommandEvent &event)
 			wxThread::Sleep(200);
 			iosup->close();
 			
-			iosup->setName (_ioNameText->GetValue().mb_str().data());
-
+			iosup->setName (_ioNameText->GetValue().mb_str());
 			if (iosup->init()) {
 				if (iosup->startProcessing()) {
 					iosup->reinit();
@@ -2376,11 +2379,11 @@ void FTmainwin::rebuildDisplay(bool dolink)
 				// main label button
 				string name = filts[m]->getName();
 				_labelButtons[rowcnt]->SetLabel (wxString::FromAscii (name.c_str()));
-				_labelButtons[rowcnt]->SetToolTip(wxString::Format(wxT("Hide %s"), name.c_str()));
+				_labelButtons[rowcnt]->SetToolTip(wxString(wxT("Hide ")) + wxString::FromAscii (name.c_str()));
 
 				// alt label button
 				_altLabelButtons[rowcnt]->SetLabel (wxString::FromAscii (name.c_str()));
-				_altLabelButtons[rowcnt]->SetToolTip(wxString::Format(wxT("Hide %s"), name.c_str()));
+				_altLabelButtons[rowcnt]->SetToolTip(wxString(wxT("Hide ")) + wxString::FromAscii (name.c_str()));
 
 
 				lastsash = sash;
@@ -2787,7 +2790,9 @@ void FTmainwin::OnAbout(wxCommandEvent& event)
 {
 	if (event.GetId() == FT_AboutMenu)
 	{
-		wxString msg(wxString::Format(wxT("FreqTweak %s brought to you by Jesse Chappell"), freqtweak_version));
+		wxString msg(wxString(wxT("FreqTweak ")) +
+			     wxString::FromAscii (freqtweak_version) +
+			     wxT(" brought to you by Jesse Chappell"));
 		
 		wxMessageBox(msg, wxT("About FreqTweak"), wxOK | wxICON_INFORMATION, this);
 	}
@@ -2922,6 +2927,8 @@ void FTmainwin::updatePosition(const wxString &freqstr, const wxString &valstr)
 void FTmainwin::handleStoreButton (wxCommandEvent &event)
 {
 	updateAllExtra();
+
+	DEBUGOUT ("store button pressed" << std::endl);
 	
 	_configManager.storeSettings (std::string (_presetCombo->GetValue().mb_str()));
 
@@ -2935,6 +2942,8 @@ void FTmainwin::handleStoreButton (wxCommandEvent &event)
 
 void FTmainwin::handleLoadButton (wxCommandEvent &event)
 {
+
+        DEBUGOUT ("load button pressed" << std::endl);
 	loadPreset (_presetCombo->GetValue().c_str());
 }
 
@@ -2970,7 +2979,7 @@ void FTmainwin::loadPreset (const wxString &name, bool uselast)
 
 void FTmainwin::rebuildPresetCombo()
 {
-	list<string> namelist =   _configManager.getSettingsNames();
+	list<string> namelist = _configManager.getSettingsNames();
 	
 	wxString selected = _presetCombo->GetValue();
 	
@@ -3148,7 +3157,7 @@ FTgridMenu::FTgridMenu (wxWindow * parent, FTmainwin *win, vector<FTactiveBarGra
 			itemid++;
 		}
 		else if ((int)gindex == itemid) {
-			item = new wxMenuItem(this, itemid++, wxString::Format(wxT("%s *"), static_cast<const char *> (gridi->mb_str())));
+			item = new wxMenuItem(this, itemid++, (*gridi) + wxT(" *"));
 			Append (item);
 		}
 		else {

@@ -20,7 +20,16 @@
 #ifndef __FTUTILS_HPP__
 #define __FTUTILS_HPP__
 
+#include <iostream>
+#include <sstream>
+
 #include <wx/string.h>
+
+#if 0
+#  define DEBUGOUT(x) (std::cout << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": " << x)
+#else
+#  define DEBUGOUT(x) ;
+#endif
 
 class FTutils
 {

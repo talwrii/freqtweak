@@ -372,7 +372,7 @@ void FTspectragram::plotNextDataSpectragram (const float *data, int length)
 		sdc.SetUserScale(_xscale, 1.0);
 		//}
 
-	sdc.DrawBitmap (_rasterImage->ConvertToBitmap(), 0, 0, false);
+	sdc.DrawBitmap (wxBitmap (_rasterImage), 0, 0, false);
 	
 	
 	// blit to screen
