@@ -41,31 +41,31 @@ void FTmodRandomize::initialize()
 {
 	_lastframe = 0;
 	
-	_rate = new Control (Control::FloatType, "Rate", "Hz");
+	_rate = new Control (Control::FloatType, "rate", "Rate", "Hz");
 	_rate->_floatLB = 0.0;
 	_rate->_floatUB = 20.0;
 	_rate->setValue (0.0f);
 	_controls.push_back (_rate);
 
-	_minfreq = new Control (Control::FloatType, "Min Freq", "Hz");
+	_minfreq = new Control (Control::FloatType, "min_freq", "Min Freq", "Hz");
 	_minfreq->_floatLB = 0.0;
 	_minfreq->_floatUB = _sampleRate / 2;
 	_minfreq->setValue (_minfreq->_floatLB);
 	_controls.push_back (_minfreq);
 
-	_maxfreq = new Control (Control::FloatType, "Max Freq", "Hz");
+	_maxfreq = new Control (Control::FloatType, "max_freq", "Max Freq", "Hz");
 	_maxfreq->_floatLB = 0.0;
 	_maxfreq->_floatUB = _sampleRate / 2;
 	_maxfreq->setValue (_maxfreq->_floatUB);
 	_controls.push_back (_maxfreq);
 
-	_minval = new Control (Control::FloatType, "Min Val", "%");
+	_minval = new Control (Control::FloatType, "min_val", "Min Val", "%");
 	_minval->_floatLB = 0.0;
 	_minval->_floatUB = 100.0;
 	_minval->setValue (_minval->_floatLB);
 	_controls.push_back (_minval);
 
-	_maxval = new Control (Control::FloatType, "Max Val", "%");
+	_maxval = new Control (Control::FloatType, "max_val", "Max Val", "%");
 	_maxval->_floatLB = 0.0;
 	_maxval->_floatUB = 100.0;
 	_maxval->setValue (_maxval->_floatUB);
@@ -104,6 +104,9 @@ void FTmodRandomize::modulate (nframes_t current_frame, fft_data * fftdata, unsi
 	
 	_rate->getValue (rate);
 
+	if (rate == 0.0)
+		return;
+	
 	unsigned int minbin, maxbin;
 	float minval, maxval;
 	float minfreq,maxfreq;
@@ -123,11 +126,11 @@ void FTmodRandomize::modulate (nframes_t current_frame, fft_data * fftdata, unsi
 	if (minfreq >= maxfreq) {
 		return;
 	}
+
+	double delta = current_frame - _lastframe;
 	
-	if (current_frame != _lastframe &&
-	    (nframes_t) (current_frame/samps) != (nframes_t) ((current_frame + nframes)/samps))
+	if (delta >=  samps) 
 	{
-		// if this range falls  across an integral boundary divisable by the mod rate
 		// fprintf (stderr, "randomize at %lu :  samps=%g  s*c=%g  s*e=%g \n", (unsigned long) current_frame, samps, (current_frame/samps), ((current_frame + nframes)/samps) );
 		
 		for (SpecModList::iterator iter = _specMods.begin(); iter != _specMods.end(); ++iter)
@@ -142,10 +145,10 @@ void FTmodRandomize::modulate (nframes_t current_frame, fft_data * fftdata, unsi
 			lb = tmplb + (tmpub-tmplb) * minval/100.0;
 			ub = tmplb + (tmpub-tmplb) * maxval/100.0;
 
-			cerr << " lb: " << lb << "  ub: " << ub
-			     << " minval: " << minval << "   maxval: " << maxval
-			     << " tmlb: " << tmplb << "  tmpub: " << tmpub
-			     << endl;
+// 			cerr << " lb: " << lb << "  ub: " << ub
+// 			     << " minval: " << minval << "   maxval: " << maxval
+// 			     << " tmlb: " << tmplb << "  tmpub: " << tmpub
+// 			     << endl;
 			
 			minbin = (int) ((minfreq*2/ _sampleRate) * len);
 			maxbin = (int) ((maxfreq*2/ _sampleRate) * len);

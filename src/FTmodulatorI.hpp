@@ -84,9 +84,10 @@ class FTmodulatorI
 			EnumType
 		};
 
-		Control (Type t, std::string name, std::string units) : _type(t), _name(name), _units(units) {}
+		Control (Type t, std::string confname, std::string name, std::string units) : _type(t), _confname(confname), _name(name), _units(units) {}
 		
 		Type getType() { return _type; }
+		std::string getConfName() { return _confname; }
 		std::string getName() { return _name; }
 		std::string getUnits() { return _units; }
 		
@@ -118,6 +119,7 @@ class FTmodulatorI
 
 		
 		Type _type;
+		std::string _confname;
 		std::string _name;
 		std::string _units;
 		

@@ -22,7 +22,7 @@
 #include "FTmodulatorI.hpp"
 
 #include "FTmodRandomize.hpp"
-#include "FTmodShift.hpp"
+#include "FTmodRotate.hpp"
 
 FTmodulatorManager * FTmodulatorManager::_instance = 0;
 
@@ -33,12 +33,13 @@ FTmodulatorManager::FTmodulatorManager()
 
 	// TODO: load initial dynamically
 	
-	FTmodulatorI * procmod = new FTmodRandomize (samprate, fftn);
+
+	FTmodulatorI * procmod = new FTmodRotate (samprate, fftn);
 	_prototypes.push_back (procmod);
 
-	procmod = new FTmodShift (samprate, fftn);
+	 procmod = new FTmodRandomize (samprate, fftn);
 	_prototypes.push_back (procmod);
-
+	
 }
 
 FTmodulatorManager::~FTmodulatorManager()

@@ -21,7 +21,7 @@
 #include <config.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -46,6 +46,8 @@
 #include "version.h"
 
 #include "xml++.hpp"
+
+using namespace std;
 
 FTconfigManager::FTconfigManager(const std::string & basedir)
         : _basedir (basedir)
@@ -323,7 +325,7 @@ bool FTconfigManager::storeSettings (const std::string &name, bool uselast)
 			{
 				int chan=0, modpos=0, filtpos=0;
 
-				if (lookupFilterLocation (chan, modpos, filtpos)) {
+				if (lookupFilterLocation ((*filtiter), chan, modpos, filtpos)) {
 					XMLNode * filtNode = filtersNode->add_child ("Filter");
 					filtNode->add_property ("channel", static_cast<const char *> (wxString::Format(wxT("%d"), chan).mb_str()));
 					filtNode->add_property ("modpos", static_cast<const char *> (wxString::Format(wxT("%d"), modpos).mb_str()));
@@ -340,24 +342,24 @@ bool FTconfigManager::storeSettings (const std::string &name, bool uselast)
 				FTmodulatorI::Control * ctrl = (*ctrliter);
 				XMLNode * ctrlNode = controlsNode->add_child ("Control");
 
-				ctrlNode->add_property ("name", ctrl->getName().c_str());
-/*
-				ctrlNode->add_property ("type", static_cast<const char *> (wxString::Format(wxT("%d"), (int) ctrl->getType()).mb_str()));
-				ctrlNode->add_property ("units", ctrl->getUnits().c_str());
+				ctrlNode->add_property ("name", ctrl->getConfName().c_str());
+
+				//ctrlNode->add_property ("type", static_cast<const char *> (wxString::Format(wxT("%d"), (int) ctrl->getType()).mb_str()));
+				//ctrlNode->add_property ("units", ctrl->getUnits().c_str());
 				if (ctrl->getType() == FTmodulatorI::Control::IntegerType) {
 					int lb,ub,val;
 					ctrl->getBounds (lb, ub);
 					ctrl->getValue (val);
-					ctrlNode->add_property ("lower_bound", static_cast<const char *> (wxString::Format(wxT("%d"), lb).mb_str()));
-					ctrlNode->add_property ("upper_bound", static_cast<const char *> (wxString::Format(wxT("%d"), ub).mb_str()));
+					//ctrlNode->add_property ("lower_bound", static_cast<const char *> (wxString::Format(wxT("%d"), lb).mb_str()));
+					//ctrlNode->add_property ("upper_bound", static_cast<const char *> (wxString::Format(wxT("%d"), ub).mb_str()));
 					ctrlNode->add_property ("value", static_cast<const char *> (wxString::Format(wxT("%d"), val).mb_str()));
 				}
 				else if (ctrl->getType() == FTmodulatorI::Control::FloatType) {
 					float lb,ub,val;
 					ctrl->getBounds (lb, ub);
 					ctrl->getValue (val);
-					ctrlNode->add_property ("lower_bound", static_cast<const char *> (wxString::Format(wxT("%.10g"), lb).mb_str()));
-					ctrlNode->add_property ("upper_bound", static_cast<const char *> (wxString::Format(wxT("%.10g"), ub).mb_str()));
+					//ctrlNode->add_property ("lower_bound", static_cast<const char *> (wxString::Format(wxT("%.10g"), lb).mb_str()));
+					//ctrlNode->add_property ("upper_bound", static_cast<const char *> (wxString::Format(wxT("%.10g"), ub).mb_str()));
 					ctrlNode->add_property ("value", static_cast<const char *> (wxString::Format(wxT("%.10g"), val).mb_str()));
 				}
 				else if (ctrl->getType() == FTmodulatorI::Control::BooleanType) {
@@ -378,17 +380,17 @@ bool FTconfigManager::storeSettings (const std::string &name, bool uselast)
 
 					ctrlNode->add_property ("value", val.c_str());
 
-					string enumstr;
-					for (list<string>::iterator eiter=enumlist.begin(); eiter != enumlist.end(); ++eiter) {
-						if (eiter != enumlist.begin()) {
-							enumstr += ",";
-						}
-						enumstr += (*eiter);
-					}
-					ctrlNode->add_property ("enumlist", enumstr.c_str());
+// 					string enumstr;
+// 					for (list<string>::iterator eiter=enumlist.begin(); eiter != enumlist.end(); ++eiter) {
+// 						if (eiter != enumlist.begin()) {
+// 							enumstr += ",";
+// 						}
+// 						enumstr += (*eiter);
+// 					}
+// 					ctrlNode->add_property ("enumlist", enumstr.c_str());
 					
 				}
-*/
+
 
 				
 			}
@@ -837,6 +839,20 @@ bool FTconfigManager::loadSettings (const std::string &name, bool restore_ports,
 // 		}
 	}
 
+
+	// Modulations
+	
+	XMLNode * modulatorsNode = find_named_node (rootNode, "Modulators");
+	if ( modulatorsNode )
+	{
+
+		loadModulators (modulatorsNode);
+		
+	}
+
+
+
+	
 	if (!ignore_iosup)
 	{
 		// now we can apply linkages
@@ -878,6 +894,257 @@ bool FTconfigManager::loadSettings (const std::string &name, bool restore_ports,
 	
 	
 	return true;
+}
+
+
+void FTconfigManager::loadModulators (const XMLNode * modulatorsNode)
+{
+
+	XMLNodeList modlist = modulatorsNode->children();
+	XMLNodeConstIterator moditer;
+	XMLNode * modNode;
+	XMLProperty * prop;
+	wxString tmpstr;
+		
+	for (moditer=modlist.begin(); moditer != modlist.end(); ++moditer)
+	{
+		modNode = *moditer;
+			
+		if (modNode->name() != "Modulator") continue;
+
+		if (!(prop = modNode->property ("name"))) {
+			fprintf (stderr, "name missing in modulator!\n"); 
+			continue;
+		}
+		string modname = prop->value();
+
+		string usermodname;
+		if (!(prop = modNode->property ("user_name"))) {
+			fprintf (stderr, "user_name missing in modulator!\n"); 
+		} else {
+			usermodname = prop->value();
+		}
+			
+
+		bool bypass = false;
+		if (!(prop = modNode->property ("bypassed"))) {
+			fprintf (stderr, "bypassed missing in modulator!\n"); 
+		}
+		else {
+			unsigned long bypassi = 0;
+				
+			tmpstr = wxString::FromAscii (prop->value().c_str());
+			if (!tmpstr.ToULong (&bypassi)) {
+				fprintf (stderr, "invalid bypass flag in modulator!\n"); 
+			}
+			bypass = (bypassi==0 ? false: true);
+		}
+
+		long channel = -1;
+		if (!(prop = modNode->property ("channel"))) {
+			fprintf (stderr, "channel missing in modulator!\n"); 
+		} else
+		{
+			tmpstr = wxString::FromAscii (prop->value().c_str());
+			if (!tmpstr.ToLong (&channel)) {
+				fprintf (stderr, "invalid channel in modulator!\n"); 
+			}
+		}
+
+
+		// create the modulator
+		FTmodulatorI * protomod = FTmodulatorManager::instance()->getModuleByName (modname);
+		if (!protomod) {
+			fprintf (stderr, "module %s could not be found\n", modname.c_str());
+			continue;
+		}
+			
+		FTmodulatorI * mod = protomod->clone();
+		mod->initialize();
+
+		mod->setUserName (usermodname);
+		mod->setBypassed (bypass);
+
+		// get all controls from real one
+		FTmodulatorI::ControlList ctrllist;
+		mod->getControls (ctrllist);
+			
+		// now do controls
+		XMLNode * modControlsNode = find_named_node (modNode, "Controls");
+		if (modControlsNode) {
+			XMLNodeList modctrllist = modControlsNode->children();
+			XMLNodeConstIterator modctrliter;
+			XMLNode * ctrlNode;
+				
+			for (modctrliter=modctrllist.begin(); modctrliter != modctrllist.end(); ++modctrliter)
+			{
+				ctrlNode = *modctrliter;
+				if (ctrlNode->name() != "Control") continue;
+					
+				if (!(prop = ctrlNode->property ("name"))) {
+					fprintf (stderr, "name missing in modulator control!\n"); 
+					continue;
+				}
+				string ctrlname = prop->value();
+
+					
+				// lookup control by name
+				for (FTmodulatorI::ControlList::iterator citer = ctrllist.begin(); citer != ctrllist.end(); ++citer) {
+
+					FTmodulatorI::Control * ctrl = (*citer);
+					if (ctrl->getConfName() == ctrlname)
+					{
+						if (ctrl->getType() == FTmodulatorI::Control::IntegerType) {
+							long intval = 0;
+							if (!(prop = ctrlNode->property ("value"))) {
+								fprintf (stderr, "int value missing in modulator control!\n"); 
+							} else
+							{
+								tmpstr = wxString::FromAscii (prop->value().c_str());
+								if (!tmpstr.ToLong (&intval)) {
+									fprintf (stderr, "invalid value in modulator control!\n"); 
+								}
+								else {
+									ctrl->setValue ((int)intval);
+								}
+							}
+						}
+						else if (ctrl->getType() == FTmodulatorI::Control::FloatType) {
+							double fval = 0;
+							if (!(prop = ctrlNode->property ("value"))) {
+								fprintf (stderr, "float value missing in modulator control!\n"); 
+							} else
+							{
+								tmpstr = wxString::FromAscii (prop->value().c_str());
+								if (!tmpstr.ToDouble (&fval)) {
+									fprintf (stderr, "invalid value in modulator control!\n"); 
+								}
+								else {
+									ctrl->setValue ((float)fval);
+								}
+							}
+						}
+						else if (ctrl->getType() == FTmodulatorI::Control::StringType ||
+							 ctrl->getType() == FTmodulatorI::Control::EnumType)
+						{
+							if (!(prop = ctrlNode->property ("value"))) {
+								fprintf (stderr, "string enum value missing in modulator control!\n"); 
+							} else {
+								string valstr = prop->value();
+								ctrl->setValue(valstr);
+							}
+						}
+						else if (ctrl->getType() == FTmodulatorI::Control::BooleanType) {
+							long intval = 0;
+							if (!(prop = ctrlNode->property ("value"))) {
+								fprintf (stderr, "bool value missing in modulator control!\n"); 
+							} else
+							{
+								tmpstr = wxString::FromAscii (prop->value().c_str());
+								if (!tmpstr.ToLong (&intval)) {
+									fprintf (stderr, "invalid value in modulator control!\n"); 
+								}
+								else {
+									ctrl->setValue ((intval == 0 ? false : true));
+								}
+							}
+						}
+
+							
+						break;
+					}
+				}
+					
+					
+
+			}
+			
+		} else {
+			fprintf (stderr, "module controls node could not be found\n");
+		}
+
+
+		// link to filters
+
+		XMLNode * modFiltersNode = find_named_node (modNode, "Filters");
+		if (modFiltersNode) {
+			XMLNodeList filtlist = modFiltersNode->children();
+			XMLNodeConstIterator filtiter;
+			XMLNode * filtNode;
+				
+			for (filtiter=filtlist.begin(); filtiter != filtlist.end(); ++filtiter)
+			{
+				filtNode = *filtiter;
+				if (filtNode->name() != "Filter") continue;
+
+				unsigned long filtchan = 0;
+
+				if (!(prop = filtNode->property ("channel"))) {
+					fprintf (stderr, "int value missing in modulator filter channel!\n"); 
+					continue;
+				} 
+				tmpstr = wxString::FromAscii (prop->value().c_str());
+				if (!tmpstr.ToULong (&filtchan)) {
+					fprintf (stderr, "invalid channel value in modulator filter control!\n"); 
+					continue;
+				}
+
+				unsigned long modpos = 0;
+
+				if (!(prop = filtNode->property ("modpos"))) {
+					fprintf (stderr, "int value missing in modulator filter pos!\n"); 
+					continue;
+				} 
+				tmpstr = wxString::FromAscii (prop->value().c_str());
+				if (!tmpstr.ToULong (&modpos)) {
+					fprintf (stderr, "invalid modpos value in modulator filter pos control!\n"); 
+					continue;
+				}
+				
+				unsigned long filtpos = 0;
+
+				if (!(prop = filtNode->property ("filtpos"))) {
+					fprintf (stderr, "int value missing in modulator filter pos!\n"); 
+					continue;
+				} 
+				tmpstr = wxString::FromAscii (prop->value().c_str());
+				if (!tmpstr.ToULong (&filtpos)) {
+					fprintf (stderr, "invalid channel value in modulator filter pos control!\n"); 
+					continue;
+				}
+
+				// finally look it up
+				FTspectrumModifier * specmod = lookupFilter (filtchan, modpos, filtpos);
+
+				if (specmod) {
+					mod->addSpecMod (specmod);
+				}
+				
+			}
+		}
+		
+		
+		// add it to proper spectral engine
+		
+		if (channel > -1) {
+			FTprocessPath * procpath = FTioSupport::instance()->getProcessPath(channel);
+			if (procpath) {
+				FTspectralEngine *engine = procpath->getSpectralEngine();
+				
+				engine->appendModulator (mod);
+			}
+			else {
+				delete mod;
+			}
+		}
+		else {
+			// for NOW, just delete it
+			delete mod;
+		}
+		
+			
+	}
+
 }
 
 
@@ -1057,8 +1324,64 @@ FTconfigManager::find_named_node (const XMLNode * node, string name)
 }
 
 
-bool FTconfigManager::lookupFilterLocation (int chan, int modpos, int filtpos)
+bool FTconfigManager::lookupFilterLocation (FTspectrumModifier * specmod, int & chan, int & modpos, int & filtpos)
+{
+	// brute force
+	FTioSupport * iosup = FTioSupport::instance();
+	bool done = false;
+	
+	for (int i=0; i < iosup->getActivePathCount(); i++)
+	{
+		FTprocessPath * procpath = iosup->getProcessPath(i);
+		if (!procpath) continue; // shouldnt happen
+
+		FTspectralEngine *engine = procpath->getSpectralEngine();
+	
+		vector<FTprocI *> procmods;
+		engine->getProcessorModules (procmods);
+	
+		for (unsigned int n=0; n < procmods.size(); ++n)
+		{
+			FTprocI *pm = procmods[n];
+			vector<FTspectrumModifier *> filts;
+			pm->getFilters (filts);
+
+			for (unsigned int m=0; m < filts.size(); ++m)
+			{
+				if (specmod == filts[m]) {
+					chan = i;
+					modpos = n;
+					filtpos = m;
+
+					done = true;
+					goto done;
+				}
+			}
+		}
+	}
+
+done:
+
+	return done;
+}
+
+
+FTspectrumModifier * FTconfigManager::lookupFilter (int  chan, int  modpos, int  filtpos)
 {
 
-	return false;
+	FTioSupport * iosup = FTioSupport::instance();
+	
+	FTprocessPath * procpath = iosup->getProcessPath(chan);
+	if (procpath) {
+		FTspectralEngine *engine = procpath->getSpectralEngine();
+		FTprocI * procmod = engine->getProcessorModule (modpos);
+
+		if (procmod) {
+			FTspectrumModifier * specmod = procmod->getFilter (filtpos);
+
+			return specmod;
+		}
+	}
+
+	return 0;
 }

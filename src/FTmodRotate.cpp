@@ -17,7 +17,7 @@
 **  
 */
 
-#include "FTmodShift.hpp"
+#include "FTmodRotate.hpp"
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
@@ -25,35 +25,35 @@
 using namespace std;
 using namespace PBD;
 
-FTmodShift::FTmodShift (nframes_t samplerate, unsigned int fftn)
-	: FTmodulatorI ("Shift", samplerate, fftn)
+FTmodRotate::FTmodRotate (nframes_t samplerate, unsigned int fftn)
+	: FTmodulatorI ("Rotate", samplerate, fftn)
 {
-	_confname = "Shift";
+	_confname = "Rotate";
 }
 
-FTmodShift::FTmodShift (const FTmodShift & other)
-	: FTmodulatorI ("Shift", other._sampleRate, other._fftN)
+FTmodRotate::FTmodRotate (const FTmodRotate & other)
+	: FTmodulatorI ("Rotate", other._sampleRate, other._fftN)
 {
-	_confname = "Shift";
+	_confname = "Rotate";
 }
 
-void FTmodShift::initialize()
+void FTmodRotate::initialize()
 {
 	_lastframe = 0;
 	
-	_rate = new Control (Control::FloatType, "Rate", "Hz/sec");
+	_rate = new Control (Control::FloatType, "rate", "Rate", "Hz/sec");
 	_rate->_floatLB = -((float) _sampleRate);
 	_rate->_floatUB =  (float) _sampleRate;
 	_rate->setValue (0.0f);
 	_controls.push_back (_rate);
 
-	_minfreq = new Control (Control::FloatType, "Min Freq", "Hz");
+	_minfreq = new Control (Control::FloatType, "min_freq", "Min Freq", "Hz");
 	_minfreq->_floatLB = 0.0;
 	_minfreq->_floatUB = _sampleRate / 2;
 	_minfreq->setValue (_minfreq->_floatLB);
 	_controls.push_back (_minfreq);
 
-	_maxfreq = new Control (Control::FloatType, "Max Freq", "Hz");
+	_maxfreq = new Control (Control::FloatType, "max_freq", "Max Freq", "Hz");
 	_maxfreq->_floatLB = 0.0;
 	_maxfreq->_floatUB = _sampleRate / 2;
 	_maxfreq->setValue (_maxfreq->_floatUB);
@@ -72,7 +72,7 @@ void FTmodShift::initialize()
 	_inited = true;
 }
 
-FTmodShift::~FTmodShift()
+FTmodRotate::~FTmodRotate()
 {
 	if (!_inited) return;
 
@@ -83,7 +83,7 @@ FTmodShift::~FTmodShift()
 	delete _maxfreq;
 }
 
-void FTmodShift::setFFTsize (unsigned int fftn)
+void FTmodRotate::setFFTsize (unsigned int fftn)
 {
 	_fftN = fftn;
 
@@ -95,7 +95,7 @@ void FTmodShift::setFFTsize (unsigned int fftn)
 }
 
 
-void FTmodShift::modulate (nframes_t current_frame, fft_data * fftdata, unsigned int fftn, sample_t * timedata, nframes_t nframes)
+void FTmodRotate::modulate (nframes_t current_frame, fft_data * fftdata, unsigned int fftn, sample_t * timedata, nframes_t nframes)
 {
 	TentativeLockMonitor lm (_specmodLock, __LINE__, __FILE__);
 
@@ -138,9 +138,9 @@ void FTmodShift::modulate (nframes_t current_frame, fft_data * fftdata, unsigned
 			FTspectrumModifier * sm = (*iter);
 			if (sm->getBypassed()) continue;
 
-			cerr << "shiftval is: " << shiftval
-			     << " hz/bin: " << hzperbin
-			     << " rate:   " << rate << endl;
+// 			cerr << "shiftval is: " << shiftval
+// 			     << " hz/bin: " << hzperbin
+// 			     << " rate:   " << rate << endl;
 			
 			
 			filter = sm->getValues();

@@ -93,8 +93,8 @@ freqtweak_SOURCES = \
 	FTmodulatorGui.hpp \
 	FTmodRandomize.cpp \
 	FTmodRandomize.hpp \
-	FTmodShift.cpp \
-	FTmodShift.hpp \
+	FTmodRotate.cpp \
+	FTmodRotate.hpp \
 	LockMonitor.hpp \
 	cycles.h
 

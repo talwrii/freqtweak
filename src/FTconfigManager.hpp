@@ -55,7 +55,11 @@ class FTconfigManager
 
 	void loadFilter (FTspectrumModifier *specmod, wxTextFile & tf);
 
-	bool lookupFilterLocation (int chan, int modpos, int filtpos);
+	bool lookupFilterLocation (FTspectrumModifier * specmod, int & chan, int & modpos, int & filtpos);
+
+	FTspectrumModifier * lookupFilter (int  chan, int  modpos, int  filtpos);
+
+        void loadModulators (const XMLNode * modulatorsNode);
 	
 	XMLNode* find_named_node (const XMLNode * node, string name);
 	

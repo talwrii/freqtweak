@@ -50,11 +50,6 @@ class FTmodulatorGui
 	virtual ~FTmodulatorGui();
 
 
-	void onRemoveButton (wxCommandEvent & ev);
-	void onAttachButton (wxCommandEvent & ev);
-	void onChannelButton (wxCommandEvent & ev);
-
-
 	SigC::Signal0<void> RemovalRequest;
 	
    protected:
@@ -64,7 +59,14 @@ class FTmodulatorGui
 	void onCheckboxChanged(wxCommandEvent &ev);
 	void onSliderChanged(wxScrollEvent &ev);
 	void onChoiceChanged(wxCommandEvent &ev);
+	void onRemoveButton (wxCommandEvent & ev);
+	void onAttachButton (wxCommandEvent & ev);
+	void onChannelButton (wxCommandEvent & ev);
+	void onTextEnter (wxCommandEvent &ev);
 
+
+
+	
 	void onAttachMenu (wxCommandEvent &ev);
 	void onChannelMenu (wxCommandEvent &ev);
 	

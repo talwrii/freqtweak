@@ -34,7 +34,8 @@ enum
 	ID_AttachButton,
 	ID_ChannelButton,
 	ID_DetachAll,
-	ID_AttachAll
+	ID_AttachAll,
+	ID_ModUserName
 };
 
 
@@ -47,9 +48,17 @@ enum {
 class FTmodControlObject : public wxObject
 {
   public:
-	FTmodControlObject(FTmodulatorI::Control *ctrl) : control(ctrl) {}
+	FTmodControlObject(FTmodulatorI::Control *ctrl)
+		: control(ctrl)
+		  , slider(0), textctrl(0), choice(0), checkbox(0)
+		{}
 	
 	FTmodulatorI::Control * control;
+
+	wxSlider * slider;
+	wxTextCtrl * textctrl;
+	wxChoice * choice;
+	wxCheckBox * checkbox;
 };
 
 class FTspecmodObject : public wxObject
@@ -78,6 +87,8 @@ BEGIN_EVENT_TABLE(FTmodulatorGui, wxPanel)
 	EVT_BUTTON(ID_AttachButton, FTmodulatorGui::onAttachButton)
 	EVT_BUTTON(ID_ChannelButton, FTmodulatorGui::onChannelButton)
 
+	EVT_TEXT_ENTER (ID_ModUserName, FTmodulatorGui::onTextEnter)
+	
 	EVT_MENU (ID_AttachAll, FTmodulatorGui::onAttachMenu)
 	EVT_MENU (ID_DetachAll, FTmodulatorGui::onAttachMenu)
 	
@@ -119,7 +130,7 @@ void FTmodulatorGui::init()
 	topSizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
 
-	_nameText = new wxTextCtrl (this, -1, wxString::FromAscii(_modulator->getUserName().c_str()));
+	_nameText = new wxTextCtrl (this, ID_ModUserName, wxString::FromAscii(_modulator->getUserName().c_str()), wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	topSizer->Add (_nameText, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
 
@@ -144,6 +155,7 @@ void FTmodulatorGui::init()
 
 	
 	int ctrlid = ID_ControlBase;
+	int textwidth = 70;
 	
 	// get controls
 	FTmodulatorI::ControlList controls;
@@ -159,10 +171,13 @@ void FTmodulatorGui::init()
 			wxCheckBox * checkb = new wxCheckBox(this, ctrlid,
 							     wxString::Format(wxT("%s [%s]"), ctrl->getName().c_str(), ctrl->getUnits().c_str()));
 
+			FTmodControlObject * ctrlobj = new FTmodControlObject(ctrl);
+			ctrlobj->checkbox = checkb;
+			
 			Connect( ctrlid,  wxEVT_COMMAND_CHECKBOX_CLICKED,
 				 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
 				 &FTmodulatorGui::onCheckboxChanged,
-				 new FTmodControlObject(ctrl));
+				 ctrlobj);
 
 			controlSizer->Add (checkb, 0, wxEXPAND|wxALL, 2);
 		}
@@ -183,12 +198,30 @@ void FTmodulatorGui::init()
 			wxSlider * slider = new wxSlider(this, ctrlid, currval, minval, maxval);
 
 			rowsizer->Add (slider, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+
+			ctrlid++;
 			
-			Connect( ctrlid,  wxEVT_SCROLL_THUMBTRACK,
+			wxTextCtrl * textctrl = new wxTextCtrl(this, ctrlid, wxString::Format(wxT("%d"), currval), wxDefaultPosition, wxSize(textwidth, -1),
+							       wxTE_PROCESS_ENTER|wxTE_RIGHT);
+			rowsizer->Add (textctrl, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+			
+			FTmodControlObject * ctrlobj = new FTmodControlObject(ctrl);
+			ctrlobj->slider = slider;
+			ctrlobj->textctrl = textctrl;
+			
+			Connect( slider->GetId(),  wxEVT_SCROLL_THUMBTRACK,
 				 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction) (wxScrollEventFunction)
 				 &FTmodulatorGui::onSliderChanged,
-				 new FTmodControlObject(ctrl));
+				 ctrlobj);
 
+			ctrlobj= new FTmodControlObject(ctrl);
+			ctrlobj->slider = slider;
+			ctrlobj->textctrl = textctrl;
+			
+			Connect( textctrl->GetId(),  wxEVT_COMMAND_TEXT_ENTER,
+				 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
+				 &FTmodulatorGui::onTextEnter,
+				 ctrlobj);
 			
 			
 			controlSizer->Add (rowsizer, 0, wxEXPAND|wxALL, 2);
@@ -205,21 +238,42 @@ void FTmodulatorGui::init()
 
 			float currval = 0;
 			float minval=0,maxval=1;
+			int calcval = 0;
+			
 			ctrl->getValue(currval);
 			ctrl->getBounds(minval, maxval);
 
 			// we'll always have slider values between 0 and 1000 for now
 
-			currval = ((currval-minval) / (maxval - minval)) * 1000;
+			calcval = (int) (((currval-minval) / (maxval - minval)) * 1000);
 			
-			wxSlider * slider = new wxSlider(this, ctrlid, (int) currval, 0, 1000);
+			wxSlider * slider = new wxSlider(this, ctrlid, (int) calcval, 0, 1000);
 
 			rowsizer->Add (slider, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+
+			ctrlid++;
 			
-			Connect( ctrlid,  wxEVT_SCROLL_THUMBTRACK,
+			wxTextCtrl * textctrl = new wxTextCtrl(this, ctrlid, wxString::Format(wxT("%.6g"), currval), wxDefaultPosition, wxSize(textwidth, -1),
+							       wxTE_PROCESS_ENTER|wxTE_RIGHT);
+			rowsizer->Add (textctrl, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+			
+			FTmodControlObject * ctrlobj = new FTmodControlObject(ctrl);
+			ctrlobj->slider = slider;
+			ctrlobj->textctrl = textctrl;
+			
+			Connect( slider->GetId(),  wxEVT_SCROLL_THUMBTRACK,
 				 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction) (wxScrollEventFunction)
 				 &FTmodulatorGui::onSliderChanged,
-				 new FTmodControlObject(ctrl));
+				 ctrlobj);
+
+			ctrlobj= new FTmodControlObject(ctrl);
+			ctrlobj->slider = slider;
+			ctrlobj->textctrl = textctrl;
+						
+			Connect( textctrl->GetId(),  wxEVT_COMMAND_TEXT_ENTER,
+				 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
+				 &FTmodulatorGui::onTextEnter,
+				 ctrlobj);
 
 			
 			
@@ -250,11 +304,14 @@ void FTmodulatorGui::init()
 			choice->SetStringSelection (wxString::FromAscii(currval.c_str()));
 			
 			rowsizer->Add (choice, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
+
+			FTmodControlObject * ctrlobj = new FTmodControlObject(ctrl);
+			ctrlobj->choice = choice;
 			
 			Connect( ctrlid,  wxEVT_COMMAND_CHOICE_SELECTED,
 				 (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
 				 &FTmodulatorGui::onChoiceChanged,
-				 new FTmodControlObject(ctrl));
+				 ctrlobj);
 
 			
 			controlSizer->Add (rowsizer, 0, wxEXPAND|wxALL, 2);
@@ -286,7 +343,6 @@ void FTmodulatorGui::refreshMenu()
 	_popupMenu = new wxMenu();
 
 	int itemid = ID_SpecModBase;
-	wxMenuItem * labelitem;
 	
 	_popupMenu->Append (ID_DetachAll, wxT("Detach All"));
 	_popupMenu->Append (ID_AttachAll, wxT("Attach All"));
@@ -300,10 +356,10 @@ void FTmodulatorGui::refreshMenu()
 			FTspectralEngine *engine = procpath->getSpectralEngine();
 
 			_popupMenu->AppendSeparator();
-			labelitem = new wxMenuItem(_popupMenu, itemid++, wxString::Format(wxT("Channel %d"), i+1));
-			labelitem->Enable(false);
-			_popupMenu->Append (labelitem);
-			
+			_popupMenu->Append (itemid, wxString::Format(wxT("Channel %d"), i+1));
+			_popupMenu->Enable (itemid, false);
+			itemid++;
+						   
 			
 			// go through all the spectrum modifiers in the engine
 			vector<FTprocI *> procmods;
@@ -400,7 +456,7 @@ void FTmodulatorGui::onAttachMenu (wxCommandEvent & ev)
 void FTmodulatorGui::onRemoveButton (wxCommandEvent & ev)
 {
 	// remove our own dear mod
-	cerr << "on remove" << endl;
+	//cerr << "on remove" << endl;
 
 	RemovalRequest (); // emit signal
 	
@@ -413,7 +469,7 @@ void FTmodulatorGui::onRemoveButton (wxCommandEvent & ev)
 		}
 	}
 
-	cerr << "post remove" << endl;
+	//cerr << "post remove" << endl;
 
 	_modulator = 0;
 }
@@ -447,8 +503,12 @@ void FTmodulatorGui::onSliderChanged(wxScrollEvent &ev)
 			int currval = slider->GetValue();
 
 			ctrl->setValue(currval);
-			cerr << "slider int changed for " << ctrl->getName() <<  ": new val = " << currval << endl;
+			//cerr << "slider int changed for " << ctrl->getName() <<  ": new val = " << currval << endl;
 
+			if (obj->textctrl) {
+				obj->textctrl->SetValue(wxString::Format(wxT("%d"), currval));
+			}
+			
 		}
 		else if (ctrl->getType() == FTmodulatorI::Control::FloatType) {
 			float minval,maxval;
@@ -456,7 +516,11 @@ void FTmodulatorGui::onSliderChanged(wxScrollEvent &ev)
 			float currval = (slider->GetValue() / 1000.0) * (maxval - minval)  + minval;
 
 			ctrl->setValue (currval);
-			cerr << "slider float changed for " << ctrl->getName() <<  ": new val = " << currval << endl;
+			//cerr << "slider float changed for " << ctrl->getName() <<  ": new val = " << currval << endl;
+
+			if (obj->textctrl) {
+				obj->textctrl->SetValue(wxString::Format(wxT("%.6g"), currval));
+			}
 		}
 	}
 	
@@ -484,8 +548,16 @@ void FTmodulatorGui::onChoiceChanged(wxCommandEvent &ev)
 
 void FTmodulatorGui::onCheckboxChanged(wxCommandEvent &ev)
 {
-	
+	FTmodControlObject * obj = (FTmodControlObject *) ev.m_callbackUserData;
+	FTmodulatorI::Control * ctrl;
 
+	if (obj && (ctrl = obj->control) && obj->checkbox) {
+		
+		ctrl->setValue ((bool) obj->checkbox->GetValue());
+
+		cerr << " checkbox changed for " << ctrl->getName() <<  ": new val = " << obj->checkbox->GetValue() << endl;
+		
+	}
 }
 
 void FTmodulatorGui::refreshChannelMenu ()
@@ -504,7 +576,6 @@ void FTmodulatorGui::refreshChannelMenu ()
 	{
 		procpath = _iosup->getProcessPath(i);
 		if (procpath) {
-			cerr << "adding item for " << i << endl;
 			
 			_channelPopupMenu->AppendCheckItem (itemid, wxString::Format(wxT("Channel %d"), i+1));
 
@@ -533,7 +604,7 @@ void FTmodulatorGui::onChannelMenu (wxCommandEvent &ev)
 	    && (!procpath->getSpectralEngine()->hasModulator(_modulator)))
 	{
 		// only if engine doesn't already contain it
-		cerr << "on channel menu" << endl;
+		// cerr << "on channel menu" << endl;
 		
 		// remove from old engine without destroying
 		for (int i=0; i < _iosup->getActivePathCount(); ++i)
@@ -563,3 +634,63 @@ void FTmodulatorGui::onChannelButton (wxCommandEvent &ev)
 	PopupMenu(_channelPopupMenu, pos.x, pos.y + pos.height);
 }
 
+
+void FTmodulatorGui::onTextEnter (wxCommandEvent &ev)
+{
+	
+	if (ev.GetId() == ID_ModUserName)
+	{
+
+		string name = static_cast<const char *> (_nameText->GetValue().fn_str());
+		
+		_modulator->setUserName (name);
+		cerr << "name changed to :" << name << endl;
+	}
+	else {
+
+		FTmodControlObject * cobj = (FTmodControlObject *) ev.m_callbackUserData;
+		wxString tmpstr;
+		long tmplong;
+		double tmpfloat;
+		
+		if (cobj && cobj->textctrl) {
+			tmpstr = cobj->textctrl->GetValue();
+
+			if (cobj->control->getType() == FTmodulatorI::Control::IntegerType) {
+				int lb,ub,currval;
+				cobj->control->getBounds(lb, ub);
+				cobj->control->getValue(currval);
+				
+				
+				if (tmpstr.ToLong (&tmplong)
+				    && cobj->control->setValue ((int) tmplong)
+				    && (float)tmpfloat >= lb && (float)tmpfloat <= ub)
+				{
+					// change slider too
+					cobj->slider->SetValue (tmplong);
+				}
+				else {
+					cobj->textctrl->SetValue(wxString::Format(wxT("%d"), currval));
+				}
+			}
+			else if (cobj->control->getType() == FTmodulatorI::Control::FloatType) {
+				float lb,ub,currval;
+				cobj->control->getBounds(lb, ub);
+				cobj->control->getValue(currval);
+				
+				if (tmpstr.ToDouble (&tmpfloat)
+				    && cobj->control->setValue ((float) tmpfloat)
+				    && (float)tmpfloat >= lb && (float)tmpfloat <= ub)
+				{
+					// change slider too
+					int slidval = (int) ((tmpfloat - lb) / (ub-lb) * 1000.0);
+					cobj->slider->SetValue (slidval);
+				}
+				else {
+					cobj->textctrl->SetValue(wxString::Format(wxT("%.6g"), currval));
+				}
+			}
+		}
+
+	}
+}

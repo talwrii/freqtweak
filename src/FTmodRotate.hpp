@@ -22,17 +22,17 @@
 
 #include "FTmodulatorI.hpp"
 
-class FTmodShift
+class FTmodRotate
 	: public FTmodulatorI
 {
   public:
 
-	FTmodShift(nframes_t samplerate, unsigned int fftn);
-	FTmodShift (const FTmodShift & other);
+	FTmodRotate(nframes_t samplerate, unsigned int fftn);
+	FTmodRotate (const FTmodRotate & other);
 
-	virtual ~FTmodShift();
+	virtual ~FTmodRotate();
 
-	FTmodulatorI * clone() { return new FTmodShift(*this); }
+	FTmodulatorI * clone() { return new FTmodRotate(*this); }
 	void initialize();
 	
 	void modulate (nframes_t current_frame, fft_data * fftdata, unsigned int fftn, sample_t * timedata, nframes_t nframes);

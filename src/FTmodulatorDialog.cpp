@@ -127,48 +127,8 @@ void FTmodulatorDialog::init()
 	wxBoxSizer * mainsizer = new wxBoxSizer(wxVERTICAL);
 	//wxStaticText * statText;
 
-	//_chanlistSizer = new wxBoxSizer(wxHORIZONTAL);
-
 	_channelSizer = new wxBoxSizer(wxHORIZONTAL);
 	
-	//FTioSupport * iosup = FTioSupport::instance();
-	// do this for every active process path
-
-	
-	
-// 	for (int i=0; i < iosup->getActivePathCount(); ++i)
-// 	{
-// 		procpath = iosup->getProcessPath(i);
-// 		if (!procpath) break;
-		
-// 		wxBoxSizer * sourceSizer = new wxBoxSizer(wxVERTICAL);
-
-// 		wxBoxSizer * rowsizer = new wxBoxSizer(wxHORIZONTAL);
-// 		statText = new wxStaticText (this, -1, wxString::Format(wxT("%s %d"), wxT("Channel"), i+1),  wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
-// 		rowsizer->Add(statText, 0, wxALL|wxALIGN_CENTRE_VERTICAL|wxALIGN_CENTRE, 3);
-
-// 		rowsizer->Add(1,-1, 1);
-		
-// 		wxButton *addButt = new wxButton(this, addbuttid, wxT("Add..."));
-// 		rowsizer->Add (addButt, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
-		
-// 		sourceSizer->Add (rowsizer, 0, wxEXPAND|wxALIGN_CENTRE|wxALIGN_CENTRE_VERTICAL, 2);
-		
-// 		_channelScrollers[i] = new wxScrolledWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSUNKEN_BORDER);
-// 		_channelScrollers[i]->SetScrollRate (10, 30);
-// 		_channelSizers[i] = new wxBoxSizer(wxVERTICAL);
-
-// 		_channelScrollers[i]->SetSizer(_channelSizers[i]);
-// 		_channelScrollers[i]->SetAutoLayout(true);
-		
-// 		sourceSizer->Add (_channelScrollers[i], 1, wxEXPAND|wxALL, 2);
-
-// 		_chanlistSizer->Add (sourceSizer, 1, wxEXPAND|wxALL, 2);
-// 		_channelCount++;
-
-// 		addbuttid++;
-// 	}		
-
 	wxButton *addButt = new wxButton(this, ID_AddModulatorChannelBase, wxT("Add Modulator..."));
 	mainsizer->Add (addButt, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 4);
 
@@ -196,7 +156,7 @@ void FTmodulatorDialog::init()
 	int modnum = 0;
 	for (FTmodulatorManager::ModuleList::iterator moditer = mlist.begin(); moditer != mlist.end(); ++moditer)
 	{
-		item = new wxMenuItem(_popupMenu, itemid, wxT("Add ") + wxString::FromAscii ((*moditer)->getName().c_str()));
+		item = new wxMenuItem(_popupMenu, itemid, wxString::FromAscii ((*moditer)->getName().c_str()));
 		_popupMenu->Append (item);
 		
 		Connect( itemid,  wxEVT_COMMAND_MENU_SELECTED,
