@@ -42,7 +42,7 @@ class FTactiveBarGraph
 		      const wxPoint& pos = wxDefaultPosition,
 		      const wxSize& size = wxDefaultSize,
 		      long style = wxRAISED_BORDER,
-		      const wxString& name = "ActiveBarGraph");
+		      const wxString& name = wxT("ActiveBarGraph"));
 
 	virtual ~FTactiveBarGraph();
 
@@ -77,7 +77,7 @@ class FTactiveBarGraph
 	void setBypassed (bool flag) { _bypassed = flag; Refresh(FALSE);}
 	bool getBypassed () { return _bypassed; }
 
-	const vector<string> & getGridChoiceStrings() { return _gridChoices; }
+	const vector<wxString> & getGridChoiceStrings() { return _gridChoices; }
 	void setGridChoice (unsigned int , bool writeextra=true);
 	unsigned int getGridChoice () { return _gridChoiceIndex; }
 
@@ -189,7 +189,7 @@ class FTactiveBarGraph
 	bool _mouseCaptured;
 	bool _bypassed;
 
-	vector<string> _gridChoices;
+	vector<wxString> _gridChoices;
 	vector<float> _gridValues;
 	float _gridFactor;
 	unsigned int _gridChoiceIndex;

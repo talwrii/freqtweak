@@ -46,7 +46,7 @@ public:
 		      const wxPoint& pos = wxDefaultPosition,
 		      const wxSize& size = wxDefaultSize,
 		      long style = wxRAISED_BORDER,
-		      const wxString& name = "Spectragram",
+		      const wxString& name = wxT("Spectragram"),
 		      PlotType pt = SPECTRAGRAM);
 //		      PlotType pt = AMPFREQ_SOLID);
 //		      PlotType pt = AMPFREQ_LINES);

@@ -41,7 +41,7 @@ class FTprocOrderDialog : public wxFrame
 			  const wxPoint& pos = wxDefaultPosition,
 			  const wxSize& size = wxSize(400,600),
 			  long style = wxDEFAULT_FRAME_STYLE,
-			  const wxString& name = "ProcOrderDialog");
+			  const wxString& name = wxT("ProcOrderDialog"));
 
 
 	virtual ~FTprocOrderDialog();

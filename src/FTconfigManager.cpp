@@ -44,16 +44,14 @@
 
 #include "xml++.hpp"
 
-
-FTconfigManager::FTconfigManager(const char * basedir)
-	: _basedir(basedir)
+FTconfigManager::FTconfigManager(const std::string & basedir)
+        : _basedir (basedir)
 {
-
-	if (_basedir.IsEmpty()) {
+	if (_basedir.empty()) {
 		char * homestr = getenv("HOME");
 
 		if (homestr) {
-			_basedir = wxString::Format("%s%c.freqtweak", homestr, wxFileName::GetPathSeparator());
+		        _basedir = static_cast<const char *> (wxString::Format(wxT("%s%c.freqtweak"), homestr, wxFileName::GetPathSeparator()).fn_str());
 		}
 		else {
 			_basedir = ".freqtweak";
@@ -63,8 +61,8 @@ FTconfigManager::FTconfigManager(const char * basedir)
 	// try to create basedir if it doesn't exist
         //wxDir bdir(_basedir);
 	
-	if ( ! wxDir::Exists(_basedir) ) {
-		if (mkdir ( _basedir, 0755 )) {
+	if ( ! wxDir::Exists(wxString::FromAscii (_basedir.c_str())) ) {
+		if (mkdir ( _basedir.c_str(), 0755 )) {
 			fprintf (stderr, "Error creating %s\n", _basedir.c_str()); 
 		}
 		else {
@@ -76,8 +74,8 @@ FTconfigManager::FTconfigManager(const char * basedir)
 	}
 
 	// make basedir/presets dir
-	if ( ! wxDir::Exists(_basedir + wxFileName::GetPathSeparator() + "presets") ) {
-		wxString predir =  wxString::Format("%s%cpresets", _basedir.c_str(), wxFileName::GetPathSeparator());
+	if ( ! wxDir::Exists(wxString::FromAscii (_basedir.c_str()) + wxFileName::GetPathSeparator() + wxT("presets")) ) {
+		std::string predir (wxString::Format(wxT("%s%cpresets"), _basedir.c_str(), wxFileName::GetPathSeparator()).fn_str());
 		if (mkdir (predir.c_str(), 0755 )) {
 			fprintf (stderr, "Error creating %s\n", predir.c_str()); 
 		}
@@ -97,9 +95,9 @@ FTconfigManager::~FTconfigManager()
 }
 
 
-bool FTconfigManager::storeSettings (const char * name, bool uselast)
+bool FTconfigManager::storeSettings (const std::string &name, bool uselast)
 {
-	if (!uselast && strcmp (name, "") == 0) {
+	if (!uselast && (name != "")) {
 		return false;
 	}
 
@@ -108,17 +106,17 @@ bool FTconfigManager::storeSettings (const char * name, bool uselast)
 	// directory to store settings
 	if (uselast)
 	{
-		dirname = wxString::Format("%s%clast_setting", _basedir.c_str(), wxFileName::GetPathSeparator());
+		dirname = wxString::Format(wxT("%s%clast_setting"), _basedir.c_str(), wxFileName::GetPathSeparator());
 	}
 	else
 	{
-		dirname = wxString::Format("%s%cpresets%c%s", _basedir.c_str(), wxFileName::GetPathSeparator(),
-					   wxFileName::GetPathSeparator(), name);
+		dirname = wxString::Format(wxT("%s%cpresets%c%s"), _basedir.c_str(), wxFileName::GetPathSeparator(),
+					   wxFileName::GetPathSeparator(), name.c_str());
 	}
 	
 	if ( ! wxDir::Exists(dirname) ) {
-		if (mkdir ( dirname, 0755 )) {
-			printf ("Error creating %s\n", dirname.c_str()); 
+		if (mkdir ( dirname.fn_str(), 0755 )) {
+			printf ("Error creating %s\n", static_cast<const char *> (dirname.mb_str())); 
 			return false;
 		}
 	}
@@ -138,7 +136,8 @@ bool FTconfigManager::storeSettings (const char * name, bool uselast)
 	while ( cont )
 	{
 		//printf ("%s\n", filename.c_str());
-		unlink (wxString::Format("%s/%s", dirname.c_str(), filename.c_str()).c_str() );
+		unlink (wxString::Format(wxT("%s/%s"), static_cast<const char *> (dirname.fn_str()),
+					 static_cast<const char *> (filename.fn_str())).fn_str() );
 		cont = dir.GetNext(&filename);
 	}
 
@@ -164,12 +163,12 @@ bool FTconfigManager::storeSettings (const char * name, bool uselast)
 		if (i==0)
 		{
 			// pull global params from first procpath
-			paramsNode->add_property ("fft_size", wxString::Format("%d", engine->getFFTsize()).c_str());
-			paramsNode->add_property ("windowing", wxString::Format("%d", engine->getWindowing()).c_str());			
-			paramsNode->add_property ("update_speed", wxString::Format("%d", engine->getUpdateSpeed()).c_str());			
-			paramsNode->add_property ("oversamp", wxString::Format("%d", engine->getOversamp()).c_str());			
-			paramsNode->add_property ("tempo", wxString::Format("%d", engine->getTempo()).c_str());			
-			paramsNode->add_property ("max_delay", wxString::Format("%.10g", engine->getMaxDelay()).c_str());			
+			paramsNode->add_property ("fft_size", static_cast<const char *> (wxString::Format(wxT("%d"), engine->getFFTsize()).mb_str()));
+			paramsNode->add_property ("windowing", static_cast<const char *> (wxString::Format(wxT("%d"), engine->getWindowing()).mb_str()));			
+			paramsNode->add_property ("update_speed", static_cast<const char *> (wxString::Format(wxT("%d"), engine->getUpdateSpeed()).mb_str()));			
+			paramsNode->add_property ("oversamp", static_cast<const char *> (wxString::Format(wxT("%d"), engine->getOversamp()).mb_str()));			
+			paramsNode->add_property ("tempo", static_cast<const char *> (wxString::Format(wxT("%d"), engine->getTempo()).mb_str()));			
+			paramsNode->add_property ("max_delay", static_cast<const char *> (wxString::Format(wxT("%.10g"), engine->getMaxDelay()).mb_str()));			
 		}
 
 
@@ -178,11 +177,11 @@ bool FTconfigManager::storeSettings (const char * name, bool uselast)
 
 		XMLNode * chanNode = channelsNode->add_child ("Channel");
 
-		chanNode->add_property ("pos", wxString::Format("%d", i).c_str());
-		chanNode->add_property ("input_gain", wxString::Format("%.10g", engine->getInputGain()).c_str());
-		chanNode->add_property ("mix_ratio", wxString::Format("%.10g", engine->getMixRatio()).c_str());
-		chanNode->add_property ("bypassed", wxString::Format("%d", engine->getBypassed() ? 1: 0).c_str());
-		chanNode->add_property ("muted", wxString::Format("%d", engine->getMuted() ? 1 : 0).c_str());
+		chanNode->add_property ("pos", static_cast<const char *> (wxString::Format(wxT("%d"), i).mb_str()));
+		chanNode->add_property ("input_gain", static_cast<const char *> (wxString::Format(wxT("%.10g"), engine->getInputGain()).mb_str()));
+		chanNode->add_property ("mix_ratio", static_cast<const char *> (wxString::Format(wxT("%.10g"), engine->getMixRatio()).mb_str()));
+		chanNode->add_property ("bypassed", static_cast<const char *> (wxString::Format(wxT("%d"), engine->getBypassed() ? 1: 0).mb_str()));
+		chanNode->add_property ("muted", static_cast<const char *> (wxString::Format(wxT("%d"), engine->getMuted() ? 1 : 0).mb_str()));
 		
 		
 		// now for the filter sections
@@ -196,31 +195,35 @@ bool FTconfigManager::storeSettings (const char * name, bool uselast)
 			pm->getFilters (filts);
 
 			XMLNode * pmNode = procmodsNode->add_child ("ProcMod");
-			pmNode->add_property ("pos", wxString::Format("%d", n).c_str());
+			pmNode->add_property ("pos", static_cast<const char *> (wxString::Format(wxT("%d"), n).mb_str()));
 			pmNode->add_property ("name", pm->getConfName());
 			
 			for (unsigned int m=0; m < filts.size(); ++m)
 			{
 				XMLNode * filtNode = pmNode->add_child ("Filter");
 
-				filtNode->add_property ("pos", wxString::Format("%d", m).c_str());
+				filtNode->add_property ("pos", static_cast<const char *> (wxString::Format(wxT("%d"), m).mb_str()));
 				filtNode->add_property ("name", filts[m]->getConfigName().c_str());
-				filtNode->add_property ("linked", wxString::Format("%d",
-										   filts[m]->getLink() ?
-										   filts[m]->getLink()->getId() : -1).c_str());
+				filtNode->add_property ("linked", static_cast<const char *> (
+				        wxString::Format(wxT("%d"),
+							 filts[m]->getLink() ?
+							 filts[m]->getLink()->getId() : -1).mb_str()));
 					
-				filtNode->add_property ("bypassed", wxString::Format("%d",
-										     filts[m]->getBypassed() ? 1 : 0).c_str());
+				filtNode->add_property ("bypassed", static_cast<const char *> (
+                                        wxString::Format(wxT("%d"),
+							 filts[m]->getBypassed() ? 1 : 0).mb_str()));
 
-				string filtfname = wxString::Format("%d_%d_%s.filter", i, n, filts[m]->getConfigName().c_str()).c_str();
+				std::string filtfname (wxString::Format(wxT("%d_%d_%s.filter"), i, n, filts[m]->getConfigName().c_str()).fn_str());
 				filtNode->add_property ("file", filtfname);
 
 				// write out filter file
-				wxTextFile filtfile (wxString::Format("%s%c%s", dirname.c_str(), wxFileName::GetPathSeparator(),
+				wxTextFile filtfile (wxString::Format(wxT("%s%c%s"),
+								      static_cast<const char *> (dirname.fn_str()),
+								      wxFileName::GetPathSeparator(),
 								      filtfname.c_str()));
 				if (filtfile.Exists()) {
 					// remove it
-					unlink (filtfile.GetName());
+					unlink (wxString (filtfile.GetName()).fn_str ());
 				}
 				filtfile.Create ();
 				writeFilter (filts[m], filtfile);
@@ -265,39 +268,41 @@ bool FTconfigManager::storeSettings (const char * name, bool uselast)
 
 	// write doc to file
 	
-	if (configdoc.write (wxString::Format("%s%c%s", dirname.c_str(), wxFileName::GetPathSeparator(), "config.xml").c_str()))
+	if (configdoc.write (static_cast<const char *> (
+                wxString::Format(wxT("%s%c%s"), static_cast<const char *> (dirname.fn_str()),
+				 wxFileName::GetPathSeparator(), "config.xml").fn_str())))
 	{	    
-		fprintf (stderr, "Stored settings into %s\n", dirname.c_str());
+		fprintf (stderr, "Stored settings into %s\n", static_cast<const char *> (dirname.fn_str()));
 		return true;
 	}
 	else {
-		fprintf (stderr, "Failed to store settings into %s\n", dirname.c_str());
+		fprintf (stderr, "Failed to store settings into %s\n", static_cast<const char *> (dirname.fn_str()));
 		return false;
 	}
 }
 
-bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool uselast)
+bool FTconfigManager::loadSettings (const std::string &name, bool restore_ports, bool uselast)
 {
 	vector<vector <FTprocI *> > tmpvec;
 	return loadSettings(name, restore_ports, false, tmpvec, uselast);
 }
 
-bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool ignore_iosup, vector< vector<FTprocI *> > & procvec, bool uselast)
+bool FTconfigManager::loadSettings (const std::string &name, bool restore_ports, bool ignore_iosup, vector< vector<FTprocI *> > & procvec, bool uselast)
 {
-	if (!uselast && strcmp (name, "") == 0) {
+	if (!uselast && (name != "")) {
 		return false;
 	}
 
 	wxString dirname;
 	if (uselast) {
-		dirname = wxString::Format("%s%clast_setting", _basedir.c_str(), wxFileName::GetPathSeparator());
+		dirname = wxString::Format(wxT("%s%clast_setting"), _basedir.c_str(), wxFileName::GetPathSeparator());
 	}
 	else {
-		dirname = wxString::Format("%s%cpresets/%s", _basedir.c_str(), wxFileName::GetPathSeparator(), name);
+		dirname = wxString::Format(wxT("%s%cpresets/%s"), _basedir.c_str(), wxFileName::GetPathSeparator(), name.c_str());
 	}
 	
 	if ( ! wxDir::Exists(dirname) ) {
-		printf ("Settings %s does not exist!\n", dirname.c_str()); 
+		printf ("Settings %s does not exist!\n", static_cast<const char *> (dirname.fn_str())); 
 		return false;
 	}
 
@@ -308,7 +313,10 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 	}
 	
 	// open file
-	string configfname(wxString::Format("%s%c%s", dirname.c_str(), wxFileName::GetPathSeparator(), "config.xml").c_str());
+	string configfname(static_cast<const char *> (wxString::Format(wxT("%s%c%s"),
+								       static_cast<const char *> (dirname.fn_str()),
+								       wxFileName::GetPathSeparator(),
+								       "config.xml").fn_str()));
 	XMLTree configdoc (configfname);
 
 	if (!configdoc.initialized()) {
@@ -373,7 +381,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 		for (propiter=proplist.begin(); propiter != proplist.end(); ++propiter)
 		{
 			string key = (*propiter)->name();
-			wxString value = (*propiter)->value().c_str();
+			wxString value (wxString::FromAscii ((*propiter)->value().c_str()));
 
 			if (key == "fft_size") {
 				value.ToULong(&fft_size);
@@ -417,7 +425,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 		}
 		
 		unsigned long chan_pos;
-		wxString tmpstr (prop->value().c_str());
+		wxString tmpstr (wxString::FromAscii (prop->value().c_str()));
 		if (!tmpstr.ToULong (&chan_pos) || chan_pos >= FT_MAXPATHS) {
 			fprintf (stderr, "invalid pos in channel!\n"); 
 			continue;
@@ -444,7 +452,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 			for (propiter=proplist.begin(); propiter != proplist.end(); ++propiter)
 			{
 				string key = (*propiter)->name();
-				wxString value = (*propiter)->value().c_str();
+				wxString value (wxString::FromAscii ((*propiter)->value().c_str()));
 
 				if (key == "input_gain") {
 					if (value.ToDouble(&fval)) {
@@ -496,7 +504,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 				continue;
 			}
 			unsigned long ppos;
-			tmpstr = prop->value().c_str();
+			tmpstr = wxString::FromAscii (prop->value().c_str());
 			if (!tmpstr.ToULong (&ppos)) {
 				fprintf (stderr, "invalid pos in procmod!\n"); 
 				continue;
@@ -547,7 +555,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 					continue;
 				}
 				unsigned long fpos;
-				tmpstr = prop->value().c_str();
+				tmpstr = wxString::FromAscii (prop->value().c_str());
 				if (!tmpstr.ToULong (&fpos)) {
 					fprintf (stderr, "invalid filter pos in channel!\n"); 
 					continue;
@@ -557,7 +565,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 					fprintf (stderr, "filter filename missing in procmod!\n"); 
 					continue;
 				}
-				string filtfname = prop->value();
+				std::string filtfname = prop->value();
 
 				FTspectrumModifier * specmod = procmod->getFilter (fpos);
 				if (!specmod) {
@@ -566,7 +574,9 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 				}
 
 				// load filter
-				wxTextFile filtfile (wxString::Format("%s%c%d_%d_%s.filter", dirname.c_str(), wxFileName::GetPathSeparator(),
+				wxTextFile filtfile (wxString::Format(wxT("%s%c%d_%d_%s.filter"),
+								      static_cast<const char *> (dirname.fn_str()),
+								      wxFileName::GetPathSeparator(),
 								      (int) chan_pos, (int) ppos,
 								      specmod->getConfigName().c_str()));
 				if (filtfile.Open()) {
@@ -577,7 +587,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 
 				// set bypassed
 				if ((prop = filtNode->property ("bypassed"))) {
-					wxString value (prop->value().c_str());
+					wxString value (wxString::FromAscii (prop->value().c_str()));
 					if (value.ToULong(&uval)) {
 						specmod->setBypassed (uval==1 ? true: false);
 					}
@@ -586,7 +596,7 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 				// actual linkage must wait for later
 				long linked = -1;
 				if ((prop = filtNode->property ("linked"))) {
-					wxString value (prop->value().c_str());
+					wxString value (wxString::FromAscii (prop->value().c_str()));
 					if (value.ToLong(&linked) && linked >= 0) {
 						
 						_linkCache.push_back (LinkCache(chan_pos, linked, ppos, fpos));
@@ -772,7 +782,7 @@ void FTconfigManager::loadFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 		wxString rangestr;
 		wxString value;
 		
-		int pos = line.find_first_of (" \t");
+		int pos = line.find_first_of (wxT(" \t"));
 		if (pos >= 0) {
 			rangestr = line.substr(0, pos);
 			value = line.Mid(pos).Strip(wxString::both);
@@ -841,13 +851,13 @@ void FTconfigManager::writeFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 		}
 		else if (i == pos + 1 ) {
 			// just write last number
-			tf.AddLine ( wxString::Format ("%.20g", lastval));
+			tf.AddLine ( wxString::Format (wxT("%.20g"), lastval));
 			pos = i;
 			lastval = values[i];
 		}
 		else {
 			// write range
-			tf.AddLine ( wxString::Format ("%d:%d  %.20g", pos, i-1, values[pos]));
+			tf.AddLine ( wxString::Format (wxT("%d:%d  %.20g"), pos, i-1, values[pos]));
 			pos = i;
 			lastval = values[i];
 		}
@@ -856,7 +866,7 @@ void FTconfigManager::writeFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 
 	// write last
 	if (pos < totbins) {
-		tf.AddLine ( wxString::Format ("%d:%d  %.20g", pos, totbins-1, values[pos]));
+		tf.AddLine ( wxString::Format (wxT("%d:%d  %.20g"), pos, totbins-1, values[pos]));
 	}
 }
 
@@ -864,7 +874,7 @@ void FTconfigManager::writeFilter (FTspectrumModifier *specmod, wxTextFile & tf)
 
 list<string> FTconfigManager::getSettingsNames()
 {
-	wxString dirname(wxString::Format("%s/presets", _basedir.c_str()));
+	wxString dirname(wxString::Format(wxT("%s%cpresets"), _basedir.c_str(), wxFileName::GetPathSeparator()));
 
 	list<string> flist;
 	
@@ -876,12 +886,12 @@ list<string> FTconfigManager::getSettingsNames()
 	wxString filename;
 
 	
-	bool cont = dir.GetFirst(&filename, "", wxDIR_DIRS);
+	bool cont = dir.GetFirst(&filename, wxT(""), wxDIR_DIRS);
 
 	while ( cont )
 	{
 		//printf ("%s\n", filename.c_str());
-		flist.push_back (string(filename.c_str()));
+		flist.push_back (static_cast<const char *> (filename.fn_str()));
 		cont = dir.GetNext(&filename);
 	}
 

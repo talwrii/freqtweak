@@ -52,8 +52,8 @@ void FThelpWindow::init()
 
 	const int sizes[] = {7, 8, 10, 12, 16, 22, 30};
 	
-	_htmlWin->SetFonts("", "", sizes);
-	_htmlWin->SetPage("Help information to be included here soon. In the meantime, please see http://freqtweak.sf.net");
+	_htmlWin->SetFonts(wxT(""), wxT(""), sizes);
+	_htmlWin->SetPage(wxT("Help information to be included here soon. In the meantime, please see http://freqtweak.sf.net"));
 	
 	this->SetSizeHints(200,100);
 	this->SetSize(400,200);

@@ -38,16 +38,16 @@ class FTconfigManager
 {
    public:
 	
-	FTconfigManager(const char *basedir = 0);
+	FTconfigManager(const std::string &basedir = "");
 	virtual ~FTconfigManager();
 
 
-	bool storeSettings (const char * name, bool uselast=false);
+	bool storeSettings (const std::string &name, bool uselast=false);
 
-	bool loadSettings (const char * name, bool restore_ports=false, bool uselast=false);
-	bool loadSettings (const char * name, bool restore_ports, bool ignore_iosup, vector<vector <FTprocI *> > & procvec, bool uselast);
+	bool loadSettings (const std::string &name, bool restore_ports=false, bool uselast=false);
+	bool loadSettings (const std::string &name, bool restore_ports, bool ignore_iosup, vector<vector <FTprocI *> > & procvec, bool uselast);
 
-	list<string> getSettingsNames();
+	list<std::string> getSettingsNames();
 
    protected:
 
@@ -57,7 +57,7 @@ class FTconfigManager
 
 	XMLNode* find_named_node (const XMLNode * node, string name);
 	
-	wxString _basedir;
+	std::string _basedir;
 
 	class LinkCache {
 	public:

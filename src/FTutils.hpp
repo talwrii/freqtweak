@@ -20,7 +20,7 @@
 #ifndef __FTUTILS_HPP__
 #define __FTUTILS_HPP__
 
-
+#include <wx/string.h>
 
 class FTutils
 {
@@ -66,8 +66,7 @@ public:
 
 
 	static inline float powerLogScale(float yval, float min);
-	
-	
+
 };
 
 

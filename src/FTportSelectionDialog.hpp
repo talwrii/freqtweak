@@ -40,7 +40,7 @@ class FTportSelectionDialog
 			  const wxPoint& pos = wxDefaultPosition,
 			  const wxSize& size = wxSize(400,600),
 			  long style = wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER,
-			  const wxString& name = "PortSelectionDialog");
+			  const wxString& name = wxT("PortSelectionDialog"));
 
 
     const char ** getSelectedPorts();

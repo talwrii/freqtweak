@@ -111,11 +111,11 @@ FTspectragram::FTspectragram(FTmainwin * mwin, wxWindow *parent, wxWindowID id,
 	_fillBrush.SetColour(_fillColor);
 	_fillBrush.SetStyle(wxSOLID);
 	
-	_xscaleMenu = new wxMenu("");
-	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_1Xscale, "1x Scale"));
-	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_2Xscale, "2x Scale"));
-	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogaXscale, "logA Scale"));
-	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogbXscale, "logB Scale"));
+	_xscaleMenu = new wxMenu(wxT(""));
+	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_1Xscale, wxT("1x Scale")));
+	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_2Xscale, wxT("2x Scale")));
+	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogaXscale, wxT("logA Scale")));
+	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogbXscale, wxT("logB Scale")));
 
 	_linePen.SetColour(255,255,255);
 
@@ -706,9 +706,9 @@ void FTspectragram::updatePositionLabels(int pX, int pY, bool showreal)
 	float sfreq, efreq;
 	int frombin, tobin;
 	xToFreqRange(pX, sfreq, efreq, frombin, tobin);
-	_freqstr.Printf ("%5d - %5d Hz", (int) sfreq, (int) efreq);
+	_freqstr.Printf (wxT("%5d - %5d Hz"), (int) sfreq, (int) efreq);
 
-	_mwin->updatePosition ( _freqstr, "" );
+	_mwin->updatePosition ( _freqstr, wxT("") );
 	
 }
 
@@ -1005,7 +1005,7 @@ void FTspectragram::OnMouseActivity( wxMouseEvent &event)
 		updatePositionLabels(pX, pY, true);
 	}
 	else if (event.Leaving()) {
-		_mwin->updatePosition("", "");
+		_mwin->updatePosition(wxT(""), wxT(""));
 	}
 	else if (event.MiddleUp() || event.RightUp()) {
 		// popup scale menu

@@ -33,6 +33,7 @@
 #include <wx/sashwin.h>
 #include <wx/spinctrl.h>
 #include <wx/notebook.h>
+#include <wx/string.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -212,7 +213,7 @@ FTmainwin::FTmainwin(int startpath, const wxString& title, const wxString& rcdir
 
 	  _updateMS(10), _superSmooth(false),
 	  _pathCount(startpath),
-	  _configManager(rcdir),
+	  _configManager(static_cast<const char *> (rcdir.fn_str())),
 	  _procmodDialog(0), _blendDialog(0),
 	  _titleFont(10, wxDEFAULT, wxNORMAL, wxBOLD),
 	  _titleAltFont(10, wxDEFAULT, wxSLANT, wxBOLD),
@@ -257,30 +258,30 @@ void FTmainwin::buildGui()
 	_rowh = 68;
 
 
-	normalizeFontSize(_buttFont, _bheight-4, "BA");
-	normalizeFontSize(_titleFont, _bheight-4, "EQ");
-	normalizeFontSize(_titleAltFont, _bheight-4, "EQ");
+	normalizeFontSize(_buttFont, _bheight-4, wxT("BA"));
+	normalizeFontSize(_titleFont, _bheight-4, wxT("EQ"));
+	normalizeFontSize(_titleAltFont, _bheight-4, wxT("EQ"));
 	
 	// set the frame icon
 	//SetIcon(wxICON(mondrian));
 	
 	// create a menu bar
-	wxMenu *menuFile = new wxMenu("", wxMENU_TEAROFF);
+	wxMenu *menuFile = new wxMenu(wxT(""), wxMENU_TEAROFF);
 
-	menuFile->Append(FT_ProcModMenu, "&DSP Modules...\tCtrl-P", "Configure DSP modules");
-	menuFile->Append(FT_PresetBlendMenu, "Preset &Blend...\tCtrl-B", "Blend multiple presets");
+	menuFile->Append(FT_ProcModMenu, wxT("&DSP Modules...\tCtrl-P"), wxT("Configure DSP modules"));
+	menuFile->Append(FT_PresetBlendMenu, wxT("Preset &Blend...\tCtrl-B"), wxT("Blend multiple presets"));
 
 	menuFile->AppendSeparator();	
-	menuFile->Append(FT_QuitMenu, "&Quit\tCtrl-Q", "Quit this program");
+	menuFile->Append(FT_QuitMenu, wxT("&Quit\tCtrl-Q"), wxT("Quit this program"));
 
 	// now append the freshly created menu to the menu bar...
 	wxMenuBar *menuBar = new wxMenuBar();
-	menuBar->Append(menuFile, "&Control");
+	menuBar->Append(menuFile, wxT("&Control"));
 
-	wxMenu *menuHelp = new wxMenu("", wxMENU_TEAROFF);
-	menuHelp->Append(FT_HelpTipsMenu, "&Usage Tips...\tCtrl-H", "Show Usage Tips window");
-	menuHelp->Append(FT_AboutMenu, "&About...\tCtrl-A", "Show about dialog");
-	menuBar->Append(menuHelp, "&Help");
+	wxMenu *menuHelp = new wxMenu(wxT(""), wxMENU_TEAROFF);
+	menuHelp->Append(FT_HelpTipsMenu, wxT("&Usage Tips...\tCtrl-H"), wxT("Show Usage Tips window"));
+	menuHelp->Append(FT_AboutMenu, wxT("&About...\tCtrl-A"), wxT("Show about dialog"));
+	menuBar->Append(menuHelp, wxT("&Help"));
 	
 	// ... and attach this menu bar to the frame
 	SetMenuBar(menuBar);
@@ -288,7 +289,7 @@ void FTmainwin::buildGui()
 #if wxUSE_STATUSBAR
 	// create a status bar just for fun (with 3 panes)
 	CreateStatusBar(3);
-	SetStatusText("FreqTweak", 0);
+	SetStatusText(wxT("FreqTweak"), 0);
 #endif // wxUSE_STATUSBAR
 
 	// terrible!
@@ -314,17 +315,17 @@ void FTmainwin::buildGui()
 	wxPanel * configpanel = new wxPanel (ctrlbook, -1);
 	wxBoxSizer *configSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	_presetCombo = new wxComboBox (configpanel, FT_PresetCombo, "",  wxDefaultPosition, wxSize(200,-1), 0, 0,  wxCB_SORT);
+	_presetCombo = new wxComboBox (configpanel, FT_PresetCombo, wxT(""),  wxDefaultPosition, wxSize(200,-1), 0, 0,  wxCB_SORT);
 	configSizer->Add( _presetCombo, 0, wxALL|wxALIGN_CENTER, 2);
 
 	
-	wxButton *storeButt = new wxButton(configpanel, FT_StoreButton, "Store");
+	wxButton *storeButt = new wxButton(configpanel, FT_StoreButton, wxT("Store"));
 	configSizer->Add( storeButt, 0, wxALL|wxALIGN_CENTER, 2);
 
-	wxButton *loadButt = new wxButton(configpanel, FT_LoadButton, "Load");
+	wxButton *loadButt = new wxButton(configpanel, FT_LoadButton, wxT("Load"));
 	configSizer->Add( loadButt, 0, wxALL|wxALIGN_CENTER, 2);
 
-	_restorePortsCheck = new wxCheckBox(configpanel, FT_RestorePortCheckId, "Restore Ports");
+	_restorePortsCheck = new wxCheckBox(configpanel, FT_RestorePortCheckId, wxT("Restore Ports"));
 	configSizer->Add( _restorePortsCheck, 0, wxALL|wxALIGN_CENTER, 2);
 
 	
@@ -332,7 +333,7 @@ void FTmainwin::buildGui()
 	configSizer->Fit( configpanel );  
 	configpanel->SetSizer(configSizer);
 
-	ctrlbook->AddPage ( (wxNotebookPage *) configpanel, "Presets" , true);
+	ctrlbook->AddPage ( (wxNotebookPage *) configpanel, wxT("Presets"), true);
 	
 	//mainsizer->Add (configSizer, 0, wxALL|wxEXPAND, 1);
 
@@ -343,33 +344,39 @@ void FTmainwin::buildGui()
 	//wxBoxSizer *specCtrlSizer = new wxStaticBoxSizer(new wxStaticBox(fftpanel, -1, "FFT Params"), wxHORIZONTAL);
 	wxBoxSizer *specCtrlSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	stattext =  new wxStaticText(fftpanel, -1, "Freq Bands");
+	stattext =  new wxStaticText(fftpanel, -1, wxT("Freq Bands"));
 	specCtrlSizer->Add (stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
 	_freqBinsChoice = new wxChoice(fftpanel, FT_FreqBinsChoiceId);
 	const int * fftbins = FTspectralEngine::getFFTSizes();
 	for (int i=0; i < FTspectralEngine::getFFTSizeCount(); i++) {
-		_freqBinsChoice->Append(wxString::Format("%d", fftbins[i] / 2), (void *) ((intptr_t)fftbins[i]));
+		_freqBinsChoice->Append(wxString::Format(wxT("%d"), fftbins[i] / 2), (void *) ((intptr_t)fftbins[i]));
 	}
 
 	specCtrlSizer->Add(_freqBinsChoice, 0, wxALL|wxALIGN_CENTER, 2);
 
-	stattext =  new wxStaticText(fftpanel, -1, "Overlap");
+	stattext =  new wxStaticText(fftpanel, -1, wxT("Overlap"));
 	specCtrlSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
 	_overlapChoice = new wxChoice(fftpanel, FT_OverlapChoiceId);
-	_overlapChoice->Append("0 %", (void *) 1);
-	_overlapChoice->Append("50 %", (void *) 2);
-	_overlapChoice->Append("75 %", (void *) 4);
-	_overlapChoice->Append("87.5 %", (void *) 8);
-	_overlapChoice->Append("93.75 %", (void *) 16);
+	_overlapChoice->Append(wxT("0 %"), (void *) 1);
+	_overlapChoice->Append(wxT("50 %"), (void *) 2);
+	_overlapChoice->Append(wxT("75 %"), (void *) 4);
+	_overlapChoice->Append(wxT("87.5 %"), (void *) 8);
+	_overlapChoice->Append(wxT("93.75 %"), (void *) 16);
 	_overlapChoice->SetSelection(2); // hack
 	specCtrlSizer->Add(_overlapChoice, 0, wxALL|wxALIGN_CENTER, 2);
 
-	stattext =  new wxStaticText(fftpanel, -1, "Window");
+	stattext =  new wxStaticText(fftpanel, -1, wxT("Window"));
 	specCtrlSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
 	_windowingChoice = new wxChoice(fftpanel, FT_WindowingChoiceId, wxDefaultPosition, wxSize(100,-1));
 	const char ** winstrs = FTspectralEngine::getWindowStrings();
 	for (int i=0; i < FTspectralEngine::getWindowStringsCount(); i++) {
+#if wxUSE_WCHAR_T
+	        wchar_t wstr[1024]; // FIXME: no idea how good this size is
+                wxMB2WC (wstr, winstrs[i], 1024);
+		_windowingChoice->Append(wstr);
+#else
 		_windowingChoice->Append(winstrs[i]);
+#endif
 	}
 	_windowingChoice->SetSelection(0);
 	
@@ -380,24 +387,24 @@ void FTmainwin::buildGui()
 	specCtrlSizer->Fit( fftpanel );  
 	fftpanel->SetSizer(specCtrlSizer);
 
-	ctrlbook->AddPage ( (wxNotebookPage *) fftpanel, "FFT");
+	ctrlbook->AddPage ( (wxNotebookPage *) fftpanel, wxT("FFT"));
 
 
 	// plot page
 	wxPanel * plotpanel = new wxPanel (ctrlbook, -1);
 	wxBoxSizer *plotSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	stattext =  new wxStaticText(plotpanel, -1, "Speed");
+	stattext =  new wxStaticText(plotpanel, -1, wxT("Speed"));
 	plotSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
 	_plotSpeedChoice = new wxChoice(plotpanel, FT_PlotSpeedChoiceId, wxDefaultPosition, wxSize(100,-1));
-	_plotSpeedChoice->Append("Turtle", (void *) FTspectralEngine::SPEED_TURTLE);
-	_plotSpeedChoice->Append("Slow", (void *) FTspectralEngine::SPEED_SLOW);
-	_plotSpeedChoice->Append("Medium", (void *) FTspectralEngine::SPEED_MED);
-	_plotSpeedChoice->Append("Fast", (void *) FTspectralEngine::SPEED_FAST);
+	_plotSpeedChoice->Append(wxT("Turtle"), (void *) FTspectralEngine::SPEED_TURTLE);
+	_plotSpeedChoice->Append(wxT("Slow"), (void *) FTspectralEngine::SPEED_SLOW);
+	_plotSpeedChoice->Append(wxT("Medium"), (void *) FTspectralEngine::SPEED_MED);
+	_plotSpeedChoice->Append(wxT("Fast"), (void *) FTspectralEngine::SPEED_FAST);
 	//_plotSpeedChoice->SetSelection(2); // hack
 	plotSizer->Add(_plotSpeedChoice, 0, wxALL|wxALIGN_CENTER, 2);
 
-	_superSmoothCheck = new wxCheckBox (plotpanel, FT_PlotSuperSmoothId, "Extra smooth but expensive"); 
+	_superSmoothCheck = new wxCheckBox (plotpanel, FT_PlotSuperSmoothId, wxT("Extra smooth but expensive")); 
 	_superSmoothCheck->SetValue(false);
 	plotSizer->Add (_superSmoothCheck, 0, wxALL|wxALIGN_CENTER, 2);
 	
@@ -405,56 +412,56 @@ void FTmainwin::buildGui()
 	plotSizer->Fit( plotpanel );  
 	plotpanel->SetSizer(plotSizer);
 
-	ctrlbook->AddPage ( (wxNotebookPage *) plotpanel, "Plots" , false);
+	ctrlbook->AddPage ( (wxNotebookPage *) plotpanel, wxT("Plots"), false);
 	
 
 	// IO page
 	wxPanel * iopanel = new wxPanel (ctrlbook, -1);
 	wxBoxSizer *ioSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	stattext =  new wxStaticText(iopanel, -1, "JACK-Name");
+	stattext =  new wxStaticText(iopanel, -1, wxT("JACK-Name"));
 	ioSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
-	_ioNameText = new wxTextCtrl (iopanel, FT_IOnameText, "", wxDefaultPosition, wxSize(150,-1));
+	_ioNameText = new wxTextCtrl (iopanel, FT_IOnameText, wxT(""), wxDefaultPosition, wxSize(150,-1));
 	ioSizer->Add (_ioNameText, 0, wxALL|wxALIGN_CENTER, 2);
 	
-	wxButton * reconnButton = new wxButton(iopanel, FT_IOreconnectButton, "Reconnect As");
+	wxButton * reconnButton = new wxButton(iopanel, FT_IOreconnectButton, wxT("Reconnect As"));
 	ioSizer->Add (reconnButton, 0, wxALL|wxALIGN_CENTER, 2);
 
-	wxButton * disconnButton = new wxButton(iopanel, FT_IOdisconnectButton, "Disconnect");
+	wxButton * disconnButton = new wxButton(iopanel, FT_IOdisconnectButton, wxT("Disconnect"));
 	ioSizer->Add (disconnButton, 0, wxALL|wxALIGN_CENTER, 2);
 
 	iopanel->SetAutoLayout(TRUE);
 	ioSizer->Fit( iopanel );  
 	iopanel->SetSizer(ioSizer);
 	
-	ctrlbook->AddPage ( (wxNotebookPage *) iopanel, "I/O" , false);
+	ctrlbook->AddPage ( (wxNotebookPage *) iopanel, wxT("I/O"), false);
 	
 
 	// time/memory page
 	wxPanel * timepanel = new wxPanel (ctrlbook, -1);
 	wxBoxSizer *timeSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	stattext =  new wxStaticText(timepanel, -1, "Max Delay Time");
+	stattext =  new wxStaticText(timepanel, -1, wxT("Max Delay Time"));
 	timeSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
 	_maxDelayChoice = new wxChoice(timepanel, FT_MaxDelayChoiceId, wxDefaultPosition, wxSize(100,-1));
-	_maxDelayChoice->Append("0.5 sec");
+	_maxDelayChoice->Append(wxT("0.5 sec"));
 	_delayList.push_back (0.5);
-	_maxDelayChoice->Append("1 sec");
+	_maxDelayChoice->Append(wxT("1 sec"));
 	_delayList.push_back (1.0);
-	_maxDelayChoice->Append("2.5 sec");
+	_maxDelayChoice->Append(wxT("2.5 sec"));
 	_delayList.push_back (2.5);
-	_maxDelayChoice->Append("5 sec");
+	_maxDelayChoice->Append(wxT("5 sec"));
 	_delayList.push_back (5.0);
-	_maxDelayChoice->Append("10 sec");
+	_maxDelayChoice->Append(wxT("10 sec"));
 	_delayList.push_back (10.0);
-	_maxDelayChoice->Append("20 sec");
+	_maxDelayChoice->Append(wxT("20 sec"));
 	_delayList.push_back (20.0);
 	timeSizer->Add(_maxDelayChoice, 0, wxALL|wxALIGN_CENTER, 2);
 
-	stattext =  new wxStaticText(timepanel, -1, "Tempo");
+	stattext =  new wxStaticText(timepanel, -1, wxT("Tempo"));
 	timeSizer->Add ( stattext, 0, wxALIGN_CENTER|wxLEFT, 4);
 	
-	_tempoSpinCtrl = new wxSpinCtrl(timepanel, FT_TempoSpinId, "120", wxDefaultPosition, wxSize(65,-1),
+	_tempoSpinCtrl = new wxSpinCtrl(timepanel, FT_TempoSpinId, wxT("120"), wxDefaultPosition, wxSize(65,-1),
 						  wxSP_ARROW_KEYS, 1, 300, 120);
 	timeSizer->Add(_tempoSpinCtrl, 0, wxALL|wxALIGN_CENTER, 2);
 	
@@ -463,7 +470,7 @@ void FTmainwin::buildGui()
 	timeSizer->Fit( timepanel );  
 	timepanel->SetSizer(timeSizer);
 
-	ctrlbook->AddPage ( (wxNotebookPage *) timepanel, "Time" , false);
+	ctrlbook->AddPage ( (wxNotebookPage *) timepanel, wxT("Time") , false);
 
 	wxBoxSizer *booksizer = new wxBoxSizer (wxHORIZONTAL);
 	
@@ -505,18 +512,18 @@ void FTmainwin::buildGui()
 
 
 	// create master link and bypass buttons
-	_inspecLabelButton = new wxButton(_inspecPanel, FT_InSpecLabelId, "In Spectra",
+	_inspecLabelButton = new wxButton(_inspecPanel, FT_InSpecLabelId, wxT("In Spectra"),
  					  wxDefaultPosition, wxSize(_labwidth,_bheight));
 	_inspecLabelButton->SetFont(_titleFont);
-	_inspecLabelButton->SetToolTip("Hide In Spectra");
+	_inspecLabelButton->SetToolTip(wxT("Hide In Spectra"));
 
 	wxLayoutConstraints * constr;
 	
 	// create alts
-	_inspecLabelButtonAlt = new wxButton(_rowPanel, FT_InSpecLabelId, "In Spectra",
+	_inspecLabelButtonAlt = new wxButton(_rowPanel, FT_InSpecLabelId, wxT("In Spectra"),
  					  wxDefaultPosition, wxSize(_labwidth,_bheight));
 	_inspecLabelButtonAlt->SetFont(_titleAltFont);
-	_inspecLabelButtonAlt->SetToolTip("Show In Spectra");
+	_inspecLabelButtonAlt->SetToolTip(wxT("Show In Spectra"));
 	_inspecLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -526,16 +533,16 @@ void FTmainwin::buildGui()
 	_inspecLabelButtonAlt->SetConstraints(constr);
 
 
-	_bypassAllButton  = new  wxButton(this, FT_BypassId, "Bypass All",
+	_bypassAllButton  = new  wxButton(this, FT_BypassId, wxT("Bypass All"),
 					     wxDefaultPosition, wxSize(_labwidth,_bheight+3));
 	_bypassAllButton->SetFont(_buttFont);
 
-	_muteAllButton  = new  wxButton(this, FT_MuteId, "Mute All",
+	_muteAllButton  = new  wxButton(this, FT_MuteId, wxT("Mute All"),
 					     wxDefaultPosition, wxSize(_labwidth,_bheight+3));
 	_muteAllButton->SetFont(_buttFont);
 
 
-	_linkMixButton  = new  wxButton(this, FT_MixLinkedButton, "Link Mix",
+	_linkMixButton  = new  wxButton(this, FT_MixLinkedButton, wxT("Link Mix"),
 					     wxDefaultPosition, wxSize(_labwidth,_bheight+3));
 	_linkMixButton->SetFont(_buttFont);
 
@@ -543,27 +550,27 @@ void FTmainwin::buildGui()
 
 	_pathCountChoice = new wxChoice(this, FT_PathCountChoice, wxDefaultPosition, wxSize(_labwidth,-1));
 	for (int i=0; i < FT_MAXPATHS; i++) {
-		_pathCountChoice->Append(wxString::Format("%d chan", i+1), (void *) ((intptr_t)(i+1)));
+		_pathCountChoice->Append(wxString::Format(wxT("%d chan"), i+1), (void *) ((intptr_t)(i+1)));
 	}
-	_pathCountChoice->SetStringSelection(wxString::Format("%d chan", _startpaths));
+	_pathCountChoice->SetStringSelection(wxString::Format(wxT("%d chan"), _startpaths));
 	
 		
 
 	// spec types buttons
 	
-	_inspecSpecTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, "SP",
+	_inspecSpecTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, wxT("SP"),
 					     wxDefaultPosition, wxSize(_bwidth,_bheight));
 	_inspecSpecTypeAllButton->SetFont(_buttFont);
-	_inspecSpecTypeAllButton->SetToolTip ("Spectrogram Plot");
+	_inspecSpecTypeAllButton->SetToolTip (wxT("Spectrogram Plot"));
 
-	_inspecPlotSolidTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, "FP",
+	_inspecPlotSolidTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, wxT("FP"),
 					     wxDefaultPosition, wxSize(_bwidth,_bheight));
 	_inspecPlotSolidTypeAllButton->SetFont(_buttFont);
-	_inspecPlotSolidTypeAllButton->SetToolTip ("Filled Plot");
-	_inspecPlotLineTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, "LP",
+	_inspecPlotSolidTypeAllButton->SetToolTip (wxT("Filled Plot"));
+	_inspecPlotLineTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, wxT("LP"),
 					     wxDefaultPosition, wxSize(_bwidth,_bheight));
 	_inspecPlotLineTypeAllButton->SetFont(_buttFont);
-	_inspecPlotLineTypeAllButton->SetToolTip ("Line Plot");
+	_inspecPlotLineTypeAllButton->SetToolTip (wxT("Line Plot"));
 
 	
 
@@ -649,17 +656,17 @@ void FTmainwin::buildGui()
 	
 	
 
-	_outspecLabelButton = new wxButton(_outspecPanel, FT_OutSpecLabelId, "Out Spectra",
+	_outspecLabelButton = new wxButton(_outspecPanel, FT_OutSpecLabelId, wxT("Out Spectra"),
 						  wxDefaultPosition, wxSize(_labwidth,_bheight));
 	_outspecLabelButton->SetFont(_titleFont);
-	_outspecLabelButton->SetToolTip("Hide Out Spectra");
+	_outspecLabelButton->SetToolTip(wxT("Hide Out Spectra"));
 
 
 	
-	_outspecLabelButtonAlt = new wxButton(_rowPanel, FT_OutSpecLabelId, "Out Spectra",
+	_outspecLabelButtonAlt = new wxButton(_rowPanel, FT_OutSpecLabelId, wxT("Out Spectra"),
 						  wxDefaultPosition, wxSize(_labwidth,_bheight));
 	_outspecLabelButtonAlt->SetFont(_titleAltFont);
-	_outspecLabelButtonAlt->SetToolTip("Show Out Spectra");
+	_outspecLabelButtonAlt->SetToolTip(wxT("Show Out Spectra"));
 	_outspecLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -672,18 +679,18 @@ void FTmainwin::buildGui()
 
 	// @@@@@@@
 	
-	_outspecSpecTypeAllButton = new  wxButton(_outspecPanel, FT_OutSpecTypeId, "SP",
+	_outspecSpecTypeAllButton = new  wxButton(_outspecPanel, FT_OutSpecTypeId, wxT("SP"),
 					     wxDefaultPosition, wxSize(_bwidth,_bheight));
 	_outspecSpecTypeAllButton->SetFont(_buttFont);
-	_outspecSpecTypeAllButton->SetToolTip ("Spectrogram Plot");
-	_outspecPlotSolidTypeAllButton = new  wxButton(_outspecPanel, FT_OutSpecTypeId, "FP",
+	_outspecSpecTypeAllButton->SetToolTip (wxT("Spectrogram Plot"));
+	_outspecPlotSolidTypeAllButton = new  wxButton(_outspecPanel, FT_OutSpecTypeId, wxT("FP"),
 					     wxDefaultPosition, wxSize(_bwidth,_bheight));
 	_outspecPlotSolidTypeAllButton->SetFont(_buttFont);
-	_outspecPlotSolidTypeAllButton->SetToolTip ("Filled Plot");
-	_outspecPlotLineTypeAllButton = new  wxButton(_outspecPanel, FT_OutSpecTypeId, "LP",
+	_outspecPlotSolidTypeAllButton->SetToolTip (wxT("Filled Plot"));
+	_outspecPlotLineTypeAllButton = new  wxButton(_outspecPanel, FT_OutSpecTypeId, wxT("LP"),
 					     wxDefaultPosition, wxSize(_bwidth,_bheight));
 	_outspecPlotLineTypeAllButton->SetFont(_buttFont);
-	_outspecPlotLineTypeAllButton->SetToolTip ("Line Plot");
+	_outspecPlotLineTypeAllButton->SetToolTip (wxT("Line Plot"));
 
 
 		
@@ -734,7 +741,7 @@ void FTmainwin::buildGui()
 		FTspectralEngine * engine = _processPath[i]->getSpectralEngine();
 
 		// set default freqbin
-		_freqBinsChoice->SetStringSelection(wxString::Format("%d", engine->getFFTsize()/2));
+		_freqBinsChoice->SetStringSelection(wxString::Format(wxT("%d"), engine->getFFTsize()/2));
 
 		engine->setUpdateToken (_updateTokens[i]);
 		
@@ -820,17 +827,17 @@ void FTmainwin::pushProcRow(FTspectrumModifier *specmod)
 	string name = specmod->getName();
 
 	// main label button
-	wxButton *labbutt = new FTtitleButton(this, false, rpanel, FT_LabelBase, name.c_str(),
+	wxButton *labbutt = new FTtitleButton(this, false, rpanel, FT_LabelBase, wxString::FromAscii (name.c_str()),
 					 wxDefaultPosition, wxSize(_labwidth,_bheight));
 	labbutt->SetFont(_titleFont);
-	labbutt->SetToolTip(wxString::Format("Hide %s\nRight-click for menu", name.c_str()));
+	labbutt->SetToolTip(wxString::Format(wxT("Hide %s\nRight-click for menu"), name.c_str()));
 	_labelButtons.push_back (labbutt);
 			
 	// alt label button
-	wxButton * altlab  = new FTtitleButton(this, true, _rowPanel, FT_LabelBase, name.c_str(),
+	wxButton * altlab  = new FTtitleButton(this, true, _rowPanel, FT_LabelBase, wxString::FromAscii (name.c_str()),
 					  wxDefaultPosition, wxSize(_labwidth,_bheight));
 	altlab->SetFont(_titleAltFont);
-	altlab->SetToolTip(wxString::Format("Show %s\nRight-click for menu", name.c_str()));
+	altlab->SetToolTip(wxString::Format(wxT("Show %s\nRight-click for menu"), name.c_str()));
 	altlab->Show(false);
 	wxLayoutConstraints * constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -841,33 +848,33 @@ void FTmainwin::pushProcRow(FTspectrumModifier *specmod)
 	_altLabelButtons.push_back (altlab);
 			
 	// link all button
-	wxButton * linkallbutt = new wxButton(rpanel, FT_LinkBase, "LA",
+	wxButton * linkallbutt = new wxButton(rpanel, FT_LinkBase, wxT("LA"),
 					      wxDefaultPosition, wxSize(_bwidth,_bheight));
 	linkallbutt->SetFont(_buttFont);
-	linkallbutt->SetToolTip ("Link All");
+	linkallbutt->SetToolTip (wxT("Link All"));
 	_linkAllButtons.push_back (linkallbutt);
 
 	// bypass all button
-	wxButton * bypallbutt = new wxButton(rpanel, FT_BypassBase, "BA",
+	wxButton * bypallbutt = new wxButton(rpanel, FT_BypassBase, wxT("BA"),
 					     wxDefaultPosition, wxSize(_bwidth,_bheight));
 	bypallbutt->SetFont(_buttFont);
-	bypallbutt->SetToolTip ("Bypass All");
+	bypallbutt->SetToolTip (wxT("Bypass All"));
 	_bypassAllButtons.push_back (bypallbutt);
 
 	// Grid buttons
 			
-	wxButton * gridbutt = new FTgridButton(this, rpanel, FT_GridBase, "G",
+	wxButton * gridbutt = new FTgridButton(this, rpanel, FT_GridBase, wxT("G"),
 					       wxDefaultPosition, wxSize(_bwidth,_bheight));
 	gridbutt->SetFont(_buttFont);
-	gridbutt->SetToolTip ("Toggle Grid\nRight-click to Adjust");
+	gridbutt->SetToolTip (wxT("Toggle Grid\nRight-click to Adjust"));
 	_gridButtons.push_back (gridbutt);
 
 	// GridSnap buttons
 			
-	wxButton * gridsnbutt = new wxButton(rpanel, FT_GridSnapBase, "GS",
+	wxButton * gridsnbutt = new wxButton(rpanel, FT_GridSnapBase, wxT("GS"),
 					     wxDefaultPosition, wxSize(_bwidth,_bheight));
 	gridsnbutt->SetFont(_buttFont);
-	gridsnbutt->SetToolTip ("Toggle Grid Snap");
+	gridsnbutt->SetToolTip (wxT("Toggle Grid Snap"));
 	_gridSnapButtons.push_back (gridsnbutt);
 
 			
@@ -1124,15 +1131,15 @@ void FTmainwin::createPathStuff(int i)
 			
 					
 			buttsizer = new wxBoxSizer(wxVERTICAL);
-			buttsizer->Add ( _bypassButtons[rowcnt][i] = new wxButton(rowpanels[i], FT_BypassBase, "B",
+			buttsizer->Add ( _bypassButtons[rowcnt][i] = new wxButton(rowpanels[i], FT_BypassBase, wxT("B"),
 										  wxDefaultPosition, wxSize(_bwidth,-1)), 1, 0,0);
 			_bypassButtons[rowcnt][i]->SetFont(_buttFont);
-			_bypassButtons[rowcnt][i]->SetToolTip("Toggle Bypass");		
-			buttsizer->Add ( _linkButtons[rowcnt][i] = new wxButton(rowpanels[i], FT_LinkBase, "L",
+			_bypassButtons[rowcnt][i]->SetToolTip(wxT("Toggle Bypass"));		
+			buttsizer->Add ( _linkButtons[rowcnt][i] = new wxButton(rowpanels[i], FT_LinkBase, wxT("L"),
 										wxDefaultPosition, wxSize(_bwidth,-1)), 1, 0,0);
 
 			_linkButtons[rowcnt][i]->SetFont(_buttFont);
-			_linkButtons[rowcnt][i]->SetToolTip("Link");		
+			_linkButtons[rowcnt][i]->SetToolTip(wxT("Link"));		
 
 			tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 			tmpsizer->Add ( buttsizer, 0, wxALL|wxEXPAND, 0);
@@ -1165,27 +1172,27 @@ void FTmainwin::createPathStuff(int i)
 	
 	// I/O buttons
 	
-	_inputButton[i] = new wxButton(_upperPanels[i], (int) FT_InputButtonId, "No Input", wxDefaultPosition, wxSize(-1,-1));
+	_inputButton[i] = new wxButton(_upperPanels[i], (int) FT_InputButtonId, wxT("No Input"), wxDefaultPosition, wxSize(-1,-1));
 	
-	_outputButton[i] = new wxButton(_lowerPanels[i], (int) FT_OutputButtonId, "No Output", wxDefaultPosition, wxSize(-1,-1));
+	_outputButton[i] = new wxButton(_lowerPanels[i], (int) FT_OutputButtonId, wxT("No Output"), wxDefaultPosition, wxSize(-1,-1));
 	
-	_bypassButton[i] = new wxButton(_upperPanels[i], (int) FT_BypassId, "Bypass", wxDefaultPosition, wxSize(-1,-1));
-	_muteButton[i] = new wxButton(_lowerPanels[i], (int) FT_MuteId, "Mute", wxDefaultPosition, wxSize(-1,-1));
+	_bypassButton[i] = new wxButton(_upperPanels[i], (int) FT_BypassId, wxT("Bypass"), wxDefaultPosition, wxSize(-1,-1));
+	_muteButton[i] = new wxButton(_lowerPanels[i], (int) FT_MuteId, wxT("Mute"), wxDefaultPosition, wxSize(-1,-1));
 	
 	// input area
 	{
-		wxStaticBox *box = new wxStaticBox(_upperPanels[i], -1, wxString::Format("Input %d", i+1));
+		wxStaticBox *box = new wxStaticBox(_upperPanels[i], -1, wxString::Format(wxT("Input %d"), i+1));
 		tmpsizer = new wxStaticBoxSizer (box, wxVERTICAL);
 		tmpsizer->Add (_inputButton[i], 0, wxBOTTOM|wxEXPAND, 1);
 		
 		tmpsizer2 = new wxBoxSizer (wxHORIZONTAL);
 		tmpsizer2->Add (_bypassButton[i], 1, wxRIGHT, 3);
 		
-		stattext = new wxStaticText(_upperPanels[i], -1, "Gain (dB)", wxDefaultPosition, wxDefaultSize);
+		stattext = new wxStaticText(_upperPanels[i], -1, wxT("Gain (dB)"), wxDefaultPosition, wxDefaultSize);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 0);
 		//_gainSlider[i] = new wxSlider(this, FT_GainSlider, 0, -70, 10);
 		//tmpsizer2->Add (_gainSlider[i], 1, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
-		_gainSpinCtrl[i] = new wxSpinCtrl(_upperPanels[i], FT_GainSpin, "0", wxDefaultPosition, wxSize(65,-1),
+		_gainSpinCtrl[i] = new wxSpinCtrl(_upperPanels[i], FT_GainSpin, wxT("0"), wxDefaultPosition, wxSize(65,-1),
 						  wxSP_ARROW_KEYS, -70, 10, 0);
 		tmpsizer2->Add (_gainSpinCtrl[i], 0, wxLEFT, 4);
 		
@@ -1201,21 +1208,21 @@ void FTmainwin::createPathStuff(int i)
 	// input spec
 	{		
 		buttsizer = new wxBoxSizer(wxVERTICAL);
-	        _inspecSpecTypeButton[i] = new wxButton(_inspecPanels[i], FT_InSpecTypeId, "SP", wxDefaultPosition, wxSize(_bwidth,-1));
+	        _inspecSpecTypeButton[i] = new wxButton(_inspecPanels[i], FT_InSpecTypeId, wxT("SP"), wxDefaultPosition, wxSize(_bwidth,-1));
 		_inspecSpecTypeButton[i]->SetFont(_buttFont);
-		_inspecSpecTypeButton[i]->SetToolTip("Spectrogram Plot");
+		_inspecSpecTypeButton[i]->SetToolTip(wxT("Spectrogram Plot"));
 		buttsizer->Add ( _inspecSpecTypeButton[i], 1, 0,0);
 
-	        _inspecPlotLineTypeButton[i] = new wxButton(_inspecPanels[i], FT_InSpecTypeId, "LP",
+	        _inspecPlotLineTypeButton[i] = new wxButton(_inspecPanels[i], FT_InSpecTypeId, wxT("LP"),
 							    wxDefaultPosition, wxSize(_bwidth,-1));
 		_inspecPlotLineTypeButton[i]->SetFont(_buttFont);
-		_inspecPlotLineTypeButton[i]->SetToolTip("Line Plot");
+		_inspecPlotLineTypeButton[i]->SetToolTip(wxT("Line Plot"));
 		buttsizer->Add ( _inspecPlotLineTypeButton[i], 1, 0,0);
 
-	        _inspecPlotSolidTypeButton[i] = new wxButton(_inspecPanels[i], FT_InSpecTypeId, "FP",
+	        _inspecPlotSolidTypeButton[i] = new wxButton(_inspecPanels[i], FT_InSpecTypeId, wxT("FP"),
 							     wxDefaultPosition, wxSize(_bwidth,-1));
 		_inspecPlotSolidTypeButton[i]->SetFont(_buttFont);
-		_inspecPlotSolidTypeButton[i]->SetToolTip("Filled Plot");
+		_inspecPlotSolidTypeButton[i]->SetToolTip(wxT("Filled Plot"));
 		buttsizer->Add ( _inspecPlotSolidTypeButton[i], 1, 0,0);
 
 		tmpsizer = new wxBoxSizer(wxHORIZONTAL);
@@ -1234,19 +1241,19 @@ void FTmainwin::createPathStuff(int i)
 	// output spec
 	{				
 		buttsizer = new wxBoxSizer(wxVERTICAL);
-		_outspecSpecTypeButton[i] = new wxButton(_outspecPanels[i], FT_OutSpecTypeId, "SP", wxDefaultPosition, wxSize(_bwidth,-1));
+		_outspecSpecTypeButton[i] = new wxButton(_outspecPanels[i], FT_OutSpecTypeId, wxT("SP"), wxDefaultPosition, wxSize(_bwidth,-1));
 		_outspecSpecTypeButton[i]->SetFont(_buttFont);
-		_outspecSpecTypeButton[i]->SetToolTip("Spectrogram Plot");
+		_outspecSpecTypeButton[i]->SetToolTip(wxT("Spectrogram Plot"));
 		buttsizer->Add ( _outspecSpecTypeButton[i], 1, 0,0);
-		_outspecPlotLineTypeButton[i] = new wxButton(_outspecPanels[i], FT_OutSpecTypeId, "LP",
+		_outspecPlotLineTypeButton[i] = new wxButton(_outspecPanels[i], FT_OutSpecTypeId, wxT("LP"),
 							 wxDefaultPosition, wxSize(_bwidth,-1));
 		_outspecPlotLineTypeButton[i]->SetFont(_buttFont);
-		_outspecPlotLineTypeButton[i]->SetToolTip("Line Plot");
+		_outspecPlotLineTypeButton[i]->SetToolTip(wxT("Line Plot"));
 		buttsizer->Add ( _outspecPlotLineTypeButton[i], 1, 0,0);
-		_outspecPlotSolidTypeButton[i] = new wxButton(_outspecPanels[i], FT_OutSpecTypeId, "FP",
+		_outspecPlotSolidTypeButton[i] = new wxButton(_outspecPanels[i], FT_OutSpecTypeId, wxT("FP"),
 							      wxDefaultPosition, wxSize(_bwidth,-1));
 		_outspecPlotSolidTypeButton[i]->SetFont(_buttFont);
-		_outspecPlotSolidTypeButton[i]->SetToolTip("Filled Plot");
+		_outspecPlotSolidTypeButton[i]->SetToolTip(wxT("Filled Plot"));
 		buttsizer->Add ( _outspecPlotSolidTypeButton[i], 1, 0,0);
 
 		tmpsizer = new wxBoxSizer(wxHORIZONTAL);
@@ -1263,16 +1270,16 @@ void FTmainwin::createPathStuff(int i)
 
 	// output stuff
 	{		
-		wxStaticBox *box = new wxStaticBox(_lowerPanels[i], -1, wxString::Format("Output %d", i+1));
+		wxStaticBox *box = new wxStaticBox(_lowerPanels[i], -1, wxString::Format(wxT("Output %d"), i+1));
 		tmpsizer = new wxStaticBoxSizer (box, wxVERTICAL);
 
 		tmpsizer2 = new wxBoxSizer (wxHORIZONTAL);
 		tmpsizer2->Add (_muteButton[i], 1, wxRIGHT, 5);
-		stattext = new wxStaticText(_lowerPanels[i], -1, "Dry", wxDefaultPosition, wxDefaultSize);
+		stattext = new wxStaticText(_lowerPanels[i], -1, wxT("Dry"), wxDefaultPosition, wxDefaultSize);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 		_mixSlider[i] = new wxSlider(_lowerPanels[i], FT_MixSlider, 1000, 0, 1000);
 		tmpsizer2->Add (_mixSlider[i], 2, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
-		stattext = new wxStaticText(_lowerPanels[i], -1, "Wet", wxDefaultPosition, wxDefaultSize);
+		stattext = new wxStaticText(_lowerPanels[i], -1, wxT("Wet"), wxDefaultPosition, wxDefaultSize);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 
 		tmpsizer->Add (tmpsizer2, 0, wxBOTTOM|wxEXPAND, 1);
@@ -1343,20 +1350,20 @@ void FTmainwin::updateDisplay()
 		// update port button labels
 		portnames = iosup->getConnectedInputPorts(i);
 		if (portnames) {
-			_inputButton[i]->SetLabel (portnames[0]);
+			_inputButton[i]->SetLabel (wxString::FromAscii (portnames[0]));
 			free(portnames);
 		}
 		else {
-			_inputButton[i]->SetLabel ("No Input");
+			_inputButton[i]->SetLabel (wxT("No Input"));
 		}
 		
 		portnames = iosup->getConnectedOutputPorts(i);
 		if (portnames) {
-			_outputButton[i]->SetLabel (portnames[0]);
+			_outputButton[i]->SetLabel (wxString::FromAscii (portnames[0]));
 			free(portnames);
 		}
 		else {
-			_outputButton[i]->SetLabel ("No Output");
+			_outputButton[i]->SetLabel (wxT("No Output"));
 		}
 
 		// update bypass and link buttons
@@ -1512,7 +1519,7 @@ void FTmainwin::updateDisplay()
 		
 	}
 	
-	_ioNameText->SetValue (iosup->getName());
+	_ioNameText->SetValue (wxString::FromAscii (iosup->getName()));
 	
 	
 	// reset timer just in case
@@ -1530,14 +1537,14 @@ void FTmainwin::handleInputButton(wxCommandEvent &event)
 {
    wxObject *source = event.GetEventObject();
 
-   wxString label("No Input");
+   wxString label(wxT("No Input"));
    
    for (int i=0; i < _pathCount; i++) {
 	   if (!_processPath[i]) continue;
 	   
 	   if (source == _inputButton[i]) {
 		   FTportSelectionDialog *dial = new FTportSelectionDialog(this, wxNewId(), i,
-									   FTportSelectionDialog::INPUT, "Input Port Selection");
+									   FTportSelectionDialog::INPUT, wxT("Input Port Selection"));
 		   dial->update();
 		   dial->SetSize(wxSize(190,190));
 		   dial->CentreOnParent();
@@ -1563,14 +1570,14 @@ void FTmainwin::handleOutputButton(wxCommandEvent &event)
 {
    wxObject *source = event.GetEventObject();
 
-   wxString label("No Output");
+   wxString label(wxT("No Output"));
    
    for (int i=0; i < _pathCount; i++) {
 	   if (!_processPath[i]) continue;
 
 	   if (source == _outputButton[i]) {
 		   FTportSelectionDialog *dial = new FTportSelectionDialog(this, wxNewId(), i,
-									   FTportSelectionDialog::OUTPUT, "Output Port Selection");
+									   FTportSelectionDialog::OUTPUT, wxT("Output Port Selection"));
 		   dial->update();
 		   dial->SetSize(wxSize(190,190));
 		   dial->CentreOnParent();
@@ -2292,15 +2299,16 @@ void FTmainwin::handleIOButtons (wxCommandEvent &event)
 
 	if (event.GetId() == FT_IOreconnectButton)
 	{
-		if (! iosup->isInited() || (_ioNameText->GetValue() != iosup->getName()))
+		if (! iosup->isInited() || (_ioNameText->GetValue() != wxString::FromAscii (iosup->getName())))
 		{
-			fprintf(stderr, "Reconnecting as %s...\n", _ioNameText->GetValue().c_str());
+			fprintf(stderr, "Reconnecting as %s...\n", static_cast<const char *>(_ioNameText->GetValue().mb_str()));
 			
 			iosup->stopProcessing();
 			wxThread::Sleep(200);
 			iosup->close();
 			
-			iosup->setName (_ioNameText->GetValue().c_str());
+			iosup->setName (_ioNameText->GetValue().mb_str().data());
+
 			if (iosup->init()) {
 				if (iosup->startProcessing()) {
 					iosup->reinit();
@@ -2367,12 +2375,12 @@ void FTmainwin::rebuildDisplay(bool dolink)
 				
 				// main label button
 				string name = filts[m]->getName();
-				_labelButtons[rowcnt]->SetLabel (name.c_str());
-				_labelButtons[rowcnt]->SetToolTip(wxString::Format("Hide %s", name.c_str()));
+				_labelButtons[rowcnt]->SetLabel (wxString::FromAscii (name.c_str()));
+				_labelButtons[rowcnt]->SetToolTip(wxString::Format(wxT("Hide %s"), name.c_str()));
 
 				// alt label button
-				_altLabelButtons[rowcnt]->SetLabel (name.c_str());
-				_altLabelButtons[rowcnt]->SetToolTip(wxString::Format("Hide %s", name.c_str()));
+				_altLabelButtons[rowcnt]->SetLabel (wxString::FromAscii (name.c_str()));
+				_altLabelButtons[rowcnt]->SetToolTip(wxString::Format(wxT("Hide %s"), name.c_str()));
 
 
 				lastsash = sash;
@@ -2459,7 +2467,7 @@ void FTmainwin::rebuildDisplay(bool dolink)
 
 					// get stuff from extra node
 					if ((prop = extra->property ("height"))) {
-						wxString val(prop->value().c_str());
+						wxString val(wxString::FromAscii (prop->value().c_str()));
 						unsigned long newh;
 						if (val.ToULong (&newh)) {
 							wxLayoutConstraints *cnst = _rowSashes[rowcnt]->GetConstraints();
@@ -2470,7 +2478,7 @@ void FTmainwin::rebuildDisplay(bool dolink)
 					}
 
 					if ((prop = extra->property ("minimized"))) {
-						wxString val(prop->value().c_str());
+						wxString val(wxString::FromAscii (prop->value().c_str()));
 						unsigned long newh;
 						if (val.ToULong (&newh)) {
 							if (newh) {
@@ -2514,15 +2522,15 @@ void FTmainwin::rebuildDisplay(bool dolink)
 				if (newrow) {
 
 					wxBoxSizer * buttsizer = new wxBoxSizer(wxVERTICAL);
-					buttsizer->Add ( _bypassButtons[rowcnt][i] = new wxButton(rowpanels[i], FT_BypassBase, "B",
+					buttsizer->Add ( _bypassButtons[rowcnt][i] = new wxButton(rowpanels[i], FT_BypassBase, wxT("B"),
 												  wxDefaultPosition, wxSize(_bwidth,-1)), 1, 0,0);
 					_bypassButtons[rowcnt][i]->SetFont(_buttFont);
-					_bypassButtons[rowcnt][i]->SetToolTip("Toggle Bypass");		
-					buttsizer->Add ( _linkButtons[rowcnt][i] = new wxButton(rowpanels[i], FT_LinkBase, "L",
+					_bypassButtons[rowcnt][i]->SetToolTip(wxT("Toggle Bypass"));		
+					buttsizer->Add ( _linkButtons[rowcnt][i] = new wxButton(rowpanels[i], FT_LinkBase, wxT("L"),
 												wxDefaultPosition, wxSize(_bwidth,-1)), 1, 0,0);
 					
 					_linkButtons[rowcnt][i]->SetFont(_buttFont);
-					_linkButtons[rowcnt][i]->SetToolTip("Link");		
+					_linkButtons[rowcnt][i]->SetToolTip(wxT("Link"));		
 					
 					wxBoxSizer * tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 					tmpsizer->Add ( buttsizer, 0, wxALL|wxEXPAND, 0);
@@ -2648,8 +2656,8 @@ void FTmainwin::updateAllExtra ()
 
 					XMLNode * extra = filts[m]->getExtraNode();
 				
-					extra->add_property ("height", wxString::Format("%d", cnst->height.GetValue()).c_str());
-					extra->add_property ("minimized", wxString::Format("%d", (int) !sash->IsShown()).c_str());
+					extra->add_property ("height", std::string (wxString::Format(wxT("%d"), cnst->height.GetValue()).mb_str()));
+					extra->add_property ("minimized", std::string (wxString::Format(wxT("%d"), (int) !sash->IsShown()).mb_str()));
 
 					//printf ("updating extra for %s : shown %d\n", filts[m]->getName().c_str(), (int) sash->IsShown());
 					
@@ -2743,7 +2751,7 @@ void FTmainwin::OnProcMod (wxCommandEvent &event)
 	// popup our procmod dsp dialog
 
 	if (!_procmodDialog) {
-		_procmodDialog = new FTprocOrderDialog(this, -1, "DSP Modules");
+		_procmodDialog = new FTprocOrderDialog(this, -1, wxT("DSP Modules"));
 		_procmodDialog->SetSize(372,228);
 	}
 
@@ -2758,7 +2766,7 @@ void FTmainwin::OnPresetBlend (wxCommandEvent &event)
 	// popup our preset blend dialog
 
 	if (!_blendDialog) {
-		_blendDialog = new FTpresetBlendDialog(this, &_configManager, -1, "Preset Blend");
+		_blendDialog = new FTpresetBlendDialog(this, &_configManager, -1, wxT("Preset Blend"));
 		_blendDialog->SetSize(372,228);
 	}
 
@@ -2779,13 +2787,13 @@ void FTmainwin::OnAbout(wxCommandEvent& event)
 {
 	if (event.GetId() == FT_AboutMenu)
 	{
-		wxString msg(wxString::Format("FreqTweak %s brought to you by Jesse Chappell", freqtweak_version));
+		wxString msg(wxString::Format(wxT("FreqTweak %s brought to you by Jesse Chappell"), freqtweak_version));
 		
-		wxMessageBox(msg, "About FreqTweak", wxOK | wxICON_INFORMATION, this);
+		wxMessageBox(msg, wxT("About FreqTweak"), wxOK | wxICON_INFORMATION, this);
 	}
 	else if (event.GetId() == FT_HelpTipsMenu)
 	{
-		FThelpWindow *helpwin = new FThelpWindow(this, -1, "Usage Tips");
+		FThelpWindow *helpwin = new FThelpWindow(this, -1, wxT("Usage Tips"));
 		helpwin->Show(true);
 	}
 }
@@ -2915,7 +2923,7 @@ void FTmainwin::handleStoreButton (wxCommandEvent &event)
 {
 	updateAllExtra();
 	
-	_configManager.storeSettings ( _presetCombo->GetValue().c_str());
+	_configManager.storeSettings (std::string (_presetCombo->GetValue().mb_str()));
 
 	if (_blendDialog && _blendDialog->IsShown()) {
 		_blendDialog->refreshState();
@@ -2935,7 +2943,7 @@ void FTmainwin::loadPreset (const wxString &name, bool uselast)
 {
 	suspendProcessing();
 	
-	bool success = _configManager.loadSettings ( name, _restorePortsCheck->GetValue(), uselast);
+	bool success = _configManager.loadSettings (std::string (name.mb_str()), _restorePortsCheck->GetValue(), uselast);
 
 	if (success) {
 		_presetCombo->SetValue(name);
@@ -2950,7 +2958,7 @@ void FTmainwin::loadPreset (const wxString &name, bool uselast)
 		}
 
 		if (_blendDialog && _blendDialog->IsShown()) {
-			_blendDialog->refreshState(name.c_str(), true, "", true);
+			_blendDialog->refreshState(name, true, wxT(""), true);
 		}
 		
 	}
@@ -2967,11 +2975,11 @@ void FTmainwin::rebuildPresetCombo()
 	wxString selected = _presetCombo->GetValue();
 	
 	_presetCombo->Clear();
-	_presetCombo->Append("");
+	_presetCombo->Append(wxT(""));
 
 	for (list<string>::iterator name=namelist.begin(); name != namelist.end(); ++name)
 	{
-		_presetCombo->Append(wxString((*name).c_str()));
+		_presetCombo->Append(wxString::FromAscii (name->c_str()));
 	}
 
 	if ( _presetCombo->FindString(selected) >= 0) {
@@ -3042,9 +3050,9 @@ FTlinkMenu::FTlinkMenu (wxWindow * parent, FTmainwin *win, FTspectralEngine *spe
 		
 		tempfilt =  tempengine->getProcessorModule(procmodnum)->getFilter(filtnum);
 		if (linkedto == tempfilt || thisfilt->isLinkedFrom(tempfilt)) {
-			item = new wxMenuItem(this, itemid, wxString::Format("* Path %d *", i+1)); 
+			item = new wxMenuItem(this, itemid, wxString::Format(wxT("* Path %d *"), i+1)); 
 		} else {
-			item = new wxMenuItem(this, itemid, wxString::Format("Path %d", i+1)); 
+			item = new wxMenuItem(this, itemid, wxString::Format(wxT("Path %d"), i+1)); 
 		}
 		
 		this->Connect( itemid,  wxEVT_COMMAND_MENU_SELECTED,
@@ -3059,7 +3067,7 @@ FTlinkMenu::FTlinkMenu (wxWindow * parent, FTmainwin *win, FTspectralEngine *spe
 	}
 
 	// add unlink item
-	wxMenuItem * item = new wxMenuItem(this, itemid, "Unlink"); 
+	wxMenuItem * item = new wxMenuItem(this, itemid, wxT("Unlink")); 
 	this->Connect( itemid, wxEVT_COMMAND_MENU_SELECTED,
 		       (wxObjectEventFunction) (wxEventFunction) (wxCommandEventFunction)
 		       &FTlinkMenu::OnUnlinkItem);
@@ -3129,22 +3137,22 @@ FTgridMenu::FTgridMenu (wxWindow * parent, FTmainwin *win, vector<FTactiveBarGra
 {
 	wxMenuItem * item = 0;
 
-	vector<string> gridunits = graphlist[0]->getGridChoiceStrings();
+	vector<wxString> gridunits = graphlist[0]->getGridChoiceStrings();
 	unsigned int gindex = graphlist[0]->getGridChoice();
 	
 	int itemid = 0;
-	for (vector<string>::iterator gridi = gridunits.begin(); gridi != gridunits.end(); ++gridi) {
+	for (vector<wxString>::iterator gridi = gridunits.begin(); gridi != gridunits.end(); ++gridi) {
 		if ( (*gridi).empty()) {
 			// add separator
 			AppendSeparator();
 			itemid++;
 		}
 		else if ((int)gindex == itemid) {
-			item = new wxMenuItem(this, itemid++, wxString::Format("%s *", (*gridi).c_str()));
+			item = new wxMenuItem(this, itemid++, wxString::Format(wxT("%s *"), static_cast<const char *> (gridi->mb_str())));
 			Append (item);
 		}
 		else {
-			item = new wxMenuItem(this, itemid++, (*gridi).c_str() );
+			item = new wxMenuItem(this, itemid++, *gridi);
 			Append (item);
 		}
 	}
@@ -3203,14 +3211,14 @@ FTtitleMenu::FTtitleMenu (wxWindow * parent, FTmainwin *win, bool minimized)
 	wxMenuItem * item = 0;
 
 	if (minimized) {
-		item = new wxMenuItem(this, ID_TitleExpand, "Expand");
+		item = new wxMenuItem(this, ID_TitleExpand, wxT("Expand"));
 	}
 	else {
-		item = new wxMenuItem(this, ID_TitleMinimize, "Minimize");
+		item = new wxMenuItem(this, ID_TitleMinimize, wxT("Minimize"));
 	}
 	Append (item);
 
-	Append (new wxMenuItem(this, ID_TitleRemove, "Remove"));
+	Append (new wxMenuItem(this, ID_TitleRemove, wxT("Remove")));
 	
 }
 

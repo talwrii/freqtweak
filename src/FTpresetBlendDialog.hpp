@@ -45,14 +45,14 @@ class FTpresetBlendDialog
 			    const wxPoint& pos = wxDefaultPosition,
 			    const wxSize& size = wxSize(400,600),
 			    long style = wxDEFAULT_FRAME_STYLE,
-			    const wxString& name = "PresetBlend");
+			    const wxString& name = wxT("PresetBlend"));
 
 	virtual ~FTpresetBlendDialog();
 
 
 	void update();
 
-	void refreshState(const string & defname = string(""), bool usefirst=false,  const string & defsec = string(""), bool usesec=false);
+	void refreshState(const wxString & defname = wxT(""), bool usefirst=false,  const wxString & defsec = wxT(""), bool usesec=false);
 	
   protected:
 

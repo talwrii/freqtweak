@@ -85,11 +85,11 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	  ,_mindb(-50.0), _maxdb(0.0), _absmindb(-60), _absmaxdb(0.0), _absposmindb(0.0f), _absposmaxdb(24.0)
 	,_minsemi(-12.0), _maxsemi(12), _absminsemi(-12), _absmaxsemi(12)
 	, _tmpfilt(0), _toptmpfilt(0)
-	, _barColor0("skyblue"), _barColor1("steelblue")
-	,  _barColor2("seagreen"), _barColor3("darkseagreen")
-	,_barColorDead("gray30")
+	, _barColor0(wxT("skyblue")), _barColor1(wxT("steelblue"))
+	,  _barColor2(wxT("seagreen")), _barColor3(wxT("darkseagreen"))
+	,_barColorDead(wxT("gray30"))
 	,_tipColor(200,200,0)
-	, _penColor("blue"), _gridColor("gray25")
+	, _penColor(wxT("blue")), _gridColor(wxT("gray25"))
 	,_backingMap(0)
 	, _xScaleType(XSCALE_1X), _lastX(0)
 	, _dragging(false), _zooming(false)
@@ -98,12 +98,12 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	, _mouseCaptured(false), _bypassed(false)
 	//, _boundsFont(8, wxDEFAULT, wxNORMAL, wxNORMAL, false, "Helvetica")
 	  , _boundsFont(8, wxDEFAULT, wxNORMAL, wxNORMAL)	
-	, _textColor("white")
+	, _textColor(wxT("white"))
 	, _tempo(120)
 {
 	SetBackgroundColour(*wxBLACK);
 	
-	_mainwin->normalizeFontSize(_boundsFont, 11, "999");
+	_mainwin->normalizeFontSize(_boundsFont, 11, wxT("999"));
 
 	
 	_barBrush0.SetColour(_barColor0);
@@ -118,7 +118,7 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	_barBrushDead.SetColour(_barColorDead);
 	_barBrushDead.SetStyle(wxSOLID);
 
-	_bypassBrush.SetColour(wxColour("gray30"));
+	_bypassBrush.SetColour(wxColour(wxT("gray30")));
 	_bypassBrush.SetStyle(wxSOLID);
 
 	
@@ -135,11 +135,11 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	_gridPen.SetStyle(wxSOLID);
 
 	
-	_xscaleMenu = new wxMenu("");
-	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_1Xscale, "1x Scale"));
-	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_2Xscale, "2x Scale"));
-	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogaXscale, "logA Scale"));
-	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogbXscale, "logB Scale"));
+	_xscaleMenu = new wxMenu(wxT(""));
+	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_1Xscale, wxT("1x Scale")));
+	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_2Xscale, wxT("2x Scale")));
+	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogaXscale, wxT("logA Scale")));
+	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogbXscale, wxT("logB Scale")));
 
 	// grid choices can't be determined until we get a specmod
 }
@@ -304,22 +304,22 @@ void FTactiveBarGraph::makeGridChoices (bool setdefault)
 	{
 	case FTspectrumModifier::GAIN_MODIFIER:
 	case FTspectrumModifier::POS_GAIN_MODIFIER:
-		_gridChoices.push_back ("1 dB");
+		_gridChoices.push_back (wxT("1 dB"));
 		_gridValues.push_back (1.0);
 
-		_gridChoices.push_back ("3 dB");
+		_gridChoices.push_back (wxT("3 dB"));
 		_gridValues.push_back (3.0);
 		
-		_gridChoices.push_back ("6 dB");
+		_gridChoices.push_back (wxT("6 dB"));
 		_gridValues.push_back (6.0);
 
-		_gridChoices.push_back ("12 dB");
+		_gridChoices.push_back (wxT("12 dB"));
 		_gridValues.push_back (12.0);
 
-		_gridChoices.push_back ("18 dB");
+		_gridChoices.push_back (wxT("18 dB"));
 		_gridValues.push_back (18.0);
 
-		_gridChoices.push_back ("24 dB");
+		_gridChoices.push_back (wxT("24 dB"));
 		_gridValues.push_back (24.0);
 
 		if (setdefault) {
@@ -329,22 +329,22 @@ void FTactiveBarGraph::makeGridChoices (bool setdefault)
 		}
 		break;
 	case FTspectrumModifier::SEMITONE_MODIFIER:
-		_gridChoices.push_back ("1/2 semi");
+		_gridChoices.push_back (wxT("1/2 semi"));
 		_gridValues.push_back (0.5);
 
-		_gridChoices.push_back ("1 semi");
+		_gridChoices.push_back (wxT("1 semi"));
 		_gridValues.push_back (1.0);
 		
-		_gridChoices.push_back ("2 semi");
+		_gridChoices.push_back (wxT("2 semi"));
 		_gridValues.push_back (2.0);
 
-		_gridChoices.push_back ("3 semi");
+		_gridChoices.push_back (wxT("3 semi"));
 		_gridValues.push_back (3.0);
 
-		_gridChoices.push_back ("4 semi");
+		_gridChoices.push_back (wxT("4 semi"));
 		_gridValues.push_back (4.0);
 
-		_gridChoices.push_back ("6 semi");
+		_gridChoices.push_back (wxT("6 semi"));
 		_gridValues.push_back (6.0);
 
 		if (setdefault) {
@@ -354,63 +354,63 @@ void FTactiveBarGraph::makeGridChoices (bool setdefault)
 		}
 		break;
 	case FTspectrumModifier::TIME_MODIFIER:
-		_gridChoices.push_back ("1000 msec");
+		_gridChoices.push_back (wxT("1000 msec"));
 		_gridValues.push_back (1.0);
 
-		_gridChoices.push_back ("500 msec");
+		_gridChoices.push_back (wxT("500 msec"));
 		_gridValues.push_back (2.0);
 
-		_gridChoices.push_back ("250 msec");
+		_gridChoices.push_back (wxT("250 msec"));
 		_gridValues.push_back (4.0);
 
-		_gridChoices.push_back ("200 msec");
+		_gridChoices.push_back (wxT("200 msec"));
 		_gridValues.push_back (5.0);
 
-		_gridChoices.push_back ("100 msec");
+		_gridChoices.push_back (wxT("100 msec"));
 		_gridValues.push_back (10.0);
 
-		_gridChoices.push_back ("50 msec");
+		_gridChoices.push_back (wxT("50 msec"));
 		_gridValues.push_back (20.0);
 
-		_gridChoices.push_back ("25 msec");
+		_gridChoices.push_back (wxT("25 msec"));
 		_gridValues.push_back (40.0);
 		
-		_gridChoices.push_back ("10 msec");
+		_gridChoices.push_back (wxT("10 msec"));
 		_gridValues.push_back (100.0);
 
-		_gridChoices.push_back ("5 msec");
+		_gridChoices.push_back (wxT("5 msec"));
 		_gridValues.push_back (200.0);
 
 		_beatscutoff = _gridValues.size();
 		
-		_gridChoices.push_back ("");
+		_gridChoices.push_back (wxT(""));
 		_gridValues.push_back (0.0);
 		
 		
 		//  meter time
 		tscale = 60.0 / _tempo;
-		_gridChoices.push_back ("1/16 beat");
+		_gridChoices.push_back (wxT("1/16 beat"));
 		_gridValues.push_back (tscale * 64.0);
 
-		_gridChoices.push_back ("1/8 beat");
+		_gridChoices.push_back (wxT("1/8 beat"));
 		_gridValues.push_back (tscale * 32.0);
 
-		_gridChoices.push_back ("1/4 beat");
+		_gridChoices.push_back (wxT("1/4 beat"));
 		_gridValues.push_back (tscale * 16.0);
 
-		_gridChoices.push_back ("1/3 beat");
+		_gridChoices.push_back (wxT("1/3 beat"));
 		_gridValues.push_back (tscale * 12.0);
 		
-		_gridChoices.push_back ("1/2 beat");
+		_gridChoices.push_back (wxT("1/2 beat"));
 		_gridValues.push_back (tscale * 8.0);
 
-		_gridChoices.push_back ("1 beat");
+		_gridChoices.push_back (wxT("1 beat"));
 		_gridValues.push_back (tscale * 4.0);
 
-		_gridChoices.push_back ("2 beats");
+		_gridChoices.push_back (wxT("2 beats"));
 		_gridValues.push_back (tscale * 2.0);
 		
-		_gridChoices.push_back ("4 beats");
+		_gridChoices.push_back (wxT("4 beats"));
 		_gridValues.push_back (tscale * 1.0);
 
 		
@@ -422,19 +422,19 @@ void FTactiveBarGraph::makeGridChoices (bool setdefault)
 		break;
 	case FTspectrumModifier::UNIFORM_MODIFIER:
 	case FTspectrumModifier::RATIO_MODIFIER:
-		_gridChoices.push_back ("50 %");
+		_gridChoices.push_back (wxT("50 %"));
 		_gridValues.push_back (2.0);
 
-		_gridChoices.push_back ("25 %");
+		_gridChoices.push_back (wxT("25 %"));
 		_gridValues.push_back (4.0);
 
-		_gridChoices.push_back ("20 %");
+		_gridChoices.push_back (wxT("20 %"));
 		_gridValues.push_back (5.0);
 
-		_gridChoices.push_back ("10 %");
+		_gridChoices.push_back (wxT("10 %"));
 		_gridValues.push_back (10.0);
 
-		_gridChoices.push_back ("5 %");
+		_gridChoices.push_back (wxT("5 %"));
 		_gridValues.push_back (20.0);
 
 		if (setdefault) {
@@ -447,22 +447,22 @@ void FTactiveBarGraph::makeGridChoices (bool setdefault)
 		
 		break;
 	case FTspectrumModifier::DB_MODIFIER:
-		_gridChoices.push_back ("1 dB");
+		_gridChoices.push_back (wxT("1 dB"));
 		_gridValues.push_back (1.0);
 
-		_gridChoices.push_back ("3 dB");
+		_gridChoices.push_back (wxT("3 dB"));
 		_gridValues.push_back (3.0);
 		
-		_gridChoices.push_back ("6 dB");
+		_gridChoices.push_back (wxT("6 dB"));
 		_gridValues.push_back (6.0);
 
-		_gridChoices.push_back ("12 dB");
+		_gridChoices.push_back (wxT("12 dB"));
 		_gridValues.push_back (12.0);
 
-		_gridChoices.push_back ("18 dB");
+		_gridChoices.push_back (wxT("18 dB"));
 		_gridValues.push_back (18.0);
 
-		_gridChoices.push_back ("24 dB");
+		_gridChoices.push_back (wxT("24 dB"));
 		_gridValues.push_back (24.0);
 
 		if (setdefault) {
@@ -1202,12 +1202,12 @@ void FTactiveBarGraph::recalculate()
 	    || _mtype == FTspectrumModifier::POS_GAIN_MODIFIER) {
 	}
 	else if (_mtype == FTspectrumModifier::SEMITONE_MODIFIER) {
-		maxstr = wxString::Format("%.3g", _maxsemi);
-		minstr = wxString::Format("%.3g", _minsemi);
+		maxstr = wxString::Format(wxT("%.3g"), _maxsemi);
+		minstr = wxString::Format(wxT("%.3g"), _minsemi);
 	}
 	else {
-		maxstr = wxString::Format("%.3g", _max);
-		minstr = wxString::Format("%.3g", _min);
+		maxstr = wxString::Format(wxT("%.3g"), _max);
+		minstr = wxString::Format(wxT("%.3g"), _min);
 	}
 
 
@@ -1231,8 +1231,8 @@ void FTactiveBarGraph::recalculate()
 			}
 		}
 
-		_maxstr = wxString::Format("%.1f", _maxdb);
-		_minstr = wxString::Format("%.1f", _mindb);
+		_maxstr = wxString::Format(wxT("%.1f"), _maxdb);
+		_minstr = wxString::Format(wxT("%.1f"), _mindb);
 		
 	}
  	else if (_specMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER)
@@ -1255,8 +1255,8 @@ void FTactiveBarGraph::recalculate()
 			}
 		}
 
-		_maxstr = wxString::Format("%+.1f", _maxsemi);
-		_minstr = wxString::Format("%+.1f", _minsemi);
+		_maxstr = wxString::Format(wxT("%+.1f"), _maxsemi);
+		_minstr = wxString::Format(wxT("%+.1f"), _minsemi);
 
 	}
 	else if (_specMod->getModifierType() == FTspectrumModifier::TIME_MODIFIER) {
@@ -1273,11 +1273,11 @@ void FTactiveBarGraph::recalculate()
 		}
 
 		if (_gridChoiceIndex >= _beatscutoff) {
-			_maxstr = wxString::Format("%.2f", _max * _tempo/60.0);
-			_minstr = wxString::Format("%.2f", _min * _tempo/60.0);
+			_maxstr = wxString::Format(wxT("%.2f"), _max * _tempo/60.0);
+			_minstr = wxString::Format(wxT("%.2f"), _min * _tempo/60.0);
 		} else {
-			_maxstr = wxString::Format("%.0f", _max * 1000);
-			_minstr = wxString::Format("%.0f", _min * 1000);
+			_maxstr = wxString::Format(wxT("%.0f"), _max * 1000);
+			_minstr = wxString::Format(wxT("%.0f"), _min * 1000);
 		}
 		
 	}
@@ -1293,8 +1293,8 @@ void FTactiveBarGraph::recalculate()
 				//printf ("uniform grid: %g  y=%d\n", i, y);
 			}
 		}
-		_maxstr = wxString::Format("%.1f", _max * 100);
-		_minstr = wxString::Format("%.1f", _min * 100);
+		_maxstr = wxString::Format(wxT("%.1f"), _max * 100);
+		_minstr = wxString::Format(wxT("%.1f"), _min * 100);
 
 	}
 	else if (_specMod->getModifierType() == FTspectrumModifier::DB_MODIFIER) {
@@ -1313,13 +1313,13 @@ void FTactiveBarGraph::recalculate()
 			}
 		}
 
-		_maxstr = wxString::Format("%.1f", _max);
-		_minstr = wxString::Format("%.1f", _min);
+		_maxstr = wxString::Format(wxT("%.1f"), _max);
+		_minstr = wxString::Format(wxT("%.1f"), _min);
 	}
 	else if (_specMod->getModifierType() == FTspectrumModifier::RATIO_MODIFIER) {
 
-		_maxstr = wxString::Format("%.0f", _max);
-		_minstr = wxString::Format("%.0f", _min);
+		_maxstr = wxString::Format(wxT("%.0f"), _max);
+		_minstr = wxString::Format(wxT("%.0f"), _min);
 		
 	}
 
@@ -1351,13 +1351,13 @@ void FTactiveBarGraph::writeExtra (FTspectrumModifier * specmod)
 {
 	XMLNode * extra = specmod->getExtraNode();
 
-	extra->add_property ("xscale", wxString::Format("%d", _xScaleType).c_str());
+	extra->add_property ("xscale", static_cast<const char *> (wxString::Format(wxT("%d"), _xScaleType).mb_str()));
 
-	extra->add_property ("gridsnap", wxString::Format("%d", (int) _gridSnapFlag).c_str());
+	extra->add_property ("gridsnap", static_cast<const char *> (wxString::Format(wxT("%d"), (int) _gridSnapFlag).mb_str()));
 
-	extra->add_property ("grid", wxString::Format("%d", (int) _gridChoiceIndex).c_str());
+	extra->add_property ("grid", static_cast<const char *> (wxString::Format(wxT("%d"), (int) _gridChoiceIndex).mb_str()));
 
-	extra->add_property ("gridlines", wxString::Format("%d", (int) _gridFlag).c_str());
+	extra->add_property ("gridlines", static_cast<const char *> (wxString::Format(wxT("%d"), (int) _gridFlag).mb_str()));
 	
 }
 
@@ -1369,28 +1369,28 @@ void FTactiveBarGraph::readExtra (FTspectrumModifier * specmod)
 	wxString strval;
 	
 	if ((prop = extra->property ("xscale"))) {
-		strval = prop->value().c_str();
+		strval = wxString::FromAscii (prop->value().c_str());
 		if (strval.ToLong (&val)) {
 			setXscale ((XScaleType) val, false);
 		}
 	}	
 
 	if ((prop = extra->property ("grid"))) {
-		strval = prop->value().c_str();
+		strval = wxString::FromAscii (prop->value().c_str());
 		if (strval.ToLong (&val)) {
 			setGridChoice ((unsigned int) val, false);
 		}
 	}	
 	
 	if ((prop = extra->property ("gridsnap"))) {
-		strval = prop->value().c_str();
+		strval = wxString::FromAscii (prop->value().c_str());
 		if (strval.ToLong (&val)) {
 			setGridSnap ( val != 0 ? true : false, false);
 		}
 	}	
 
 	if ((prop = extra->property ("gridlines"))) {
-		strval = prop->value().c_str();
+	        strval = wxString::FromAscii (prop->value().c_str());
 		if (strval.ToLong (&val)) {
 			setGridLines ( val != 0 ? true : false, false);
 		}
@@ -1458,7 +1458,7 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 	}
 	else if (event.Leaving()) {
 		SetCursor(*wxSTANDARD_CURSOR);
-		_mainwin->updatePosition("", "");
+		_mainwin->updatePosition(wxT(""), wxT(""));
 	}
 	else if (event.MiddleUp()) {
 		// popup scale menu
@@ -1996,7 +1996,7 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 	float sfreq, efreq;
 	int frombin, tobin;
 	xToFreqRange(pX, sfreq, efreq, frombin, tobin);
-	_freqstr.Printf ("%5d - %5d Hz", (int) sfreq, (int) efreq);
+	_freqstr.Printf (wxT("%5d - %5d Hz"), (int) sfreq, (int) efreq);
 
 	float val, realval;	
 
@@ -2014,20 +2014,20 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 		val = yToDb (pY);
 		if (showreal) {
 			realval = valToDb (data[frombin]);
-			_valstr.Printf ("C: %7.1f dB  @: %7.1f dB", val, realval);
+			_valstr.Printf (wxT("C: %7.1f dB  @: %7.1f dB"), val, realval);
 		}
 		else {
-			_valstr.Printf ("C: %7.1f dB", val);
+			_valstr.Printf (wxT("C: %7.1f dB"), val);
 		}
 	}
 	else if (specmod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER) {
 		val = yToSemi (pY);
 		if (showreal) {
 			realval = valToSemi (data[frombin]);
-			_valstr.Printf ("C: %7.1f semi  @: %7.1f semi", val, realval);
+			_valstr.Printf (wxT("C: %7.1f semi  @: %7.1f semi"), val, realval);
 		}
 		else {
-			_valstr.Printf ("C: %7.1f dB", val);
+			_valstr.Printf (wxT("C: %7.1f dB"), val);
 		}
 	}
 	else if (specmod->getModifierType() == FTspectrumModifier::TIME_MODIFIER) {
@@ -2036,16 +2036,16 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 		if (showreal) {
 			realval = data[frombin];
 			if (_gridChoiceIndex >= _beatscutoff) {
-				_valstr.Printf ("C: %7.3f beats  @: %7.3f beats", val * _tempo/60.0, realval * _tempo/60.0);
+				_valstr.Printf (wxT("C: %7.3f beats  @: %7.3f beats"), val * _tempo/60.0, realval * _tempo/60.0);
 			} else {
-				_valstr.Printf ("C: %7.0f ms  @: %7.0f ms", val * 1000.0, realval * 1000.0);
+				_valstr.Printf (wxT("C: %7.0f ms  @: %7.0f ms"), val * 1000.0, realval * 1000.0);
 			}
 		}
 		else {
 			if (_gridChoiceIndex >= _beatscutoff) {
-				_valstr.Printf ("C: %7.3f beats", val * _tempo/60.0);
+				_valstr.Printf (wxT("C: %7.3f beats"), val * _tempo/60.0);
 			} else {
-				_valstr.Printf ("C: %7.0f ms", val * 1000.0);
+				_valstr.Printf (wxT("C: %7.0f ms"), val * 1000.0);
 			}
 		}
 	}
@@ -2054,20 +2054,20 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 		val = yToVal (pY);
 		if (showreal) {
 			realval = data[frombin];
-			_valstr.Printf ("C: %7.1f %%  @: %7.1f %%", val * 100.0, realval * 100.0);
+			_valstr.Printf (wxT("C: %7.1f %%  @: %7.1f %%"), val * 100.0, realval * 100.0);
 		}
 		else {
-			_valstr.Printf ("C: %7.1f %%", val * 100.0);
+			_valstr.Printf (wxT("C: %7.1f %%"), val * 100.0);
 		}
 	}
 	else if (specmod->getModifierType() == FTspectrumModifier::DB_MODIFIER) {
 		val = yToVal (pY);
 		if (showreal) {
 			realval = data[frombin];
-			_valstr.Printf ("C: %7.2f dB  @: %7.2f dB", val, realval);
+			_valstr.Printf (wxT("C: %7.2f dB  @: %7.2f dB"), val, realval);
 		}
 		else {
-			_valstr.Printf ("C: %8.2f dB", val);
+			_valstr.Printf (wxT("C: %8.2f dB"), val);
 		}
 		
 	}
@@ -2083,20 +2083,20 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 			realval = data[frombin];
 			realval = ((realval - _absmin) / (_absmax-_absmin)) * samprate * 0.5;
 			
-			_valstr.Printf ("C: %5d Hz  @: %5d Hz", (int) val, (int) realval);
+			_valstr.Printf (wxT("C: %5d Hz  @: %5d Hz"), (int) val, (int) realval);
 		}
 		else {
-			_valstr.Printf ("C: %5d Hz", (int)val);
+			_valstr.Printf (wxT("C: %5d Hz"), (int)val);
 		}
 	}
 	else {
 		val = yToVal (pY);
 		if (showreal) {
 			realval = data[frombin];
-			_valstr.Printf ("C: %7.3f  @: %7.3f ", val, realval);
+			_valstr.Printf (wxT("C: %7.3f  @: %7.3f "), val, realval);
 		}
 		else {
-			_valstr.Printf ("C: %8.3f", val);
+			_valstr.Printf (wxT("C: %8.3f"), val);
 		}
 		
 	}

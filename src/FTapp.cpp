@@ -67,16 +67,18 @@ IMPLEMENT_APP(FTapp)
 
 static const wxCmdLineEntryDesc cmdLineDesc[] =
 {
-	{ wxCMD_LINE_SWITCH, "h", "help", "show this help", wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
-	{ wxCMD_LINE_OPTION, "c", "channels",    "# processing channels (1-4) default is 2", wxCMD_LINE_VAL_NUMBER },
-	{ wxCMD_LINE_OPTION, "i", "inputs",
-	  "connect inputs from these jack ports (separate each channel with commas).\n\t\t\t  Defaults to 'alsa_pcm:capture_1,..." },
-	{ wxCMD_LINE_OPTION, "o", "outputs",
-	  "connect outputs to these jack ports (separate each channel with commas).\n\t\t\t  Defaults to 'alsa_pcm:playback_1,...'" },
-	{ wxCMD_LINE_OPTION, "n", "jack-name",    "jack name.   default is freqtweak_1"},
-	{ wxCMD_LINE_OPTION, "D", "tmpdir",    "jack server tmp directory (should match jackd --tmpdir)"},
-	{ wxCMD_LINE_OPTION, "p", "preset",    "load given preset initially"},
-	{ wxCMD_LINE_OPTION, "r", "rc-dir",    "what directory to use for run-control state. default is ~/.freqtweak"},
+	{ wxCMD_LINE_SWITCH, wxT("h"), wxT("help"), wxT("show this help"), wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
+	{ wxCMD_LINE_OPTION, wxT("c"), wxT("channels"), wxT("# processing channels (1-4) default is 2"), wxCMD_LINE_VAL_NUMBER },
+	{ wxCMD_LINE_OPTION, wxT("i"), wxT("inputs"),
+	  wxT("connect inputs from these jack ports (separate each channel with commas).\n")
+	      "\t\t\t  Defaults to 'alsa_pcm:capture_1,..." },
+	{ wxCMD_LINE_OPTION, wxT("o"), wxT("outputs"),
+	  wxT("connect outputs to these jack ports (separate each channel with commas).\n")
+	      "\t\t\t  Defaults to 'alsa_pcm:playback_1,...'" },
+	{ wxCMD_LINE_OPTION, wxT("n"), wxT("jack-name"), wxT("jack name.   default is freqtweak_1")},
+	{ wxCMD_LINE_OPTION, wxT("D"), wxT("tmpdir"), wxT("jack server tmp directory (should match jackd --tmpdir)")},
+	{ wxCMD_LINE_OPTION, wxT("p"), wxT("preset"), wxT("load given preset initially")},
+	{ wxCMD_LINE_OPTION, wxT("r"), wxT("rc-dir"), wxT("what directory to use for run-control state. default is ~/.freqtweak")},
 	{ wxCMD_LINE_NONE }
 };	
 
@@ -224,7 +226,7 @@ bool FTapp::OnInit()
 	
 	wxCmdLineParser parser(argc, argv);
 	parser.SetDesc(cmdLineDesc);
-	parser.SetLogo(wxString::Format("FreqTweak %s\n%s%s%s%s", freqtweak_version,
+	parser.SetLogo(wxString::Format(wxT("FreqTweak %s\n%s%s%s%s"), freqtweak_version,
 					"Copyright 2002-2003 Jesse Chappell\n",
 					"FreqTweak comes with ABSOLUTELY NO WARRANTY\n",
 					"This is free software, and you are welcome to redistribute it\n",
@@ -240,7 +242,7 @@ bool FTapp::OnInit()
 	wxString strval;
 	long longval;
 
-	if (parser.Found ("c", &longval)) {
+	if (parser.Found (wxT("c"), &longval)) {
 		if (longval < 1 || longval > FT_MAXPATHS) {
 			fprintf(stderr, "Error: channel count must be in range [1-%d]\n", FT_MAXPATHS);
 			parser.Usage();
@@ -249,16 +251,17 @@ bool FTapp::OnInit()
 		pcnt = (int) longval;
 	}
 
-	if (parser.Found ("d", &jackdir)) {
-	       FTioSupport::setDefaultDir (jackdir);
+	if (parser.Found (wxT("d"), &jackdir)) {
+	       FTioSupport::setDefaultDir ((const char *) jackdir.c_str());
 	}
 	
-	if (parser.Found ("n", &jackname)) {
-	       FTioSupport::setDefaultName (jackname);
+	if (parser.Found (wxT("n"), &jackname)) {
+		// FIXME: needs wchar_t->char conversion
+       	       FTioSupport::setDefaultName (jackname.mb_str ());
 	}
 
-	parser.Found ("r", &rcdir);
-	parser.Found ("p", &preset);
+	parser.Found (wxT("r"), &rcdir);
+	parser.Found (wxT("p"), &preset);
 
 	
 	
@@ -272,7 +275,7 @@ bool FTapp::OnInit()
 
 
 	
-	if (parser.Found ("i", &strval))
+	if (parser.Found (wxT("i"), &strval))
 	{
 		// parse comma separated values
 		wxString port = strval.BeforeFirst(',');
@@ -302,7 +305,7 @@ bool FTapp::OnInit()
 	}
 
 	// OUTPUT PORTS
-	if (parser.Found ("o", &strval))
+	if (parser.Found (wxT("o"), &strval))
 	{
 		// parse comma separated values
 		wxString port = strval.BeforeFirst(',');
@@ -321,7 +324,8 @@ bool FTapp::OnInit()
 		if (ports) {
 			// default output ports
 			for (int id=0; id < pcnt && ports[id]; ++id, ++ocnt) {
-				outputports[id] = ports[id];
+				// FIXME: needs wchar_t->char conversion
+				outputports[id] = wxString::FromAscii (ports[id]);
 			}
 			
 			free (ports);
@@ -331,7 +335,7 @@ bool FTapp::OnInit()
 
 	
 	// Create the main application window
-	_mainwin = new FTmainwin(pcnt, "FreqTweak", rcdir,
+	_mainwin = new FTmainwin(pcnt, wxT("FreqTweak"), rcdir,
 				 wxPoint(100, 100), wxDefaultSize);
 
 	
@@ -350,15 +354,15 @@ bool FTapp::OnInit()
 			// connect initial I/O
 			for (int id=0; id < icnt; ++id)
 			{
-				iosup->connectPathInput(id, inputports[id]);
+				iosup->connectPathInput(id, inputports[id].mb_str());
 			}
 			for (int id=0; id < ocnt; ++id)
 			{
-				iosup->connectPathOutput(id, outputports[id]);
+				iosup->connectPathOutput(id, outputports[id].mb_str());
 			}
 
 			// load last settings
-			_mainwin->loadPreset("", true);
+			_mainwin->loadPreset(wxT(""), true);
 		}
 		else {
 			_mainwin->loadPreset(preset);

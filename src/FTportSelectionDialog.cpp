@@ -62,7 +62,7 @@ void FTportSelectionDialog::init()
 
 
 	
-	wxButton * deselbutt = new wxButton(this, DESELECTALLID, "Deselect All");
+	wxButton * deselbutt = new wxButton(this, DESELECTALLID, wxT("Deselect All"));
 	mainsizer->Add(deselbutt, 0, wxALL, 3);
 
 	
@@ -70,8 +70,8 @@ void FTportSelectionDialog::init()
 
 	// button bar
 	wxBoxSizer * buttSizer = new wxBoxSizer(wxHORIZONTAL);
-	wxButton *okButton =  new wxButton(this, wxID_OK, "OK");
-	wxButton *cancButton =  new wxButton(this, wxID_CANCEL, "Cancel");
+	wxButton *okButton =  new wxButton(this, wxID_OK, wxT("OK"));
+	wxButton *cancButton =  new wxButton(this, wxID_CANCEL, wxT("Cancel"));
 
 	buttSizer->Add(okButton, 0, wxRIGHT, 10);
 	buttSizer->Add(cancButton, 0, wxLEFT, 10);
@@ -109,8 +109,8 @@ void FTportSelectionDialog::update()
 	
 	if (availports) {
 		for (int i=0; availports[i]; i++) {
-			if (noportname && wxString(availports[i]).Cmp(noportname) != 0) {
-				_listBox->Append (wxString(availports[i]), (void *) 0);
+			if (noportname && wxString::FromAscii(availports[i]).Cmp(wxString::FromAscii (noportname)) != 0) {
+				_listBox->Append (wxString::FromAscii(availports[i]), (void *) 0);
 			}
 		}
 		free (availports);
@@ -120,7 +120,7 @@ void FTportSelectionDialog::update()
 		}
 		if (connports) {
 			for (int i=0; connports[i]; i++) {
-				int n = _listBox->FindString(connports[i]);
+				int n = _listBox->FindString(wxString::FromAscii (connports[i]));
 				//printf ("connport = %s  find is %d\n", connports[i], n);
 				if (n >= 0)
 				   _listBox->SetSelection (n, TRUE);
@@ -139,7 +139,7 @@ const char ** FTportSelectionDialog::getSelectedPorts()
 	const char ** pnames = (const char **) malloc(sizeof(char*) * n+1);
 
 	for (int i=0; i < n; i++) {
-		pnames[i] = _selectedPorts.Item(i)->GetData();
+		pnames[i] = wxString(_selectedPorts.Item(i)->GetData()).mb_str();
 	}
 	pnames[n] = NULL;
 

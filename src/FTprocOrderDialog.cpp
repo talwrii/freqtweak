@@ -117,7 +117,7 @@ void FTprocOrderDialog::init()
 	wxBoxSizer * sourceSizer = new wxBoxSizer(wxVERTICAL);
 
 	_sourceList = new wxListCtrl (this, ID_SourceList, wxDefaultPosition, wxDefaultSize, wxLC_REPORT|wxSUNKEN_BORDER);
-	_sourceList->InsertColumn(0, "Available Modules");
+	_sourceList->InsertColumn(0, wxT("Available Modules"));
 	
 	sourceSizer->Add (_sourceList, 1, wxEXPAND|wxALL, 2);
 
@@ -130,22 +130,22 @@ void FTprocOrderDialog::init()
 
 	midbuttSizer->Add (-1, 20);
 	
-	butt = new wxButton(this, ID_AddButton, "Add ->", wxDefaultPosition, wxSize(-1,40));
+	butt = new wxButton(this, ID_AddButton, wxT("Add ->"), wxDefaultPosition, wxSize(-1,40));
 	midbuttSizer->Add(butt, 0, wxEXPAND|wxALL, 2);
 	
-	butt = new wxButton(this, ID_RemoveButton, "Remove", wxDefaultPosition, wxSize(-1,30));
+	butt = new wxButton(this, ID_RemoveButton, wxT("Remove"), wxDefaultPosition, wxSize(-1,30));
 	midbuttSizer->Add(butt, 0, wxEXPAND|wxALL, 2);
 
 	midbuttSizer->Add (-1, 15);
 	
-	butt = new wxButton(this, ID_UpButton, "Up", wxDefaultPosition, wxSize(-1,30));
+	butt = new wxButton(this, ID_UpButton, wxT("Up"), wxDefaultPosition, wxSize(-1,30));
 	midbuttSizer->Add(butt, 0, wxEXPAND|wxALL, 2);
-	butt = new wxButton(this, ID_DownButton, "Down", wxDefaultPosition, wxSize(-1, 30));
+	butt = new wxButton(this, ID_DownButton, wxT("Down"), wxDefaultPosition, wxSize(-1, 30));
 	midbuttSizer->Add(butt, 0, wxEXPAND|wxALL, 2);
 
 	midbuttSizer->Add (-1, 5, 1);
 
-	_modifiedText = new wxStaticText (this, -1, "", wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
+	_modifiedText = new wxStaticText (this, -1, wxT(""), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE);
 	midbuttSizer->Add(_modifiedText, 0, wxALL|wxEXPAND|wxALIGN_CENTRE_VERTICAL|wxALIGN_CENTRE, 3);
 	
 	//butt =  new wxButton(this, ID_CloseButton, "Close");
@@ -158,7 +158,7 @@ void FTprocOrderDialog::init()
 	wxBoxSizer * targSizer = new wxBoxSizer(wxVERTICAL);
 
 	_targetList = new wxListCtrl (this, ID_TargetList, wxDefaultPosition, wxDefaultSize, wxLC_REPORT|wxSUNKEN_BORDER|wxLC_SINGLE_SEL);
-	_targetList->InsertColumn(0, "Configured Modules");
+	_targetList->InsertColumn(0, wxT("Configured Modules"));
 
 	targSizer->Add (_targetList, 1, wxEXPAND|wxALL, 2);
 	
@@ -166,10 +166,10 @@ void FTprocOrderDialog::init()
 	// button bar
 	wxBoxSizer * buttSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	_autoCheck = new wxCheckBox(this, ID_AutoCheck, "Auto");
+	_autoCheck = new wxCheckBox(this, ID_AutoCheck, wxT("Auto"));
 	buttSizer->Add( _autoCheck, 0, wxALL, 2);
 
-	butt =  new wxButton(this, ID_CommitButton, "Commit");
+	butt =  new wxButton(this, ID_CommitButton, wxT("Commit"));
 	buttSizer->Add(butt, 1, wxALL, 2);
 	
 	targSizer->Add(buttSizer, 0, wxALL|wxEXPAND, 0);
@@ -209,7 +209,7 @@ void FTprocOrderDialog::refreshState()
 	
 	for (; mod != mlist.end(); ++mod)
 	{
-		item.SetText ((*mod)->getName().c_str());
+		item.SetText (wxString::FromAscii ((*mod)->getName().c_str()));
 		item.SetData ((unsigned) (*mod));
 		item.SetId(pos++);
 		
@@ -229,7 +229,7 @@ void FTprocOrderDialog::refreshState()
 		
 		for (unsigned int n=0; n < procmods.size(); ++n)
 		{
-			item.SetText (procmods[n]->getName().c_str());
+			item.SetText (wxString::FromAscii (procmods[n]->getName().c_str()));
 			item.SetData ((unsigned) procmods[n]);
 			item.SetId (n);
 			
@@ -242,7 +242,7 @@ void FTprocOrderDialog::refreshState()
 	}
 	
 	_actions.clear();
-	_modifiedText->SetLabel ("");
+	_modifiedText->SetLabel (wxT(""));
 }
 
 
@@ -343,7 +343,7 @@ void FTprocOrderDialog::onTargetButtons(wxCommandEvent & ev)
 				onCommit(ev);
 			}
 			else {
-				_modifiedText->SetLabel ("* modified *");
+				_modifiedText->SetLabel (wxT("* modified *"));
 			}
 		}
 	}
@@ -373,7 +373,7 @@ void FTprocOrderDialog::onTargetButtons(wxCommandEvent & ev)
 				onCommit(ev);
 			}
 			else {
-				_modifiedText->SetLabel ("* modified *");
+				_modifiedText->SetLabel (wxT("* modified *"));
 			}
 		}
 	}
@@ -404,7 +404,7 @@ void FTprocOrderDialog::onTargetButtons(wxCommandEvent & ev)
 				onCommit(ev);
 			}
 			else {
-				_modifiedText->SetLabel ("* modified *");
+				_modifiedText->SetLabel (wxT("* modified *"));
 			}
 
 		}
@@ -440,7 +440,7 @@ void FTprocOrderDialog::onAddButton(wxCommandEvent & ev)
 		FTprocI * proc = (FTprocI *) _sourceList->GetItemData(itemi); 
 
 		if (proc) {
-			item.SetText (proc->getName().c_str());
+			item.SetText (wxString::FromAscii (proc->getName().c_str()));
 			item.SetData ((unsigned)proc);
 			item.SetId (_targetList->GetItemCount());
 			
@@ -457,7 +457,7 @@ void FTprocOrderDialog::onAddButton(wxCommandEvent & ev)
 			onCommit(ev);
 		}
 		else {
-			_modifiedText->SetLabel ("* modified *");
+			_modifiedText->SetLabel (wxT("* modified *"));
 		}
 	}
 }

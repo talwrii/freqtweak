@@ -39,7 +39,7 @@ class FThelpWindow
 		     const wxPoint& pos = wxDefaultPosition,
 		     const wxSize& size = wxSize(400,600),
 		     long style = wxDEFAULT_FRAME_STYLE,
-		     const wxString& name = "HelpWin");
+		     const wxString& name = wxT("HelpWin"));
 
 	virtual ~FThelpWindow();
 	
