@@ -502,26 +502,31 @@ void FTspectralEngine::processNow (FTprocessPath *procpath)
 void FTspectralEngine::computeAverageInputPower (fft_data *fftbuf)
 {
 	float power;
-	int fftn2 = (_fftN+1) / 2;
+	int fftn2 = _fftN / 2;
 
 	if (_averages > 1) {
-	
-		for (int i=0; i < fftn2 ; i++)
-		{
-			power = (fftbuf[i] * fftbuf[i]) + (fftbuf[_fftN-i] * fftbuf[_fftN-i]);
-			if (_currInAvgIndex > 0) {
-				_inputPowerSpectra[i] += power;
-			}
-			else {
-				_inputPowerSpectra[i] = power;
-				
+
+		if (_currInAvgIndex > 0) {
+			_inputPowerSpectra[0] += fftbuf[0] * fftbuf[0];
+			for (int i=1; i < fftn2-1; i++)
+			{
+				_inputPowerSpectra[i] += (fftbuf[i] * fftbuf[i]) + (fftbuf[_fftN-i] * fftbuf[_fftN-i]);
+			}	
+		}
+		else {
+			_inputPowerSpectra[0] = fftbuf[0] * fftbuf[0];
+		
+			for (int i=1; i < fftn2-1 ; i++)
+			{
+				_inputPowerSpectra[i] = (fftbuf[i] * fftbuf[i]) + (fftbuf[_fftN-i] * fftbuf[_fftN-i]);
 			}	
 		}
 		
 		_currInAvgIndex = (_currInAvgIndex+1) % _averages;
 		
 		if (_currInAvgIndex == 0) {
-			for (int i=0; i < fftn2 ; i++)
+			_runningInputPower[0] = _inputPowerSpectra[0] / _averages;
+			for (int i=1; i < fftn2-1 ; i++)
 			{
 				_runningInputPower[i] = _inputPowerSpectra[i] / _averages;
 			}
@@ -530,7 +535,9 @@ void FTspectralEngine::computeAverageInputPower (fft_data *fftbuf)
 	}
 	else {
 		// 1 average, minimize looping
-		for (int i=0; i < fftn2 ; i++)
+		_runningInputPower[0] = (fftbuf[0] * fftbuf[0]);
+		
+		for (int i=1; i < fftn2-1 ; i++)
 		{
 			_runningInputPower[i] = (fftbuf[i] * fftbuf[i]) + (fftbuf[_fftN-i] * fftbuf[_fftN-i]);
 		}		
@@ -546,23 +553,28 @@ void FTspectralEngine::computeAverageOutputPower (fft_data *fftbuf)
 	int fftn2 = (_fftN+1) / 2;
 
 	if (_averages > 1) {
-	
-		for (int i=0; i < fftn2 ; i++)
-		{
-			power = (fftbuf[i] * fftbuf[i]) + (fftbuf[_fftN-i] * fftbuf[_fftN-i]);
-			if (_currOutAvgIndex > 0) {
-				_outputPowerSpectra[i] += power;
+
+		if (_currOutAvgIndex > 0) {
+		
+			_outputPowerSpectra[0] += (fftbuf[0] * fftbuf[0]);
+			for (int i=1; i < fftn2-1; i++)
+			{
+				_outputPowerSpectra[i] += (fftbuf[i] * fftbuf[i]) + (fftbuf[_fftN-i] * fftbuf[_fftN-i]);
 			}
-			else {
-				_outputPowerSpectra[i] = power;
-				
-			}	
+		}
+		else {
+			_outputPowerSpectra[0] = (fftbuf[0] * fftbuf[0]);
+			for (int i=1; i < fftn2-1 ; i++)
+			{
+				_outputPowerSpectra[i] = (fftbuf[i] * fftbuf[i]) + (fftbuf[_fftN-i] * fftbuf[_fftN-i]);
+			}
 		}
 		
 		_currOutAvgIndex = (_currOutAvgIndex+1) % _averages;
 		
 		if (_currOutAvgIndex == 0) {
-			for (int i=0; i < fftn2 ; i++)
+			_runningOutputPower[0] = _outputPowerSpectra[0] / _averages;
+			for (int i=1; i < fftn2-1 ; i++)
 			{
 				_runningOutputPower[i] = _outputPowerSpectra[i] / _averages;
 			}
@@ -571,7 +583,8 @@ void FTspectralEngine::computeAverageOutputPower (fft_data *fftbuf)
 	}
 	else {
 		// 1 average, minimize looping
-		for (int i=0; i < fftn2 ; i++)
+		_runningOutputPower[0] = (fftbuf[0] * fftbuf[0]);
+		for (int i=1; i < fftn2-1 ; i++)
 		{
 			_runningOutputPower[i] = (fftbuf[i] * fftbuf[i]) + (fftbuf[_fftN-i] * fftbuf[_fftN-i]);
 		}		

@@ -77,8 +77,14 @@ void FTprocGate::process (fft_data *data, unsigned int fftn)
 	int fftn2 = (fftn+1) >> 1;
 	
 	// only allow data through if power is above threshold
+
+	power = (data[0] * data[0]);
+	db = FTutils::powerLogScale (power, 0.0000000) + _dbAdjust; // total fudge factors
+	if (db < filter[0] || db > invfilter[0]) {
+		data[0] = 0.0;
+	}
 	
- 	for (int i = 0; i < fftn2; i++)
+ 	for (int i = 1; i < fftn2-1; i++)
  	{
 		power = (data[i] * data[i]) + (data[fftn-i] * data[fftn-i]);
 		db = FTutils::powerLogScale (power, 0.0000000) + _dbAdjust; // total fudge factors

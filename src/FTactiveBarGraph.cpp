@@ -81,7 +81,8 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 
 	: wxPanel(parent, id, pos, size, style, name)
 	//, _topHeight(4), _bottomHeight(4), _leftWidth(4, _rightWidth(4)
-	, _specMod(0), _topSpecMod(0)
+	  , _width(1), _height(1)
+	  , _specMod(0), _topSpecMod(0), _min(0.0), _max(1.0), _absmin(0.0), _absmax(1.0)
 	  ,_mindb(-50.0), _maxdb(0.0), _absmindb(-60), _absmaxdb(0.0), _absposmindb(0.0f), _absposmaxdb(24.0)
 	,_minsemi(-12.0), _maxsemi(12), _absminsemi(-12), _absmaxsemi(12)
 	, _tmpfilt(0), _toptmpfilt(0)

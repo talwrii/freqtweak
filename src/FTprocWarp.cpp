@@ -18,7 +18,7 @@
 */
 
 #include "FTprocWarp.hpp"
-
+#include "FTutils.hpp"
 
 FTprocWarp::FTprocWarp (nframes_t samprate, unsigned int fftn)
 	: FTprocI("Warp", samprate, fftn)
@@ -71,18 +71,18 @@ void FTprocWarp::process (fft_data *data, unsigned int fftn)
 	int fftN2 = (fftn+1) >> 1;
 
 	memset(_tmpdata, 0, fftn * sizeof(fft_data));
-	
-	for (int i = 0; i < fftN2; i++)
+
+	for (int i = 1; i < fftN2-1; i++)
 	{
-		if (filter[i] > max) filt = max;
-		else if (filter[i] < min) filt = min;
-		else filt = filter[i];
+		filt = FTutils::f_clamp(filter[i], min, max);
 		
 // 		_tmpdata[i] +=  data[(int)filt];
 // 		_tmpdata[fftn-i] +=  data[fftn - ((int)filt)];
  		_tmpdata[(int)filt] +=  data[i];
- 		_tmpdata[fftn-((int)filt)] +=  data[fftn - i];
-
+		if (i > 0 && filt > 0) {
+			_tmpdata[fftn-((int)filt)] +=  data[fftn - i];
+		}
+		
 	}
 
 	memcpy (data, _tmpdata, fftn * sizeof(fft_data));

@@ -252,7 +252,7 @@ void FTprocCompressor::process (fft_data *data, unsigned int fftn)
 	
 	int fftN2 = (fftn+1) >> 1;
 	
-	for (int i = 0; i < fftN2; i++)
+	for (int i = 0; i < fftN2-1; i++)
 	{
 // 		if (filter[i] > max) filt = max;
 // 		else if (filter[i] < min) filt = min;
@@ -276,7 +276,12 @@ void FTprocCompressor::process (fft_data *data, unsigned int fftn)
 		ef_ai = 1.0f - ef_a;
 		
 		//_sum[i] += FTutils::fast_square_root((data[i] * data[i]) + (data[fftn-i] * data[fftn-i]));
-		_sum[i] += (data[i] * data[i]) + (data[fftn-i] * data[fftn-i]);
+		if (i == 0) {
+			_sum[i] += (data[i] * data[i]);
+		}
+		else {
+			_sum[i] += (data[i] * data[i]) + (data[fftn-i] * data[fftn-i]);
+		}
 
 // 		_sum[i] = FLUSH_TO_ZERO(_sum[i]);
 // 		_env[i] = FLUSH_TO_ZERO(_env[i]);
@@ -307,7 +312,9 @@ void FTprocCompressor::process (fft_data *data, unsigned int fftn)
 		_gain[i] = _gain[i] * ef_a + _gain_t[i] * ef_ai;
 		
 		data[i] *=  _gain[i] * mug;
-		data[fftn-i] *=  _gain[i] * mug;
+		if (i > 0) {
+			data[fftn-i] *=  _gain[i] * mug;
+		}
 
 	}
 }

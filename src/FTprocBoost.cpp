@@ -18,7 +18,7 @@
 */
 
 #include "FTprocBoost.hpp"
-
+#include "FTutils.hpp"
 
 FTprocBoost::FTprocBoost (nframes_t samprate, unsigned int fftn)
 	: FTprocI("EQ Boost", samprate, fftn)
@@ -66,11 +66,12 @@ void FTprocBoost::process (fft_data *data, unsigned int fftn)
 
 	int fftN2 = (fftn+1) >> 1;
 
-	for (int i = 0; i < fftN2; i++)
+	filt = FTutils::f_clamp(filter[0], min, max);
+	data[0] *=  filt;
+	
+	for (int i = 1; i < fftN2-1; i++)
 	{
-		if (filter[i] > max) filt = max;
-		else if (filter[i] < min) filt = min;
-		else filt = filter[i];
+		filt = FTutils::f_clamp(filter[i], min, max);
 		
 		data[i] *=  filt;
 		data[fftn-i] *=  filt;

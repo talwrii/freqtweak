@@ -73,13 +73,21 @@ void FTprocLimit::process (fft_data *data, unsigned int fftn)
 
 	
 	int fftN2 = (fftn+1) >> 1;
-	
-	for (int i = 0; i < fftN2; i++)
-	{
-		if (filter[i] > max) filt = max;
-		else if (filter[i] < min) filt = min;
-		else filt = filter[i];
 
+	// do for first element
+	filt = FTutils::f_clamp (filter[0], min, max);
+	power = (data[0] * data[0]);
+	db = FTutils::powerLogScale (power, 0.0000000) + _dbAdjust; // total fudge factors
+	if (filt < db) {
+		// apply limiting
+		scale = 1 / (pow (2, (db-filt) / 6.0));
+		data[0] *=  scale;
+	}
+	
+	// do for the rest
+	for (int i = 1; i < fftN2-1; i++)
+	{
+		filt = FTutils::f_clamp (filter[i], min, max);
 		power = (data[i] * data[i]) + (data[fftn-i] * data[fftn-i]);
 		db = FTutils::powerLogScale (power, 0.0000000) + _dbAdjust; // total fudge factors
 

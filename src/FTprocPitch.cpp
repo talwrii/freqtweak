@@ -20,7 +20,7 @@
 #include <math.h>
 
 #include "FTprocPitch.hpp"
-
+#include "FTutils.hpp"
 
 FTprocPitch::FTprocPitch (nframes_t samprate, unsigned int fftn)
 	: FTprocI("Pitch", samprate, fftn)
@@ -51,6 +51,13 @@ void FTprocPitch::initialize()
 	gAnaMagn = new float [FT_MAX_FFT_SIZE];
 	gSynMagn = new float [FT_MAX_FFT_SIZE];
 
+	memset(gLastPhase, 0, FT_MAX_FFT_SIZE*sizeof(float));
+	memset(gSumPhase, 0, FT_MAX_FFT_SIZE*sizeof(float));
+	memset(gAnaFreq, 0, FT_MAX_FFT_SIZE*sizeof(float));
+	memset(gSynFreq, 0, FT_MAX_FFT_SIZE*sizeof(float));
+	memset(gAnaMagn, 0, FT_MAX_FFT_SIZE*sizeof(float));
+	memset(gSynMagn, 0, FT_MAX_FFT_SIZE*sizeof(float));
+	
 	_inited = true;
 }
 
@@ -94,7 +101,7 @@ void FTprocPitch::process (fft_data *data, unsigned int fftn)
 	expct = 2.0*M_PI*(double)stepSize/(double)fftFrameLength;
 
 	/* this is the analysis step */
-	for (k = 0; k <= fftFrameSize2; k++) {
+	for (k = 1; k < fftFrameSize2-1; k++) {
 		
 		real = data[k];
 		imag = data[fftFrameLength - k];
@@ -134,9 +141,7 @@ void FTprocPitch::process (fft_data *data, unsigned int fftn)
 	memset(gSynFreq, 0, fftFrameLength*sizeof(float));
 	for (k = 0; k <= fftFrameSize2; k++)
 	{
-		if (filter[k] > max) filt = max;
-		else if (filter[k] < min) filt = min;
-		else filt = filter[k];
+		filt = FTutils::f_clamp (filter[k], min, max);
 
 		index = (long) (k/filt);
 		if (index <= fftFrameSize2) {
@@ -159,7 +164,7 @@ void FTprocPitch::process (fft_data *data, unsigned int fftn)
 	
 	/* ***************** SYNTHESIS ******************* */
 	/* this is the synthesis step */
-	for (k = 0; k <= fftFrameSize2; k++) {
+	for (k = 1; k < fftFrameSize2-1; k++) {
 		
 		/* get magnitude and true frequency from synthesis arrays */
 		magn = gSynMagn[k];

@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cmath>
 
 #include <wx/string.h>
 
@@ -76,6 +77,20 @@ public:
 
 	static inline float powerLogScale(float yval, float min);
 
+
+	static inline float f_clamp(float x, float a, float b)
+		{
+			const float x1 = std::fabs(x - a);
+			const float x2 = std::fabs(x - b);
+			
+			x = x1 + a + b;
+			x -= x2;
+			x *= 0.5;
+			
+			return x;
+		}
+
+	
 };
 
 

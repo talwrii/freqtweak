@@ -137,7 +137,7 @@ void FTprocDelay::process (fft_data *data, unsigned int fftn)
 	_frameFifo->get_write_vector(wrvec);
 
 	
-	for (int i = 0; i < fftn2; i++)
+	for (int i = 0; i < fftn2-1; i++)
 	{
 		if (bypassfeed) {
 			feedback = 0.0;
@@ -188,7 +188,9 @@ void FTprocDelay::process (fft_data *data, unsigned int fftn)
 		
 		
 		*rdest = data[i] + (*rcurr)*feedback;
-		*idest = data[fftn-i] + (*icurr)*feedback;
+		if (i > 0) {
+			*idest = data[fftn-i] + (*icurr)*feedback;
+		}
 	}
 	
 	// advance it
