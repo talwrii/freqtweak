@@ -274,7 +274,7 @@ bool FTapp::OnInit()
 
 	if (!iosup->init()) {
 		fprintf(stderr, "Error connecting to jack!\n");
-		connected = false;
+		return FALSE;
 	}
 
 

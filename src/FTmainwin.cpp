@@ -297,7 +297,7 @@ void FTmainwin::buildGui()
 		// add to io support instance
 		_processPath[i] = iosup->setProcessPathActive (i, true);
 	}	
-	
+
 	wxBoxSizer *mainsizer = new wxBoxSizer(wxVERTICAL);
 	
 	// overall controls
