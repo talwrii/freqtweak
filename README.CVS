@@ -1,8 +1,5 @@
-To build this from CVS right now, you'll need to download and install
-autotools-0.10 (poorly named) from 
-   ftp://ftp.ugcs.caltech.edu/pub/elef/autotools/autotools-0.10.tar.gz
-
- ./reconf
+To build this from CVS: 
+ ./autogen.sh
  ./configure
  make
 
