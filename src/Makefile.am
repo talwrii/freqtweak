@@ -77,7 +77,9 @@ freqtweak_SOURCES = \
 	FTpresetBlender.cpp \
 	FTpresetBlender.hpp \
 	FTprocCompressor.cpp \
-	FTprocCompressor.hpp
+	FTprocCompressor.hpp \
+	FTprocBoost.cpp \
+	FTprocBoost.hpp
 
 
 

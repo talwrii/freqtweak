@@ -28,6 +28,7 @@
 #include "FTprocLimit.hpp"
 #include "FTprocWarp.hpp"
 #include "FTprocCompressor.hpp"
+#include "FTprocBoost.hpp"
 
 FTdspManager * FTdspManager::_instance = 0;
 
@@ -40,6 +41,9 @@ FTdspManager::FTdspManager()
 	
 	FTprocI * procmod = new FTprocEQ (samprate, fftn);
 	_prototypes.push_back (procmod);
+
+	procmod = new FTprocBoost (samprate, fftn);
+ 	_prototypes.push_back (procmod);
 
 	procmod = new FTprocPitch (samprate, fftn);
  	_prototypes.push_back (procmod);
@@ -58,6 +62,7 @@ FTdspManager::FTdspManager()
 
 	procmod = new FTprocCompressor (samprate, fftn);
  	_prototypes.push_back (procmod);
+
 	
 }
 

@@ -141,6 +141,7 @@ class FTactiveBarGraph
 	
 	float _mindb, _maxdb;
 	float _absmindb, _absmaxdb;
+	float _absposmindb, _absposmaxdb;
 
 	float _minsemi, _maxsemi;
 	float _absminsemi, _absmaxsemi;

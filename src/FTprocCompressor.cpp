@@ -48,7 +48,7 @@ inline static float rms_env_process(rms_env *r, const float x)
 	r->buffer[r->pos] = x;
 	r->pos = (r->pos + 1) & (RMS_BUF_SIZE - 1);
 
-	return sqrt(r->sum / (float)RMS_BUF_SIZE);
+	return FTutils::fast_square_root(r->sum / (float)RMS_BUF_SIZE);
 }
 
 
@@ -86,14 +86,14 @@ static inline int f_round(float f) {
 
 FTprocCompressor::FTprocCompressor (nframes_t samprate, unsigned int fftn)
 	: FTprocI("Compressor", samprate, fftn)
-	  , _dbAdjust(-37.0)
+	  , _dbAdjust(12.0)
 	  
 {
 }
 
 FTprocCompressor::FTprocCompressor (const FTprocCompressor & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)	
-	  , _dbAdjust(-37.0)
+	  , _dbAdjust(12.0)
 {
 	
 }
@@ -149,7 +149,7 @@ void FTprocCompressor::initialize()
 	_as = new float[A_TBL];
 	_as[0] = 1.0f;
 	for (unsigned int i=1; i<A_TBL; i++) {
-		_as[i] = expf(-1.0f / ((_sampleRate/(float)nbins) * (float)i / (float)A_TBL));
+		_as[i] = expf(-1.0f / ((_sampleRate/(4*(float)_fftN)) * (float)i / (float)A_TBL));
 	}
 	
 	_inited = true;
@@ -202,7 +202,7 @@ void FTprocCompressor::setFFTsize (unsigned int fftn)
 
 	_as[0] = 1.0f;
 	for (unsigned int i=1; i<A_TBL; i++) {
-		_as[i] = expf(-1.0f / ((_sampleRate/(float)nbins) * (float)i / (float)A_TBL));
+		_as[i] = expf(-1.0f / ((_sampleRate/((float)4*_fftN)) * (float)i / (float)A_TBL));
 	}
 
 }
@@ -256,9 +256,9 @@ void FTprocCompressor::process (fftw_real *data, unsigned int fftn)
 // 		power = (data[i] * data[i]) + (data[fftn-i] * data[fftn-i]);
 // 		db = FTutils::powerLogScale (power, 0.0000000) + _dbAdjust; // total fudge factors
 
-		thresh = LIMIT(threshold[i], -60.0f, 0.0f);
+		thresh = LIMIT(threshold[i], -60.0f, 0.0f) + _dbAdjust;
 		rat = LIMIT(ratio[i], 1.0f, 80.0f);
-		att = LIMIT(attack[i], 0.000000002f, 1.0f); 
+		att = LIMIT(attack[i], 0.002f, 1.0f); 
 		rel = LIMIT(release[i], att, 1.0f);
 		
 		ga = _as[f_round(att  * (float)(A_TBL-1))];
@@ -270,7 +270,8 @@ void FTprocCompressor::process (fftw_real *data, unsigned int fftn)
 		ef_a = ga * 0.25f;
 		ef_ai = 1.0f - ef_a;
 		
-		_sum[i] += FTutils::fast_square_root((data[i] * data[i]) + (data[fftn-i] * data[fftn-i]));
+		//_sum[i] += FTutils::fast_square_root((data[i] * data[i]) + (data[fftn-i] * data[fftn-i]));
+		_sum[i] += (data[i] * data[i]) + (data[fftn-i] * data[fftn-i]);
 
 // 		_sum[i] = FLUSH_TO_ZERO(_sum[i]);
 // 		_env[i] = FLUSH_TO_ZERO(_env[i]);

@@ -82,7 +82,7 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	: wxPanel(parent, id, pos, size, style, name)
 	//, _topHeight(4), _bottomHeight(4), _leftWidth(4, _rightWidth(4)
 	, _specMod(0), _topSpecMod(0)
-	,_mindb(-50.0), _maxdb(0.0), _absmindb(-60), _absmaxdb(0.0)
+	  ,_mindb(-50.0), _maxdb(0.0), _absmindb(-60), _absmaxdb(0.0), _absposmindb(0.0f), _absposmaxdb(24.0)
 	,_minsemi(-12.0), _maxsemi(12), _absminsemi(-12), _absmaxsemi(12)
 	, _tmpfilt(0), _toptmpfilt(0)
 	, _barColor0("skyblue"), _barColor1("steelblue")
@@ -176,6 +176,15 @@ void FTactiveBarGraph::refreshBounds()
 		_min = dbToVal(_mindb);
 		_max = dbToVal(_maxdb);
 	}
+ 	else if (_specMod->getModifierType() == FTspectrumModifier::POS_GAIN_MODIFIER)
+	{
+		_mindb = _absposmindb;
+		_maxdb = _absposmaxdb;
+		_absmin = valToDb(_absmin); // special case
+		_absmax = valToDb(_absmax); // special case
+		_min = dbToVal(_mindb);
+		_max = dbToVal(_maxdb);
+	}
  	else if (_specMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER)
 	{
 		_minsemi = valToSemi(_min);
@@ -258,6 +267,15 @@ void FTactiveBarGraph::setTopSpectrumModifier (FTspectrumModifier *sm)
 		_min = dbToVal(_mindb);
 		_max = dbToVal(_maxdb);
 	}
+ 	else if (_topSpecMod->getModifierType() == FTspectrumModifier::POS_GAIN_MODIFIER)
+	{
+		_mindb = _absposmindb;
+		_maxdb = _absposmaxdb;
+		_absmin = valToDb(_absmin); // special case
+		_absmax = valToDb(_absmax); // special case
+		_min = dbToVal(_mindb);
+		_max = dbToVal(_maxdb);
+	}
  	else if (_topSpecMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER)
 	{
 		_minsemi = valToSemi(_min);
@@ -285,6 +303,7 @@ void FTactiveBarGraph::makeGridChoices (bool setdefault)
 	switch(_mtype)
 	{
 	case FTspectrumModifier::GAIN_MODIFIER:
+	case FTspectrumModifier::POS_GAIN_MODIFIER:
 		_gridChoices.push_back ("1 dB");
 		_gridValues.push_back (1.0);
 
@@ -682,7 +701,9 @@ float FTactiveBarGraph::valDiffY(float val, int lasty, int newy)
 {
 	float retval;
 	
-	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER) {
+	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER
+	    || _specMod->getModifierType() == FTspectrumModifier::POS_GAIN_MODIFIER)
+	{
 		// db scaled
 		float vdb = valToDb (val);
 		float ddb = ((lasty-newy)/(float)_height) * (_maxdb - _mindb) ;
@@ -822,7 +843,9 @@ int FTactiveBarGraph::valToY(float val)
 {
 	int y = 0;
 	
-	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER) {
+	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER
+	    ||_specMod->getModifierType() == FTspectrumModifier::POS_GAIN_MODIFIER)
+	{
 		// db scale it
 		float db = valToDb(val);
 		y = (int) (( (db - _mindb) / (_maxdb - _mindb)) * _height);
@@ -879,7 +902,9 @@ float FTactiveBarGraph::yToVal(int y)
 {
 	float val = 0.0;
 	
-	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER) {
+	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER
+	    ||_specMod->getModifierType() == FTspectrumModifier::POS_GAIN_MODIFIER)
+	{
 		// go from db to linear
 		
 		float db = yToDb (y);
@@ -939,6 +964,18 @@ float FTactiveBarGraph::snapValue(float val)
 		float dbval = valToDb(val) / _gridFactor;
 		float numDivs = ((_absmaxdb - _absmindb) / _gridFactor);
 		float divdb = (_absmaxdb - _absmindb) / numDivs;
+
+		snapval = divdb * rint(dbval);
+
+		//printf ("gain snap: %g \n", snapval);
+		snapval = dbToVal (snapval);
+	}
+ 	else if (_specMod->getModifierType() == FTspectrumModifier::POS_GAIN_MODIFIER)
+	{
+		// every 6 db
+		float dbval = valToDb(val) / _gridFactor;
+		float numDivs = ((_absposmaxdb - _absposmindb) / _gridFactor);
+		float divdb = (_absposmaxdb - _absposmindb) / numDivs;
 
 		snapval = divdb * rint(dbval);
 
@@ -1161,7 +1198,8 @@ void FTactiveBarGraph::recalculate()
 
 	_gridPoints.clear();
 	wxString maxstr, minstr;
-	if (_mtype == FTspectrumModifier::GAIN_MODIFIER) {
+	if (_mtype == FTspectrumModifier::GAIN_MODIFIER
+	    || _mtype == FTspectrumModifier::POS_GAIN_MODIFIER) {
 	}
 	else if (_mtype == FTspectrumModifier::SEMITONE_MODIFIER) {
 		maxstr = wxString::Format("%.3g", _maxsemi);
@@ -1173,7 +1211,8 @@ void FTactiveBarGraph::recalculate()
 	}
 
 
- 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER)
+ 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER
+	    || _specMod->getModifierType() == FTspectrumModifier::POS_GAIN_MODIFIER)
 	{
 		// every _gridFactor db
 		_mindb = valToDb(_min);
@@ -1896,6 +1935,14 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 					_max = dbToVal(_maxdb);
 					recalculate();
 				}
+				else if (_specMod->getModifierType() == FTspectrumModifier::POS_GAIN_MODIFIER)
+				{
+					_mindb = _absposmindb;
+					_maxdb = _absposmaxdb;
+					_min = dbToVal(_mindb);
+					_max = dbToVal(_maxdb);
+					recalculate();
+				}
 				else {
 					setMinMax (_absmin, _absmax);
 				}
@@ -1961,7 +2008,9 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 
 	float *data = specmod->getValues();
 
-	if (specmod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER) {
+	if (specmod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER
+	    ||specmod->getModifierType() == FTspectrumModifier::POS_GAIN_MODIFIER)
+	{
 		val = yToDb (pY);
 		if (showreal) {
 			realval = valToDb (data[frombin]);

@@ -17,33 +17,33 @@
 **  
 */
 
-#include "FTprocEQ.hpp"
+#include "FTprocBoost.hpp"
 
 
-FTprocEQ::FTprocEQ (nframes_t samprate, unsigned int fftn)
-	: FTprocI("EQ", samprate, fftn)
+FTprocBoost::FTprocBoost (nframes_t samprate, unsigned int fftn)
+	: FTprocI("Boost", samprate, fftn)
 {
 }
 
-FTprocEQ::FTprocEQ (const FTprocEQ & other)
+FTprocBoost::FTprocBoost (const FTprocBoost & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)	
 {
 	
 }
 
-void FTprocEQ::initialize()
+void FTprocBoost::initialize()
 {
 	// create filter
 
-	_eqfilter = new FTspectrumModifier("EQ Cut", "freq", 0, FTspectrumModifier::GAIN_MODIFIER, FREQ_SPECMOD, _fftN/2, 1.0);
-	_eqfilter->setRange(0.0, 1.0);
+	_eqfilter = new FTspectrumModifier("EQ Boost", "freq_boost", 0, FTspectrumModifier::POS_GAIN_MODIFIER, BOOST_SPECMOD, _fftN/2, 1.0);
+	_eqfilter->setRange(1.0, 16.0);
 	
 	_filterlist.push_back (_eqfilter);
 
 	_inited = true;
 }
 
-FTprocEQ::~FTprocEQ()
+FTprocBoost::~FTprocBoost()
 {
 	if (!_inited) return;
 
@@ -51,11 +51,12 @@ FTprocEQ::~FTprocEQ()
 	delete _eqfilter;
 }
 
-void FTprocEQ::process (fftw_real *data, unsigned int fftn)
+void FTprocBoost::process (fftw_real *data, unsigned int fftn)
 {
 	if (!_inited || _eqfilter->getBypassed()) {
 		return;
 	}
+
 	
 	float *filter = _eqfilter->getValues();
 	float min = _eqfilter->getMin();
@@ -63,7 +64,7 @@ void FTprocEQ::process (fftw_real *data, unsigned int fftn)
 	float filt;
 
 	int fftN2 = (fftn+1) >> 1;
-	
+
 	for (int i = 0; i < fftN2; i++)
 	{
 		if (filter[i] > max) filt = max;

@@ -24,14 +24,14 @@ using namespace std;
 
 FTprocLimit::FTprocLimit (nframes_t samprate, unsigned int fftn)
 	: FTprocI("Limit", samprate, fftn)
-	  , _dbAdjust(-37.0)
+	  , _dbAdjust(-48.0)
 	  
 {
 }
 
 FTprocLimit::FTprocLimit (const FTprocLimit & other)
 	: FTprocI (other._name, other._sampleRate, other._fftN)	
-	  , _dbAdjust(-37.0)
+	  , _dbAdjust(-48.0)
 {
 	
 }

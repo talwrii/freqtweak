@@ -704,7 +704,12 @@ bool FTconfigManager::loadSettings (const char * name, bool restore_ports, bool 
 			FTspectrumModifier *dest = iosup->getProcessPath(lc.dest_chan)->getSpectralEngine()
 				->getProcessorModule(lc.mod_n)->getFilter(lc.filt_n);
 
-			source->link (dest);
+			if (dest && source) {
+				source->link (dest);
+			}
+			else {
+				fprintf(stderr, "could not link! source or dest does not exist!\n");
+			}
 		
 		}
 	
