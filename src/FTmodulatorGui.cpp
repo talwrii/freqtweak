@@ -332,6 +332,8 @@ void FTmodulatorGui::init()
 	//controlSizer->Add(new wxButton(this, -1, wxT("BIG TEST"), wxDefaultPosition, wxSize(120, 90)),
 	//		  1, wxEXPAND|wxALL, 2);
 
+
+	_modulator->GoingAway.connect ( slot (*this, &FTmodulatorGui::onModulatorDeath));
 	
 	mainSizer->Add (controlSizer, 1, wxEXPAND|wxALL, 2);
 	
@@ -481,6 +483,13 @@ void FTmodulatorGui::onRemoveButton (wxCommandEvent & ev)
 
 	_modulator = 0;
 }
+
+void FTmodulatorGui::onModulatorDeath (FTmodulatorI * mod)
+{
+	// cerr << "modguiuui: mod death" << endl;
+	_modulator = 0;
+}
+
 
 void FTmodulatorGui::onAttachButton (wxCommandEvent & ev)
 {

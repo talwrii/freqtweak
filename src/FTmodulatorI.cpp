@@ -54,7 +54,7 @@ void FTmodulatorI::addSpecMod (FTspectrumModifier * specmod)
 
 	if (find(_specMods.begin(), _specMods.end(), specmod) == _specMods.end())
 	{
-		
+		specmod->registerListener(this);
 		_specMods.push_back (specmod);
 	}
 }
@@ -64,6 +64,7 @@ void FTmodulatorI::removeSpecMod (FTspectrumModifier * specmod)
 	if (!specmod) return;
 	LockMonitor pmlock(_specmodLock, __LINE__, __FILE__);
 	_specMods.remove (specmod);
+	specmod->unregisterListener(this);
 	specmod->setDirty(false);
 }
 
@@ -73,6 +74,7 @@ void FTmodulatorI::clearSpecMods ()
 
 	for (SpecModList::iterator iter = _specMods.begin(); iter != _specMods.end(); ++iter)
 	{
+		(*iter)->unregisterListener(this);
 		(*iter)->setDirty(false);
 	}
 	_specMods.clear();

@@ -66,6 +66,7 @@ class FTmodulatorGui
 	void onBypassButton (wxCommandEvent &ev);
 	
 
+	void onModulatorDeath (FTmodulatorI * mod);
 
 	
 	void onAttachMenu (wxCommandEvent &ev);

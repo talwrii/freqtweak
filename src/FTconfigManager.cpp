@@ -839,13 +839,23 @@ bool FTconfigManager::loadSettings (const std::string &name, bool restore_ports,
 // 		}
 	}
 
-
 	// Modulations
+
+	// clear all modulators from all engines
+	for (int i=0; i < FTioSupport::instance()->getActivePathCount(); i++) {
+		FTprocessPath * procpath = FTioSupport::instance()->getProcessPath(i);
+		if (procpath) {
+			FTspectralEngine *engine = procpath->getSpectralEngine();
+			
+			engine->clearModulators ();
+		}
+	}
+	
 	
 	XMLNode * modulatorsNode = find_named_node (rootNode, "Modulators");
 	if ( modulatorsNode )
 	{
-
+		
 		loadModulators (modulatorsNode);
 		
 	}
@@ -905,7 +915,8 @@ void FTconfigManager::loadModulators (const XMLNode * modulatorsNode)
 	XMLNode * modNode;
 	XMLProperty * prop;
 	wxString tmpstr;
-		
+
+	
 	for (moditer=modlist.begin(); moditer != modlist.end(); ++moditer)
 	{
 		modNode = *moditer;

@@ -46,7 +46,8 @@ enum {
 	ID_PopupMenu,
 	ID_EditMenuItem,
 	ID_RemoveMenuItem,
-	ID_ChannelList
+	ID_ChannelList,
+	ID_ClearButton
 };
 
 
@@ -64,6 +65,7 @@ BEGIN_EVENT_TABLE(FTmodulatorDialog, wxFrame)
 	EVT_SIZE (FTmodulatorDialog::onSize)
 	EVT_PAINT (FTmodulatorDialog::onPaint)
 
+	EVT_BUTTON (ID_ClearButton, FTmodulatorDialog::onClearButton)
 
 	EVT_COMMAND_RANGE(ID_AddModulatorChannelBase, ID_AddModulatorChannelMax, wxEVT_COMMAND_BUTTON_CLICKED, FTmodulatorDialog::onAddButton)
 	
@@ -128,10 +130,18 @@ void FTmodulatorDialog::init()
 	//wxStaticText * statText;
 
 	_channelSizer = new wxBoxSizer(wxHORIZONTAL);
+
+	wxBoxSizer * rowsizer = new wxBoxSizer(wxHORIZONTAL);
 	
 	wxButton *addButt = new wxButton(this, ID_AddModulatorChannelBase, wxT("Add Modulator..."));
-	mainsizer->Add (addButt, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 4);
+	rowsizer->Add (addButt, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 4);
 
+	rowsizer->Add (2,1,1);
+	
+	wxButton *clearButt = new wxButton(this, ID_ClearButton, wxT("Remove All"));
+	rowsizer->Add (clearButt, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 4);
+
+	mainsizer->Add (rowsizer, 0, wxALL|wxEXPAND);
 
 	_channelScroller = new wxScrolledWindow(this, -1, wxDefaultPosition, wxDefaultSize, wxSUNKEN_BORDER);
 	_channelSizer = new wxBoxSizer(wxVERTICAL);
@@ -259,6 +269,19 @@ void FTmodulatorDialog::onClose(wxCloseEvent & ev)
 	}
 }
 
+void FTmodulatorDialog::onClearButton (wxCommandEvent &ev)
+{
+
+	// remove all modulators
+	for (int i=0; i < FTioSupport::instance()->getActivePathCount(); i++) {
+		FTprocessPath * procpath = FTioSupport::instance()->getProcessPath(i);
+		if (procpath) {
+			FTspectralEngine *engine = procpath->getSpectralEngine();
+			
+			engine->clearModulators ();
+		}
+	}
+}
 
 void FTmodulatorDialog::onAddButton (wxCommandEvent &ev)
 {
@@ -317,11 +340,11 @@ void FTmodulatorDialog::OnIdle(wxIdleEvent &ev)
 
 void FTmodulatorDialog::onModulatorDeath (FTmodulatorI * mod)
 {
-	cerr << "mod death: " << mod->getName() << endl;
+	//cerr << "mod death: " << mod->getName() << endl;
 
 	if (_modulatorGuis.find (mod) != _modulatorGuis.end())
 	{
-		cerr << "deleting modgui" << endl;
+		//cerr << "deleting modgui" << endl;
 		FTmodulatorGui * modgui = _modulatorGuis[mod];
 		_channelSizer->Remove (modgui);
 		modgui->Show(false);

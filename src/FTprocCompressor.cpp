@@ -121,7 +121,7 @@ void FTprocCompressor::initialize()
 	// state
 	unsigned int nbins = _fftN >> 1;
 
-	_rms = new (rms_env*)[nbins];
+	_rms = new rms_env*[nbins];
 	_sum = new float[nbins];
 	_amp = new float[nbins];
 	_gain = new float[nbins];
@@ -185,7 +185,7 @@ void FTprocCompressor::setFFTsize (unsigned int fftn)
 	
 	unsigned int nbins = _fftN >> 1;
 
-	_rms = new (rms_env*)[nbins];
+	_rms = new rms_env*[nbins];
 	_sum = new float[nbins];
 	_amp = new float[nbins];
 	_gain = new float[nbins];

@@ -1,9 +1,14 @@
 freqtweak -- History of visible changes.
 
-Copyright (C) 2002-2003, Jesse Chappell <jesse@essej.net>
+Copyright (C) 2002-2004, Jesse Chappell <jesse@essej.net>
 See the end for copying conditions.
 
 Please send freqtweak bug reports to freqtweak-user@lists.sourceforge.net
+
+Version 0.6.1 -- 7 July 2004
+ * various fixes to satisfy compilers
+ * modulator preset loading fixes
+ * jack tmpdir option fix
 
 Version 0.6.0 -- 23 April 2004
  * added filter Modulators, Rotate, Rotate LFO,

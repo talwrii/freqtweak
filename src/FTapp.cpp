@@ -252,7 +252,7 @@ bool FTapp::OnInit()
 		pcnt = (int) longval;
 	}
 
-	if (parser.Found (wxT("d"), &jackdir)) {
+	if (parser.Found (wxT("D"), &jackdir)) {
 	       FTioSupport::setDefaultDir ((const char *) jackdir.c_str());
 	}
 	

@@ -64,6 +64,7 @@ class FTmodulatorDialog : public wxFrame, public SigC::Object
 
 	void onAddModulator (wxCommandEvent &ev);
 	void onAddButton (wxCommandEvent &ev);
+	void onClearButton (wxCommandEvent &ev);
 
 	void onModulatorDeath (FTmodulatorI * mod);
 
