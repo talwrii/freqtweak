@@ -789,6 +789,8 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 	}
 	else if ((event.LeftDown() || (_dragging && event.Dragging() && event.LeftIsDown())) && !event.RightIsDown() && !_zooming)
 	{
+		// Pencil drawing
+	   
 		if (event.LeftDown()) {
 			_firstX = _lastX = pX;
 			_firstY = _lastY = pY;
@@ -820,13 +822,17 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 		}
 		
 		int leftx, rightx;
+		int sign;
+		
 		if (_lastX <= pX) {
 			leftx = _lastX;
 			rightx = pX;
+			sign = 1;
 		}
 		else {
 			leftx = pX;
 			rightx = _lastX;
+			sign = -1;
 		}
 		
 		// compute values to modify
@@ -840,26 +846,54 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 		//int toi = (int) (pX / xscale);
 
 		int useY = pY;
+		
 		if (event.ControlDown()) {
 			if (_firstCtrl) {
-				_firstY = useY;
+				_firstY = pY;
 				_firstCtrl = false;
 			}
 			useY = _firstY;
+
+			if (useY < 0) useY = 0;
+			else if (useY > _height) useY = _height;
+
+			float val = yToVal (useY);
+			for ( i=frombin; i<=tobin; i++)
+			{
+				values[i] = val;
+				//values[i] = (((_height - useY) / (float)_height)) * (_max-_min) + _min;
+				//printf ("i=%d  values %g\n", i, values[i]);
+			}
+
 		}
 		else {
 			_firstCtrl = true;
+
+			if (useY < 0) useY = 0;
+			else if (useY > _height) useY = _height;
+
+			// do linear interpolation between lasty and usey
+			float adj = (_lastY - useY) / (float)(1 + tobin-frombin);
+			//printf ("adjust is %g   useY=%d  lasty=%d\n", adj, useY, _lastY);
+			float curradj = 0;
+			float leftY;
+			
+			if (sign > 0) {
+				leftY = _lastY;
+			}
+			else {
+				leftY = useY;
+			}
+			
+			for ( i=frombin; i<=tobin; i++)
+			{
+				values[i] = yToVal((int) (leftY - sign*curradj));
+				//values[i] = (((_height - useY) / (float)_height)) * (_max-_min) + _min;
+				//printf ("i=%d  values %g\n", i, values[i]);
+				curradj += adj;
+			}
 		}
 		
-		if (useY < 0) useY = 0;
-		else if (useY > _height) useY = _height;
-		
-		for ( i=frombin; i<=tobin; i++)
-		{
-			values[i] = yToVal(useY);
-			//values[i] = (((_height - useY) / (float)_height)) * (_max-_min) + _min;
-			//printf ("i=%d  values %g\n", i, values[i]);
-		}
 		
 		Refresh(FALSE);
 		_mainwin->updateGraphs(this, specm->getSpecModifierType());

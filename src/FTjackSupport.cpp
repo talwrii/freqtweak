@@ -462,7 +462,17 @@ void FTjackSupport::jackShutdown (void *arg)
 
 	fprintf (stderr, "Jack shut us down!\n");
 
+	for (int i=0; i < FT_MAXPATHS; i++)
+	{
+		if (jsup->_pathInfos[i]) {
+		   jsup->_pathInfos[i]->active = false;
+		}
+	}
+	
 	jsup->_inited = false;
+	jsup->_activePathCount = 0;
+
+	// reconnect?
 }
 
 // This isn't in use yet.
@@ -471,7 +481,7 @@ int FTjackSupport::portsChanged (jack_port_id_t port, int blah, void *arg)
 	FTjackSupport * jsup = (FTjackSupport *) FTioSupport::instance();
 
 	fprintf (stderr, "Ports changed on us!\n");
-
+ 
 	jsup->_portsChanged = true;
 
 	return 0;
