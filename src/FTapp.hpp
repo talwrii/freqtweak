@@ -44,6 +44,7 @@ class FTapp : public wxApp
 	FTmainwin * getMainwin() { return _mainwin; }
 
 	//FTprocessPath * getProcessPath(int index);
+	void setupSignals();
 	
   protected:
 	FTmainwin * _mainwin;

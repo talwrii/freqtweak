@@ -27,6 +27,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
+#include <string>
+using namespace std;
 
 #include "FTjackSupport.hpp"
 #include "FTprocessPath.hpp"
@@ -36,20 +38,15 @@
 #include <jack/jack.h>
 
 
-FTjackSupport::FTjackSupport(const char *name)
-	: _inited(false), _activePathCount(0), _activated(false)
+FTjackSupport::FTjackSupport(const char * name)
+	:  _inited(false), _jackClient(0), _activePathCount(0), _activated(false)
 {
 	// init process path info
 	for (int i=0; i < FT_MAXPATHS; i++) {
 		_pathInfos[i] = 0;
 	}
 
-	if (name) {
-		snprintf(_name, sizeof(_name)-1, "%s", name);
-	}
-	else {
-		strncpy(_name, "", sizeof(_name)-1);
-	}
+	_name = name;
 }
 
 FTjackSupport::~FTjackSupport()
@@ -74,19 +71,38 @@ FTjackSupport::~FTjackSupport()
  */
 bool FTjackSupport::init()
 {
-	/* try to become a client of the JACK server */
-	int pid = getpid();
-
-	if (strcmp(_name, "") == 0) {
-		snprintf(_name, sizeof(_name)-1, "freqtweak-%d", pid);
-	}
+	char namebuf[100];
 	
-	if ((_jackClient = jack_client_new (_name)) == 0) {
-		fprintf (stderr, "JACK Error: Either invalid name %s or JACK server not running?\n", _name);
+	/* try to become a client of the JACK server */
+	if (_name.empty()) {
+		// find a name predictably
+		for (int i=1; i < 10; i++) {
+			snprintf(namebuf, sizeof(namebuf)-1, "freqtweak_%d", i);
+			if ((_jackClient = jack_client_new (namebuf)) != 0) {
+				_name = namebuf;
+				break;
+			}
+		}
+	}
+	else {
+		// try the passed name, or base a predictable name from it
+		if ((_jackClient = jack_client_new (_name.c_str())) == 0) {
+			for (int i=1; i < 10; i++) {
+				snprintf(namebuf, sizeof(namebuf)-1, "%s_%d", _name.c_str(), i);
+				if ((_jackClient = jack_client_new (namebuf)) != 0) {
+					_name = namebuf;
+					break;
+				}
+			}
+		}
+	}
+
+	if (!_jackClient) {
+		fprintf (stderr, "JACK Error: No good client name or JACK server not running?\n");
 		_inited = false;
 		return false;
 	}
-
+	
 	/* tell the JACK server to call `process()' whenever
 	   there is work to be done.
 	*/
@@ -144,11 +160,20 @@ bool FTjackSupport::stopProcessing()
 {
 	if (!_jackClient) return false;
 
+	// load up latest port connections for possible restoring
+	for (int i=0; i < _activePathCount; ++i) {
+		const char ** ports;
+		if ((ports = getConnectedInputPorts (i)) != NULL)
+			free (ports);
+		if ((ports = getConnectedOutputPorts (i)) != NULL)
+			free (ports);
+	}
+	
 	if (jack_deactivate (_jackClient)) {
 		fprintf (stderr, "Error: cannot deactivate jack client!\n");
 		return false;
 	}
-
+	//printf ("deactivated jack\n");
 	_activated = false;
 	
 	return true;
@@ -452,6 +477,38 @@ const char ** FTjackSupport::getConnectedOutputPorts(int index)
 	return portnames;
 }
 
+const char ** FTjackSupport::getPhysicalInputPorts()
+{
+	const char ** portnames = NULL;
+	if (!_jackClient) return NULL;
+	
+	if ((portnames = jack_get_ports (_jackClient, NULL, NULL, JackPortIsPhysical|JackPortIsOutput)) == NULL) {
+		fprintf(stderr, "Cannot find any physical capture ports");
+	}
+
+	return portnames;
+}
+
+const char ** FTjackSupport::getPhysicalOutputPorts()
+{
+	const char ** portnames = NULL;
+	if (!_jackClient) return NULL;
+	
+	if ((portnames = jack_get_ports (_jackClient, NULL, NULL, JackPortIsPhysical|JackPortIsInput)) == NULL) {
+		fprintf(stderr, "Cannot find any physical playback ports");
+	}
+
+	return portnames;
+}
+
+
+bool FTjackSupport::inAudioThread()
+{
+	if (_jackClient && (pthread_self() == jack_client_thread_id (_jackClient))) {
+		return true;
+	} 
+	return false;
+}
 
 bool FTjackSupport::reinit (bool rebuild)
 {
@@ -482,8 +539,8 @@ bool FTjackSupport::reinit (bool rebuild)
 				// only do it if the port is not one of ours
 				// those interconnected ports within ourself are added
 				// only once below
-				if ( ! jack_port_is_mine ( _jackClient,
-							  jack_port_by_name(_jackClient, port.c_str())) )
+				jack_port_t * tport = jack_port_by_name(_jackClient, port.c_str());
+				if ( tport && ! jack_port_is_mine ( _jackClient, tport))
 				{
 					//fprintf(stderr, "reconnecting to input: %s\n", port.c_str());
 					connectPathInput ( i, port );
@@ -518,6 +575,7 @@ int FTjackSupport::processCallback (jack_nframes_t nframes, void *arg)
 {
 	FTjackSupport * jsup = (FTjackSupport *) FTioSupport::instance();
 	PathInfo * tmppath;
+
 	
 	// do processing for each path
 	for (int i=0; i < FT_MAXPATHS; i++)
@@ -594,3 +652,4 @@ int FTjackSupport::portsChanged (jack_port_id_t port, int blah, void *arg)
 
 	return 0;
 }
+

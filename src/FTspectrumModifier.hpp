@@ -39,6 +39,7 @@ class FTspectrumModifier
 		RATIO_MODIFIER,
 		FREQ_MODIFIER,
 		DB_MODIFIER,
+		SEMITONE_MODIFIER,
 	};
 
 	FTspectrumModifier(ModifierType mtype, SpecModType smtype, int length=512, float initval=0.0);

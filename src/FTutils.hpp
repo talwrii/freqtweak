@@ -35,6 +35,11 @@ public:
 /* input must be > 0       */
 	static float fast_log10 (float x);
 
+/* Logarithm base-2.      */
+/* absolute error < 6.4e-4 */
+/* input must be > 0       */
+	static float fast_log2 (float x);
+	
 
 /* Square root.           */
 /* relative error < 0.08% */
@@ -53,6 +58,7 @@ public:
 /* to the same array for in-place   */
 /* computation                      */
 
+	static void vector_fast_log2 (const float* x_input, float* y_output, int N);
 	static void vector_fast_log10 (const float* x_input, float* y_output, int N);
 	static void vector_fast_square_root (const float* x_input, float* y_output, int N);
 	static void vector_fast_fourth_root (const float* x_input, float* y_output, int N);

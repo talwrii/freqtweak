@@ -24,6 +24,9 @@
 #ifndef __FTIOSUPPORT_HPP__
 #define __FTIOSUPPORT_HPP__
 
+#include <string>
+using namespace std;
+
 #include "FTtypes.hpp"
 
 class FTprocessPath;
@@ -63,14 +66,19 @@ class FTioSupport
 	virtual const char * getInputPortName(int index) = 0;
 	virtual const char * getOutputPortName(int index) = 0;
 	
-    
+
+	virtual const char ** getPhysicalInputPorts() = 0;
+	virtual const char ** getPhysicalOutputPorts() = 0;
+
+	
 	virtual nframes_t getSampleRate() = 0;
 
 	virtual bool getPortsChanged() = 0;
 
-	virtual void setName (const char *name);
-	virtual const char * getName() { return _name; }
+	virtual void setName (const string & name);
+	virtual const char * getName() { return _name.c_str(); }
 
+	virtual bool inAudioThread() { return false; }
 	
 	enum IOtype
 	{
@@ -93,9 +101,9 @@ class FTioSupport
 	static IOtype _iotype;
 	
 	static FTioSupport * createInstance();
-	static const char * _defaultName;
+	static string _defaultName;
 	
-	char _name[100];
+	string _name;
 };
 
 

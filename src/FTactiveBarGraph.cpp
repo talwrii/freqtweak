@@ -82,16 +82,20 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	: wxPanel(parent, id, pos, size, style, name)
 	//, _topHeight(4), _bottomHeight(4), _leftWidth(4, _rightWidth(4)
 	, _specMod(0), _topSpecMod(0)
-	,_mindb(-50.0), _maxdb(0.0), _absmindb(-50), _absmaxdb(0.0)
+	,_mindb(-50.0), _maxdb(0.0), _absmindb(-60), _absmaxdb(0.0)
+	,_minsemi(-12.0), _maxsemi(12), _absminsemi(-12), _absmaxsemi(12)
 	, _tmpfilt(0), _toptmpfilt(0)
 	, _barColor0("skyblue"), _barColor1("steelblue")
 	,  _barColor2("seagreen"), _barColor3("darkseagreen")
 	,_barColorDead("gray30")
 	,_tipColor(200,200,0)
-	, _penColor("blue"), _backingMap(0)
+	, _penColor("blue"), _gridColor("gray25")
+	,_backingMap(0)
 	, _xScaleType(XSCALE_1X), _lastX(0)
 	, _dragging(false), _zooming(false)
 	, _mainwin(win)
+	, _gridFlag(false), _gridSnapFlag(false)
+	, _mouseCaptured(false)
 {
 	SetBackgroundColour(*wxBLACK);
 
@@ -116,6 +120,10 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	_barPen.SetColour(_penColor);
 	_barPen.SetStyle(wxTRANSPARENT);
 
+	_gridPen.SetColour(_gridColor);
+	_gridPen.SetStyle(wxSOLID);
+
+	
 	_xscaleMenu = new wxMenu("");
 	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_1Xscale, "1x Scale"));
 	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_2Xscale, "2x Scale"));
@@ -145,6 +153,13 @@ void FTactiveBarGraph::setSpectrumModifier (FTspectrumModifier *sm)
 	{
 		_mindb = _absmindb;
 		_maxdb = _absmaxdb;
+		_min = dbToVal(_mindb);
+		_max = dbToVal(_maxdb);
+	}
+ 	else if (_specMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER)
+	{
+		_minsemi = valToSemi(_min);
+		_maxsemi = valToSemi(_max);
 	}
 
 	
@@ -166,6 +181,13 @@ void FTactiveBarGraph::setTopSpectrumModifier (FTspectrumModifier *sm)
 	{
 		_mindb = _absmindb;
 		_maxdb = _absmaxdb;
+		_min = dbToVal(_mindb);
+		_max = dbToVal(_maxdb);
+	}
+ 	else if (_topSpecMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER)
+	{
+		_minsemi = valToSemi(_min);
+		_maxsemi = valToSemi(_max);
 	}
 
 	
@@ -184,28 +206,14 @@ void FTactiveBarGraph::setXscale(XScaleType sc)
 
 bool FTactiveBarGraph::setMinMax(float min, float max)
 {
- 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER)
-	{
-		if (min >= _absmin && max <= _absmax) {
-			_min = min;
-			_max = max;
-			_mindb = valToDb(min);
-			_maxdb = valToDb(max);
-			
-			Refresh(FALSE);
-			return true;
-		}
-		Refresh(FALSE);
-		return false;
-	}
-	else if (min >= _absmin && max <= _absmax) {
+	if (min >= _absmin && max <= _absmax) {
 		_min = min;
 		_max = max;
-		Refresh(FALSE);
+
+		recalculate();
 		return true;
 	}
 
-	Refresh(FALSE);
 	return false;
 }
 
@@ -354,17 +362,30 @@ int FTactiveBarGraph::xDeltaToBinDelta(int xdelt)
 
 float FTactiveBarGraph::valDiffY(float val, int lasty, int newy)
 {
+	float retval;
+	
 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER) {
 		// db scaled
 		float vdb = valToDb (val);
 		float ddb = ((lasty-newy)/(float)_height) * (_maxdb - _mindb) ;
-
-		return dbToVal (vdb + ddb);
+		retval =  dbToVal (vdb + ddb);
+	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER) {
+		// semitone scaled
+		float vsemi = valToSemi (val);
+		float dsemi = ((lasty-newy)/(float)_height) * (_maxsemi - _minsemi) ;
+		retval = semiToVal (vsemi + dsemi);
 	}
 	else {
 		float shiftval = yToVal(newy) - yToVal(lasty);
-		return ( val + shiftval);
+		retval = ( val + shiftval);
 	}
+
+	if (_gridSnapFlag) {
+		retval = snapValue(retval);
+	}
+	
+	return retval;
 }
 
 void FTactiveBarGraph::binToXRange(int bin, int &fromx, int &tox)
@@ -478,35 +499,6 @@ void FTactiveBarGraph::binToXRange(int bin, int &fromx, int &tox)
 }
 
 
-float FTactiveBarGraph::valToDb(float val)
-{
-	// assumes 0 <= yval <= 1
-	
-	if (val <= 0.0) {
-		// negative infinity really
-		return -200.0;
-	}
-	
-	//float nval = (20.0 * FTutils::fast_log10(yval / refmax));
-	float nval = (20.0 * FTutils::fast_log10(val));
-	
-	// printf ("scaled value is %g   mincut=%g\n", nval, _minCutoff);
-	return nval;
-	
-}
-
-float FTactiveBarGraph::dbToVal(float db)
-{
-	
-	//float nval = (20.0 * FTutils::fast_log10(yval / refmax));
-	float nval = pow ( 10.0, db/20);
-	
-	// printf ("scaled value is %g   mincut=%g\n", nval, _minCutoff);
-	return nval;
-	
-}
-
-
 
 int FTactiveBarGraph::valToY(float val)
 {
@@ -518,6 +510,11 @@ int FTactiveBarGraph::valToY(float val)
 		y = (int) (( (db - _mindb) / (_maxdb - _mindb)) * _height);
 		//printf ("val=%g  db=%g  y=%d\n", val, db, y);
 
+	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER) {
+		// go from octave to semitone
+		float semi = valToSemi (val);
+		y = (int) (( (semi - _minsemi) / (_maxsemi - _minsemi)) * _height);
 	}
 	else {
 		y = (int) ( (val - _min)/(_max-_min) * _height);
@@ -533,6 +530,12 @@ float FTactiveBarGraph::yToDb(int y)
 	return (((_height - y)/(float)_height) * (_maxdb-_mindb)) + _mindb ;
 }
 
+float FTactiveBarGraph::yToSemi(int y)
+{
+	return (((_height - y)/(float)_height) * (_maxsemi-_minsemi)) + _minsemi ;
+}
+
+
 float FTactiveBarGraph::yToVal(int y)
 {
 	float val = 0.0;
@@ -546,11 +549,70 @@ float FTactiveBarGraph::yToVal(int y)
 		//printf ("y=%d  val=%g  db=%g\n",  y, val, db);
 
 	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER) {
+		// go from semitone to octave
+		
+		float semi = (((_height - y)/(float)_height) * (_maxsemi-_minsemi)) + _minsemi ;
+		// Up a semitone is * 1.0593 or 12   2 (12th root of 2)
+		val = semiToVal(semi);
+		//printf ("y=%d  val=%g  db=%g\n",  y, val, db);
+
+	}
 	else {
 		val = (((_height - y) / (float)_height)) * (_max-_min) + _min;
 	}	
 
 	return val;
+}
+
+float FTactiveBarGraph::snapValue(float val)
+{
+	// takes a given value (as passed to the specmanip)
+	// and snaps it to the nearest gridline
+
+	float snapval = val;
+
+ 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER)
+	{
+		// every 6 db
+		float dbval = valToDb(val) / 6.0;
+		float numDivs = ((_absmaxdb - _absmindb) / 6.0);
+		float divdb = (_absmaxdb - _absmindb) / numDivs;
+
+		snapval = divdb * rint(dbval);
+		//printf ("gain snap: %g \n", snapval);
+		snapval = dbToVal (snapval);
+	}
+ 	else if (_specMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER)
+	{
+		float semival = valToSemi(val);
+
+		snapval = rint(semival);
+		//printf ("semi snap: %g \n", snapval);
+		snapval = semiToVal (snapval);
+		
+	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::TIME_MODIFIER) {
+		// every 500 msec
+		float updiv = val * 2;
+		snapval = rint(updiv) / 2.0;
+	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::UNIFORM_MODIFIER) {
+		// every 0.2
+		float updiv = val * 5.0;
+		snapval = rint(updiv) / 5.0;
+	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::DB_MODIFIER) {
+		// every 12 db
+		float dbval = val / 12.0;
+		float numDivs = ((_absmax - _absmin) / 12.0);
+		float divdb = (_absmax - _absmin) / numDivs;
+
+		snapval = divdb * rint(dbval);
+		//printf ("gain snap: %g \n", snapval);
+	}
+	
+	return snapval;
 }
 
 
@@ -657,6 +719,11 @@ void FTactiveBarGraph::OnPaint(wxPaintEvent & event)
 	}
 
 
+	// draw gridlines
+	if (_gridFlag) {
+		paintGridlines (backdc);
+	}
+	
 	if (_zooming) {
 		// draw xor'd box
 		backdc.SetLogicalFunction (wxINVERT);
@@ -676,13 +743,121 @@ void FTactiveBarGraph::OnPaint(wxPaintEvent & event)
 }
 
 
+void FTactiveBarGraph::paintGridlines(wxDC & dc)
+{
+	int origfunc = dc.GetLogicalFunction();
+	wxPen origPen = dc.GetPen();
+	
+	dc.SetPen(_gridPen);
+	dc.SetLogicalFunction(wxOR);
+	
+	// draw grid lines
+	list<int>::iterator yend = _gridPoints.end();
+	for (list<int>::iterator y = _gridPoints.begin() ; y != yend; ++y)
+	{
+		dc.DrawLine (0,  *y, _width, *y);
+	}
+  	
+	dc.SetPen(origPen);
+	dc.SetLogicalFunction(origfunc);
+}
+
+
 void FTactiveBarGraph::recalculate()
 {
 	int totbins = _specMod->getLength();
 	_xscale = _width / (float)totbins;
 
-	_min = _specMod->getMin();
-	_max = _specMod->getMax();
+	_gridPoints.clear();
+
+ 	if (_specMod->getModifierType() == FTspectrumModifier::GAIN_MODIFIER)
+	{
+		// every 6 db
+		_mindb = valToDb(_min);
+		_maxdb = valToDb(_max);
+		float numDivs = ((_absmaxdb - _absmindb) / 6.0);
+		float divdb = (_absmaxdb - _absmindb) / numDivs;
+		int y;
+		float cdb;
+		for (int i=1; i < (int)numDivs; ++i) {
+			cdb = _absmaxdb - (divdb * i);
+			if (cdb <= _maxdb && cdb >= _mindb) {
+				// add line
+				y = (int) (( (cdb - _mindb) / (_maxdb - _mindb)) * _height);
+				_gridPoints.push_back (_height - y);
+				//printf ("gain grid %d:  %g  y=%d\n", i, cdb, y);
+			}
+		}
+			
+	}
+ 	else if (_specMod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER)
+	{
+		// every semitone
+		_minsemi = valToSemi(_min);
+		_maxsemi = valToSemi(_max);
+
+		float numDivs = (_absmaxsemi - _absminsemi);
+		float updiv = 1.0;
+		int y;
+		float cunit;
+		for (int i=1; i < (int)numDivs; ++i) {
+			cunit = _absmaxsemi - (updiv * i);
+			if (cunit <= _maxsemi && cunit >= _minsemi) {
+				// add line
+				y = valToY(semiToVal(cunit));
+				_gridPoints.push_back (_height - y);
+				//printf ("pitch grid %d:  %g  y=%d\n", i, cunit, y);
+			}
+		}
+
+	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::TIME_MODIFIER) {
+		// every 500 msec
+		float updiv = 0.5;
+		int y;
+		for (float i=updiv; i < _absmax; i+=updiv) {
+			if (i <= _max && i >= _min) {
+				// add line
+				y = valToY(i);
+				_gridPoints.push_back (_height - y);
+				//printf ("time grid: %g  y=%d\n", i, y);
+			}
+		}
+
+	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::UNIFORM_MODIFIER) {
+		// every 0.1
+		float updiv = 0.2;
+		int y;
+		for (float i=updiv; i < _absmax; i+=updiv) {
+			if (i <= _max && i >= _min) {
+				// add line
+				y = valToY(i);
+				_gridPoints.push_back (_height - y);
+				//printf ("uniform grid: %g  y=%d\n", i, y);
+			}
+		}
+
+	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::DB_MODIFIER) {
+		// every 12 db
+		float numDivs = ((_absmax - _absmin) / 12.0);
+		float divdb = (_absmax - _absmin) / numDivs;
+		int y;
+		float cdb;
+		for (int i=1; i < (int)numDivs; ++i) {
+			cdb = _absmax - (divdb * i);
+			if (cdb <= _max && cdb >= _min) {
+				// add line
+				y = (int) (( (cdb - _min) / (_max - _min)) * _height);
+				_gridPoints.push_back (_height - y);
+				//printf ("gain grid %d:  %g  y=%d\n", i, cdb, y);
+			}
+		}
+	}
+
+
+	
 	
 	Refresh(FALSE);
 }
@@ -738,12 +913,17 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 		if (event.RightIsDown()) {
 			SetCursor(wxCURSOR_HAND);
 		}
-		CaptureMouse();
-
+		if (!_mouseCaptured) {
+			CaptureMouse();
+			_mouseCaptured = true;
+		}
 	}
 	else if (event.RightDown()) {
 		SetCursor(wxCURSOR_HAND);
-		CaptureMouse();
+		if (!_mouseCaptured) {
+			CaptureMouse();
+			_mouseCaptured = true;
+		}
 	}
 			
 
@@ -861,6 +1041,11 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 			else if (useY > _height) useY = _height;
 
 			float val = yToVal (useY);
+
+			if (_gridSnapFlag) {
+				val = snapValue(val);
+			}
+			
 			for ( i=frombin; i<=tobin; i++)
 			{
 				values[i] = val;
@@ -907,12 +1092,25 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 				{
 					float rightval = yToVal(rightY);
 					float leftval = yToVal(leftY);
+					if (_gridSnapFlag) {
+						leftval = snapValue(leftval);
+						rightval = snapValue(rightval);
+					}
+
 					float slope = (rightval - leftval) / (float)(1+tobin-frombin);				
-					
 					int n = 0;
-					for ( i=frombin; i<=tobin; i++, n++)
-					{
-						values[i] = leftval + slope * n;
+					
+					if (_gridSnapFlag) {
+						for ( i=frombin; i<=tobin; i++, n++)
+						{
+							values[i] = snapValue(leftval + slope * n);
+						}
+					}
+					else {
+						for ( i=frombin; i<=tobin; i++, n++)
+						{
+							values[i] = leftval + slope * n;
+						}
 					}
 				}
 // 				else {
@@ -953,13 +1151,27 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 				{
 					float rightval = yToVal(rightY);
 					float leftval = yToVal(leftY);
+					if (_gridSnapFlag) {
+						leftval = snapValue(leftval);
+						rightval = snapValue(rightval);
+					}
+
 					float slope = (rightval - leftval) / (float)(1+tobin-frombin);				
 					
 					int n = 0;
-					for ( i=frombin; i<=tobin; i++, n++)
-					{
-						values[i] = leftval + slope * n;
+					if (_gridSnapFlag) {
+						for ( i=frombin; i<=tobin; i++, n++)
+						{
+							values[i] = snapValue(leftval + slope * n);
+						}
 					}
+					else {
+						for ( i=frombin; i<=tobin; i++, n++)
+						{
+							values[i] = leftval + slope * n;
+						}
+					}
+
 				}
 // 				else {
 // 					// do linear interpolation between firsty and usey
@@ -995,6 +1207,7 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 			_firstY = _lastY = pY;
 			SetCursor(wxCURSOR_HAND);
 			_dragging = true;
+			_firstMove = true;
 		}
 
 		float * valueslist[2];
@@ -1043,6 +1256,31 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 			return;
 		}
 
+		
+		if (_gridSnapFlag)
+		{
+			int fromi, toi;
+			xToBinRange(_firstX, fromi, toi);
+			
+			if (_firstMove) {
+				_lastVal = snapValue(valueslist[0][fromi]);
+				_firstMove = false;
+			}
+			else {
+				if (_lastY != pY) {
+					float tval = valDiffY (_lastVal, _lastY, pY);
+					if (tval == _lastVal) {
+						//
+						//printf ("not good enough returning: %g\n", tval);
+						pY = _lastY;
+					}
+					else {
+						_lastVal = tval;
+						//printf ("good enough: new lastval=%g\n", _lastVal);					
+					}
+				}
+			}
+		}
 		
 		// compute difference in x and y from last
 		int diffX, diffY;
@@ -1133,7 +1371,11 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 
 	}
 	else if (event.ButtonUp()  && !event.LeftIsDown() && !event.RightIsDown()) {
-		ReleaseMouse();
+		if (_mouseCaptured) {
+			ReleaseMouse();
+			_mouseCaptured = false;
+		}
+		
 		SetCursor(wxCURSOR_PENCIL);
 		_dragging = false;
 
@@ -1147,7 +1389,9 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 				{
 					_mindb = _absmindb;
 					_maxdb = _absmaxdb;
-					Refresh(FALSE);
+					_min = dbToVal(_mindb);
+					_max = dbToVal(_maxdb);
+					recalculate();
 				}
 				else {
 					setMinMax (_absmin, _absmax);
@@ -1215,6 +1459,16 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 		if (showreal) {
 			realval = valToDb (data[frombin]);
 			_valstr.Printf ("C: %8.1f dB   @: %8.1f dB", val, realval);
+		}
+		else {
+			_valstr.Printf ("C: %8.1f dB", val);
+		}
+	}
+	else if (specmod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER) {
+		val = yToSemi (pY);
+		if (showreal) {
+			realval = valToSemi (data[frombin]);
+			_valstr.Printf ("C: %8.1f semi   @: %8.1f semi", val, realval);
 		}
 		else {
 			_valstr.Printf ("C: %8.1f dB", val);

@@ -126,8 +126,10 @@ FTspectralManip::FTspectralManip()
 	_feedbackFilter = new FTspectrumModifier(FTspectrumModifier::UNIFORM_MODIFIER, FEEDB_SPECMOD, _fftN/2, 0.0);
 	_feedbackFilter->setRange(0.0, 1.0);
 	
-	_scaleFilter = new FTspectrumModifier(FTspectrumModifier::RATIO_MODIFIER, SCALE_SPECMOD, _fftN/2, 1.0);
-	_scaleFilter->setRange(0.5, 2.0);
+// 	_scaleFilter = new FTspectrumModifier(FTspectrumModifier::RATIO_MODIFIER, SCALE_SPECMOD, _fftN/2, 1.0);
+// 	_scaleFilter->setRange(0.5, 2.0);
+ 	_scaleFilter = new FTspectrumModifier(FTspectrumModifier::SEMITONE_MODIFIER, SCALE_SPECMOD, _fftN/2, 1.0);
+ 	_scaleFilter->setRange(0.5, 2.0);
 	
 	_gateFilter = new FTspectrumModifier(FTspectrumModifier::DB_MODIFIER, GATE_SPECMOD, _fftN/2, -90.0);
 	_gateFilter->setRange(-90.0, 0.0);

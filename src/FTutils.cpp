@@ -111,6 +111,77 @@ float FTutils::fast_log10 (float x)
     return ans;
 }
 
+/* Logarithm base-10.      */
+/* absolute error < 6.4e-4 */
+/* input must be > 0       */
+float FTutils::fast_log2 (float x)
+{
+    /******************************************************************/
+    /* strategy: factor x into                                        */
+    /* 2^k * xprime                                                   */
+    /*   (where xprime is in the interval [1, 2))                     */
+    /* and compute log2 of both parts.                                */
+    /*                                                                */
+    /* a) log2 of 2^k is k (exact)                                    */
+    /* b) log2 of xprime is approximated with                         */
+    /*    a minimax polynomial.                                       */
+    /*                                                                */
+    /* The answer is the sum of the answers (a) and (b).              */
+    /*                                                                */
+    /* The approximation used for (b) yields max error of             */
+    /* 6.4e-4 over the interval [1, 2)                                */
+    /******************************************************************/
+
+
+    /* minimax approximation courtesy of MAPLE                    */
+    /* invocation:                                                */
+    /* > with('numapprox');                                       */
+    /* > y := minimax(log(x)/log(2), 1..2, [3,0], 1, 'maxerror'); */
+    /* > maxerror;                                                */
+
+
+#define FAST_LOG2_PREFACE                                                     \
+                                                                               \
+    /* coefficients for polynomial approximation */                            \
+    static const float c0 = -2.153620718;                                      \
+    static const float c1 = 3.047884161;                                       \
+    static const float c2 = -1.051875031;                                      \
+    static const float c3 = 0.1582487046;                                      \
+                                                                               \
+    float ans = 0;                                                             \
+                                                                               \
+                                                                               \
+    /* "bits" representation of the argument "x" */                            \
+    unsigned long* xbits = (unsigned long*)&x;                                 \
+                                                                               \
+    /* exponent of IEEE float */                                               \
+    int expo;                                                                  \
+
+
+    FAST_LOG2_PREFACE
+
+
+#define FAST_LOG2_BODY                                                        \
+    /* get the IEEE float exponent and debias */                               \
+    expo = (int) (*xbits >> 23) - 127;                                         \
+                                                                               \
+    /* force the exponent of x to zero */                                      \
+    /* (range reduction to [1, 2)):    */                                      \
+    *xbits &= 0x007fffff;                                                      \
+    *xbits += 0x3f800000;                                                      \
+                                                                               \
+    /* do the polynomial approximation */                                      \
+    ans = c0 + (c1 + (c2 + c3 * x) * x) * x;                                   \
+                                                                               \
+    /* add the log2(2^k) term */                                               \
+    ans += expo;                                                               \
+
+    FAST_LOG2_BODY
+
+    return ans;
+}
+
+
 /* Fourth root.           */
 /* relative error < 0.06% */
 /* input must be >= 0     */
@@ -350,6 +421,21 @@ void FTutils::vector_fast_log10 (const float* x_input, float* y_output, int N)
 	y_output[i] = ans;
     }
 }
+
+void FTutils::vector_fast_log2 (const float* x_input, float* y_output, int N)
+{
+    int i;
+    float x;
+    FAST_LOG2_PREFACE;
+    
+    for (i=0; i<N; ++i)
+    {
+	x = x_input[i];
+	FAST_LOG2_BODY
+	y_output[i] = ans;
+    }
+}
+
 
 
 void FTutils::vector_fast_square_root (const float* x_input, float* y_output, int N)

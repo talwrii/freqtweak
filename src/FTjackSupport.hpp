@@ -38,7 +38,7 @@ class FTjackSupport
 	: public FTioSupport
 {
   public:
-	FTjackSupport(const char *name="");
+	FTjackSupport(const char * name="");
 
 	virtual ~FTjackSupport();
 
@@ -71,9 +71,13 @@ class FTjackSupport
 	const char ** getInputConnectablePorts(int index);
 	const char ** getOutputConnectablePorts(int index);
 
+	const char ** getPhysicalInputPorts();
+	const char ** getPhysicalOutputPorts();
+
 	const char * getInputPortName(int index);
 	const char * getOutputPortName(int index);
 	
+	bool inAudioThread();
     
 	nframes_t getSampleRate() { return _sampleRate; }
 	bool getPortsChanged() { return _portsChanged; }

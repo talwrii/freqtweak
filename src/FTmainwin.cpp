@@ -120,6 +120,21 @@ enum WindowIds
 	FT_IOreconnectButton,
 	FT_IOdisconnectButton,
 	FT_IOnameText,
+
+	FT_FreqGridId,
+	FT_DelayGridId,
+	FT_FeedbackGridId,
+	FT_ScaleGridId,
+	FT_MashGridId,
+	FT_GateGridId,
+
+	FT_FreqGridSnapId,
+	FT_DelayGridSnapId,
+	FT_FeedbackGridSnapId,
+	FT_ScaleGridSnapId,
+	FT_MashGridSnapId,
+	FT_GateGridSnapId,
+	
 };
 
 
@@ -186,6 +201,21 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 	EVT_BUTTON(FT_MixLinkedButton, FTmainwin::handleLinkButtons)
 	EVT_BUTTON(FT_IOreconnectButton, FTmainwin::handleIOButtons)
 	EVT_BUTTON(FT_IOdisconnectButton, FTmainwin::handleIOButtons)
+
+	EVT_BUTTON(FT_FreqGridId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_DelayGridId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_FeedbackGridId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_ScaleGridId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_MashGridId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_GateGridId, FTmainwin::handleGridButtons)
+
+	EVT_BUTTON(FT_FreqGridSnapId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_DelayGridSnapId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_FeedbackGridSnapId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_ScaleGridSnapId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_MashGridSnapId, FTmainwin::handleGridButtons)
+	EVT_BUTTON(FT_GateGridSnapId, FTmainwin::handleGridButtons)
+	
 	
 END_EVENT_TABLE()
 
@@ -405,7 +435,7 @@ void FTmainwin::buildGui()
 	int rowi = 0;
 	
 	//_rowPanel = new wxPanel(this, -1);
-	_rowPanel = new wxScrolledWindow(this, FT_RowPanel, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxSUNKEN_BORDER);
+	_rowPanel = new wxScrolledWindow(this, FT_RowPanel, wxDefaultPosition, wxDefaultSize, wxVSCROLL|wxHSCROLL|wxSUNKEN_BORDER);
 	
 	_inspecSash = new wxSashLayoutWindow(_rowPanel, FT_RowPanelId, wxDefaultPosition, wxSize(-1,rowh));
 	_inspecPanel = new wxPanel(_inspecSash, -1);
@@ -639,6 +669,56 @@ void FTmainwin::buildGui()
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_feedbBypassAllButton->SetFont(buttFont);
 
+	// @@@@@@@@@@@@@@@@@@@@@@@@
+	// Grid buttons
+	
+	_freqGridButton = new wxButton(_freqPanel, FT_FreqGridId, "G",
+ 					  wxDefaultPosition, wxSize(bwidth,bheight));
+	_freqGridButton->SetFont(buttFont);
+	
+ 	_delayGridButton = new wxButton(_delayPanel, FT_DelayGridId, "G",
+ 					   wxDefaultPosition, wxSize(bwidth,bheight));
+	_delayGridButton->SetFont(buttFont);
+
+ 	_scaleGridButton = new wxButton(_scalePanel, FT_ScaleGridId, "G",
+					   wxDefaultPosition, wxSize(bwidth,bheight));
+	_scaleGridButton->SetFont(buttFont);
+
+ 	_gateGridButton = new wxButton(_gatePanel, FT_GateGridId, "G",
+					   wxDefaultPosition, wxSize(bwidth,bheight));
+	_gateGridButton->SetFont(buttFont);
+
+	_feedbGridButton = new wxButton(_feedbPanel, FT_FeedbackGridId, "G",
+					   wxDefaultPosition, wxSize(bwidth,bheight));
+	_feedbGridButton->SetFont(buttFont);
+
+
+	// @@@@@@@@@@@@@@@@@@@@@@@@
+	// GridSnap buttons
+	
+	_freqGridSnapButton = new wxButton(_freqPanel, FT_FreqGridSnapId, "GS",
+ 					  wxDefaultPosition, wxSize(bwidth,bheight));
+	_freqGridSnapButton->SetFont(buttFont);
+	
+ 	_delayGridSnapButton = new wxButton(_delayPanel, FT_DelayGridSnapId, "GS",
+ 					   wxDefaultPosition, wxSize(bwidth,bheight));
+	_delayGridSnapButton->SetFont(buttFont);
+
+ 	_scaleGridSnapButton = new wxButton(_scalePanel, FT_ScaleGridSnapId, "GS",
+					   wxDefaultPosition, wxSize(bwidth,bheight));
+	_scaleGridSnapButton->SetFont(buttFont);
+
+ 	_gateGridSnapButton = new wxButton(_gatePanel, FT_GateGridSnapId, "GS",
+					   wxDefaultPosition, wxSize(bwidth,bheight));
+	_gateGridSnapButton->SetFont(buttFont);
+
+	_feedbGridSnapButton = new wxButton(_feedbPanel, FT_FeedbackGridSnapId, "GS",
+					   wxDefaultPosition, wxSize(bwidth,bheight));
+	_feedbGridSnapButton->SetFont(buttFont);
+
+	// @@@@@@@
+	// spec types buttons
+	
 	_inspecSpecTypeAllButton = new  wxButton(_inspecPanel, FT_InSpecTypeId, "SP",
 					     wxDefaultPosition, wxSize(bwidth,bheight));
 	_inspecSpecTypeAllButton->SetFont(buttFont);
@@ -723,6 +803,11 @@ void FTmainwin::buildGui()
 	tmpsizer2->Add (_freqBypassAllButton, 1, wxALL, 1);
 	tmpsizer2->Add (_freqLinkAllButton, 1, wxALL, 1);
 	_freqbuttsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
+	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
+	tmpsizer2->Add (_freqGridButton, 1, wxALL, 1);
+	tmpsizer2->Add (_freqGridSnapButton, 1, wxALL, 1);
+	_freqbuttsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
+
 	_freqsizer->Add (_freqbuttsizer, 0, wxALL|wxEXPAND, 0);
 
 	_freqPanel->SetAutoLayout(TRUE);
@@ -743,6 +828,10 @@ void FTmainwin::buildGui()
 	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
 	tmpsizer2->Add (_scaleBypassAllButton, 1, wxALL, 1);
 	tmpsizer2->Add (_scaleLinkAllButton, 1, wxALL, 1);
+	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
+	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
+	tmpsizer2->Add (_scaleGridButton, 1, wxALL, 1);
+	tmpsizer2->Add (_scaleGridSnapButton, 1, wxALL, 1);
 	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
 	_scalesizer->Add (tmpsizer, 0, wxALL|wxEXPAND, 0);
 
@@ -785,6 +874,10 @@ void FTmainwin::buildGui()
 	tmpsizer2->Add (_gateBypassAllButton, 1, wxALL, 1);
 	tmpsizer2->Add (_gateLinkAllButton, 1, wxALL, 1);
 	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
+	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
+	tmpsizer2->Add (_gateGridButton, 1, wxALL, 1);
+	tmpsizer2->Add (_gateGridSnapButton, 1, wxALL, 1);
+	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
 	_gatesizer->Add (tmpsizer, 0, wxALL|wxEXPAND, 0);
 
 	_gatePanel->SetAutoLayout(TRUE);
@@ -806,6 +899,10 @@ void FTmainwin::buildGui()
 	tmpsizer2->Add (_delayBypassAllButton, 1, wxALL, 1);
 	tmpsizer2->Add (_delayLinkAllButton, 1, wxALL, 1);
 	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
+	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
+	tmpsizer2->Add (_delayGridButton, 1, wxALL, 1);
+	tmpsizer2->Add (_delayGridSnapButton, 1, wxALL, 1);
+	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
 	_delaysizer->Add (tmpsizer, 0, wxALL|wxEXPAND, 0);
 
 	_delayPanel->SetAutoLayout(TRUE);
@@ -825,6 +922,10 @@ void FTmainwin::buildGui()
 	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
 	tmpsizer2->Add (_feedbBypassAllButton, 1, wxALL, 1);
 	tmpsizer2->Add (_feedbLinkAllButton, 1, wxALL, 1);
+	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
+	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
+	tmpsizer2->Add (_feedbGridButton, 1, wxALL, 1);
+	tmpsizer2->Add (_feedbGridSnapButton, 1, wxALL, 1);
 	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 0);
 	_feedbsizer->Add (tmpsizer, 0, wxALL|wxEXPAND, 0);
 	_feedbPanel->SetAutoLayout(TRUE);
@@ -919,8 +1020,12 @@ void FTmainwin::buildGui()
 	SetSizer( mainsizer );
 
 	rowpanelScrollSize();
+
+	// force a nice minimum size
+	this->SetSizeHints(453,281);
 	
 	// set timer
+	
 	
 	_eventTimer->Start(_updateMS, FALSE);
 }
@@ -1335,6 +1440,9 @@ void FTmainwin::updateDisplay()
 	bool inspec=true, inplotline=true, inplotsolid=true;
 	bool outspec=true, outplotline=true, outplotsolid=true;
 	bool bypassed=true, muted=true, linked, active;
+	bool freqgrid=true, scalegrid=true, delaygrid=true, feedbgrid=true, gategrid=true;
+	bool freqgridsnap=true, scalegridsnap=true, delaygridsnap=true, feedbgridsnap=true, gategridsnap=true;
+	
 	
 	for (int i=0; i<_pathCount; i++)
 	{		
@@ -1440,6 +1548,28 @@ void FTmainwin::updateDisplay()
 		active = _outputSpectragram[i]->getPlotType()==FTspectragram::AMPFREQ_LINES;
 		_outspecPlotLineTypeButton[i]->SetBackgroundColour ((active ? (_activeBg) : (_defaultBg)));
 		if (outplotline && !active) outplotline = false;
+
+		// grid stuff
+		if (freqgrid && !_freqGraph[i]->getGridLines()) freqgrid = false;
+		
+		if (delaygrid && !_delayGraph[i]->getGridLines()) delaygrid = false;
+
+		if (feedbgrid && !_feedbackGraph[i]->getGridLines()) feedbgrid = false;
+
+		if (scalegrid && !_scaleGraph[i]->getGridLines()) scalegrid = false;
+
+		if (gategrid && !_gateGraph[i]->getGridLines()) gategrid = false;
+		//
+		if (freqgridsnap && !_freqGraph[i]->getGridSnap()) freqgridsnap = false;
+		
+		if (delaygridsnap && !_delayGraph[i]->getGridSnap()) delaygridsnap = false;
+
+		if (feedbgridsnap && !_feedbackGraph[i]->getGridSnap()) feedbgridsnap = false;
+
+		if (scalegridsnap && !_scaleGraph[i]->getGridSnap()) scalegridsnap = false;
+
+		if (gategridsnap && !_gateGraph[i]->getGridSnap()) gategridsnap = false;
+		
 		
 	}
 
@@ -1458,6 +1588,19 @@ void FTmainwin::updateDisplay()
 //	_mashLinkAllButton->SetBackgroundColour ((mashlink ? (_activeBg) : (_defaultBg)));
 	_gateLinkAllButton->SetBackgroundColour ((gatelink ? (_activeBg) : (_defaultBg)));
 
+	_freqGridButton->SetBackgroundColour ((freqgrid ? (_activeBg) : (_defaultBg)));
+	_delayGridButton->SetBackgroundColour ((delaygrid ? (_activeBg) : (_defaultBg)));
+	_feedbGridButton->SetBackgroundColour ((feedbgrid ? (_activeBg) : (_defaultBg)));
+	_scaleGridButton->SetBackgroundColour ((scalegrid ? (_activeBg) : (_defaultBg)));
+	_gateGridButton->SetBackgroundColour ((gategrid ? (_activeBg) : (_defaultBg)));
+
+	_freqGridSnapButton->SetBackgroundColour ((freqgridsnap ? (_activeBg) : (_defaultBg)));
+	_delayGridSnapButton->SetBackgroundColour ((delaygridsnap ? (_activeBg) : (_defaultBg)));
+	_feedbGridSnapButton->SetBackgroundColour ((feedbgridsnap ? (_activeBg) : (_defaultBg)));
+	_scaleGridSnapButton->SetBackgroundColour ((scalegridsnap ? (_activeBg) : (_defaultBg)));
+	_gateGridSnapButton->SetBackgroundColour ((gategridsnap ? (_activeBg) : (_defaultBg)));
+
+	
 	_bypassAllButton->SetBackgroundColour ((bypassed ? (_activeBg) : (_defaultBg)));
 	_muteAllButton->SetBackgroundColour ((muted ? (_activeBg) : (_defaultBg)));
 	_linkMixButton->SetBackgroundColour ((_linkedMix ? (_activeBg) : (_defaultBg)));
@@ -1472,33 +1615,36 @@ void FTmainwin::updateDisplay()
 	
 	_pathCountChoice->SetSelection(_pathCount - 1);
 
-	if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_TURTLE)
-		_plotSpeedChoice->SetSelection(0);
-	else if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_SLOW)
-		_plotSpeedChoice->SetSelection(1);
-	else if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_MED)
-		_plotSpeedChoice->SetSelection(2);
-	else if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_FAST)
-		_plotSpeedChoice->SetSelection(3);
-
-	_windowingChoice->SetSelection(_processPath[0]->getSpectralManip()->getWindowing());
-
-	const int * fftbins = FTspectralManip::getFFTSizes();
-	for (int i=0; i < FTspectralManip::getFFTSizeCount(); i++) {
-		if (fftbins[i] == _processPath[0]->getSpectralManip()->getFFTsize()) {
-			_freqBinsChoice->SetSelection(i);
-			break;
+	if (_processPath[0]) {
+	
+		if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_TURTLE)
+			_plotSpeedChoice->SetSelection(0);
+		else if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_SLOW)
+			_plotSpeedChoice->SetSelection(1);
+		else if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_MED)
+			_plotSpeedChoice->SetSelection(2);
+		else if (_processPath[0]->getSpectralManip()->getUpdateSpeed() == FTspectralManip::SPEED_FAST)
+			_plotSpeedChoice->SetSelection(3);
+		
+		_windowingChoice->SetSelection(_processPath[0]->getSpectralManip()->getWindowing());
+		
+		const int * fftbins = FTspectralManip::getFFTSizes();
+		for (int i=0; i < FTspectralManip::getFFTSizeCount(); i++) {
+			if (fftbins[i] == _processPath[0]->getSpectralManip()->getFFTsize()) {
+				_freqBinsChoice->SetSelection(i);
+				break;
+			}
+		}
+		
+		// hack
+		for (int i=0; i < 5; i++) {
+			if (_processPath[0]->getSpectralManip()->getOversamp() == 1<<i) {
+				_overlapChoice->SetSelection(i);
+				break;
+			}
 		}
 	}
-
-	// hack
-	for (int i=0; i < 5; i++) {
-		if (_processPath[0]->getSpectralManip()->getOversamp() == 1<<i) {
-			_overlapChoice->SetSelection(i);
-			break;
-		}
-	}
-
+	
 	_ioNameText->SetValue (iosup->getName());
 	
 	
@@ -1752,7 +1898,7 @@ void FTmainwin::handleLinkButtons (wxCommandEvent &event)
 		   break;
 	   }
 	   else if (source == _delayLinkButton[i]) {
-		   // popup menu
+		   // popup menuGrid
 		   FTlinkMenu *menu = new FTlinkMenu (_delayLinkButton[i], this, manip, DELAY_SPECMOD);
 		   _delayLinkButton[i]->PopupMenu (menu, 0, 0);
 		   break;
@@ -2022,7 +2168,6 @@ void FTmainwin::handleLabelButtons (wxCommandEvent &event)
 }
 
 
-
 void FTmainwin::handleChoices (wxCommandEvent &event)
 {
 	wxObject *source = event.GetEventObject();
@@ -2031,9 +2176,10 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 	
 	if (source == _freqBinsChoice) {
 		int sel = _freqBinsChoice->GetSelection();
-		iosup->stopProcessing();
 
-		wxThread::Sleep(100);
+		iosup->close();
+
+		wxThread::Sleep(200);
 		
 		for (int i=0; i < _pathCount; i++) {
 			if (!_processPath[i]) continue;
@@ -2041,8 +2187,18 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			_processPath[i]->getSpectralManip()->setFFTsize( (FTspectralManip::FFT_Size) (unsigned)_freqBinsChoice->GetClientData(sel) );
 		}
 
-		iosup->startProcessing();
-		iosup->reinit(false);
+		if (iosup->init()) {
+			if (iosup->startProcessing()) {
+				iosup->reinit();
+			}
+		}
+		else {
+			fprintf(stderr, "Error initing jack client\n");
+		}
+		
+		//iosup->init();
+		//iosup->startProcessing();
+		//iosup->reinit(false);
 		//updateDisplay();
 
 		updateGraphs(0, ALL_SPECMOD);
@@ -2090,6 +2246,53 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 	}
 	
 }
+
+void FTmainwin::handleGridButtons (wxCommandEvent &event)
+{
+   wxObject *source = event.GetEventObject();
+
+   for (int i=0; i < _pathCount; i++) {
+	   if (!_processPath[i]) continue;
+
+	   // master gridlines buttons
+	   if (source == _scaleGridButton) {
+		   _scaleGraph[i]->setGridLines ( _scaleGridButton->GetBackgroundColour() != _activeBg);
+	   }
+	   else if (source == _gateGridButton) {
+		   _gateGraph[i]->setGridLines ( _gateGridButton->GetBackgroundColour() != _activeBg);
+	   }
+	   else if (source == _freqGridButton) {
+		   _freqGraph[i]->setGridLines ( _freqGridButton->GetBackgroundColour() != _activeBg);
+	   }
+	   else if (source == _delayGridButton) {
+		   _delayGraph[i]->setGridLines ( _delayGridButton->GetBackgroundColour() != _activeBg);
+	   }
+	   else if (source == _feedbGridButton) {
+		   _feedbackGraph[i]->setGridLines ( _feedbGridButton->GetBackgroundColour() != _activeBg);
+	   }	   
+
+	   
+	   else if (source == _scaleGridSnapButton) {
+		   _scaleGraph[i]->setGridSnap ( _scaleGridSnapButton->GetBackgroundColour() != _activeBg);
+	   }
+	   else if (source == _gateGridSnapButton) {
+		   _gateGraph[i]->setGridSnap ( _gateGridSnapButton->GetBackgroundColour() != _activeBg);
+	   }
+	   else if (source == _freqGridSnapButton) {
+		   _freqGraph[i]->setGridSnap ( _freqGridSnapButton->GetBackgroundColour() != _activeBg);
+	   }
+	   else if (source == _delayGridSnapButton) {
+		   _delayGraph[i]->setGridSnap ( _delayGridSnapButton->GetBackgroundColour() != _activeBg);
+	   }
+	   else if (source == _feedbGridSnapButton) {
+		   _feedbackGraph[i]->setGridSnap ( _feedbGridSnapButton->GetBackgroundColour() != _activeBg);
+	   }	   
+
+   }
+
+   updateDisplay();
+}
+
 
 void FTmainwin::handleIOButtons (wxCommandEvent &event)
 {

@@ -46,7 +46,8 @@ of all filters can be stored or loaded as presets.
       scaling algorithm (used in Steve Harris' LADSPA plugin). If you keep all
       the bins at the same scale, it is equivalent to Steve's plugin, but when
       you start applying different scales per frequency bin, things quickly
-      get weird.
+      get weird.  For highest quality results (at the expense of transients) use
+      larger FFT (>= 1024 bins).
 
     ** Gate -- This is a double filter where a given frequency band is allowed
       to pass through (unaltered) if the power on that band is between two dB

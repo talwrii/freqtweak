@@ -87,6 +87,7 @@ class FTmainwin : public wxFrame
 	void handleLabelButtons (wxCommandEvent &event);
 	
 	void handlePlotTypeButtons (wxCommandEvent &event);
+	void handleGridButtons (wxCommandEvent &event);
 	
 	void handleChoices (wxCommandEvent &event);
 	void handleSashDragged (wxSashEvent &event);
@@ -152,6 +153,19 @@ class FTmainwin : public wxFrame
 	wxButton * _delayLinkAllButton;
 	wxButton * _feedbLinkAllButton;
 
+	wxButton * _scaleGridButton;
+	wxButton * _gateGridButton;
+	wxButton * _freqGridButton;
+	wxButton * _delayGridButton;
+	wxButton * _feedbGridButton;
+
+	wxButton * _scaleGridSnapButton;
+	wxButton * _gateGridSnapButton;
+	wxButton * _freqGridSnapButton;
+	wxButton * _delayGridSnapButton;
+	wxButton * _feedbGridSnapButton;
+	
+	
 	wxButton * _inspecLabelButton;
 	wxButton * _scaleLabelButton;
 	wxButton * _mashLabelButton;
@@ -178,8 +192,12 @@ class FTmainwin : public wxFrame
 	wxButton * _outspecPlotSolidTypeAllButton;
 	wxButton * _outspecPlotLineTypeAllButton;
 
+
+	
 	wxButton * _linkMixButton;
 
+	
+	
 	// per path panels
 	wxPanel * _upperPanels[FT_MAXPATHS];
 	wxPanel * _inspecPanels[FT_MAXPATHS];

@@ -20,9 +20,13 @@
 #ifndef __FTACTIVEBARGRAPH_HPP__
 #define __FTACTIVEBARGRAPH_HPP__
 
+#include <list>
+using namespace std;
+
 #include <wx/wx.h>
 
 #include "FTtypes.hpp"
+#include "FTutils.hpp"
 
 class FTspectrumModifier;
 class FTmainwin;
@@ -56,6 +60,12 @@ class FTactiveBarGraph
 
 	void setFixMin (bool flag);
 	bool getFixMin () { return _fixMin; }
+
+	void setGridLines (bool flag) { _gridFlag = flag; recalculate(); }
+	bool getGridLines() { return _gridFlag; }
+
+	void setGridSnap (bool flag) { _gridSnapFlag = flag; }
+	bool getGridSnap () { return _gridSnapFlag; }
 	
 	void OnPaint ( wxPaintEvent &event);
 	void OnSize ( wxSizeEvent &event);
@@ -74,14 +84,22 @@ class FTactiveBarGraph
 	int valToY(float val);
 	float yToVal(int y);
 
-	float valToDb(float val);
-	float dbToVal(float db);
+	inline float valToDb(float val);
+	inline float dbToVal(float db);
+	inline float valToSemi(float val);
+	inline float semiToVal(float semi);
+
+
 	float yToDb(int y);
+	float yToSemi(int y);
 
 	float valDiffY(float val, int lasty, int newy);
 
 	void updatePositionLabels(int pX, int pY, bool showreal=false, FTspectrumModifier *specmod=0);
-	
+
+	void paintGridlines(wxDC & dc);
+
+	float snapValue(float val);
 	
 	int _width, _height;
 
@@ -101,6 +119,9 @@ class FTactiveBarGraph
 	
 	float _mindb, _maxdb;
 	float _absmindb, _absmaxdb;
+
+	float _minsemi, _maxsemi;
+	float _absminsemi, _absmaxsemi;
 	
 	float *_tmpfilt, *_toptmpfilt;
 	
@@ -110,6 +131,10 @@ class FTactiveBarGraph
 	wxBrush _bgBrush;
 	wxColour _penColor;
 	wxPen  _barPen;
+
+	wxColour  _gridColor;
+	wxPen  _gridPen;
+
 	
 	wxBitmap * _backingMap;
 
@@ -121,8 +146,9 @@ class FTactiveBarGraph
 	// mouse stuff
 	int _lastX, _lastY;
 	int _firstX, _firstY;
+	float _lastVal;
 	bool _dragging;
-	bool _firstCtrl;
+	bool _firstCtrl, _firstMove;
 	bool _zooming;
 	int _topzoomY, _bottomzoomY;
 	
@@ -131,12 +157,71 @@ class FTactiveBarGraph
 	wxMenu * _xscaleMenu;
 	
 	FTmainwin * _mainwin;
+
+	list<int> _gridPoints;
+	bool _gridFlag;
+	bool _gridSnapFlag;
 	
+	bool _mouseCaptured;
   private:
 	// any class wishing to process wxWindows events must use this macro
 	DECLARE_EVENT_TABLE()	
 
 };
+
+
+inline float FTactiveBarGraph::valToDb(float val)
+{
+	// assumes 0 <= yval <= 1
+	
+	if (val <= 0.0) {
+		// negative infinity really
+		return -200.0;
+	}
+	
+	//float nval = (20.0 * FTutils::fast_log10(yval / refmax));
+	float nval = (20.0 * FTutils::fast_log10(val));
+	
+	// printf ("scaled value is %g   mincut=%g\n", nval, _minCutoff);
+	return nval;
+	
+}
+
+inline float FTactiveBarGraph::dbToVal(float db)
+{
+	
+	//float nval = (20.0 * FTutils::fast_log10(yval / refmax));
+	float nval = pow ( 10.0, db/20);
+	
+	// printf ("scaled value is %g   mincut=%g\n", nval, _minCutoff);
+	return nval;
+	
+}
+
+inline float FTactiveBarGraph::semiToVal(float semi)
+{
+	
+	float val = pow (2.0, semi/12.0);
+	
+	// printf ("scaled value is %g   mincut=%g\n", nval, _minCutoff);
+	return val;
+	
+}
+
+inline float FTactiveBarGraph::valToSemi(float val)
+{
+	// assumes 0 <= yval <= 1
+	
+	if (val <= 0.0) {
+		// invalid
+		return 0.0;
+	}
+	
+	float semi = 12.0 * FTutils::fast_log2(val);
+		
+	return semi;
+}
+
 
 
 #endif

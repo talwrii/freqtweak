@@ -24,6 +24,8 @@
 
 #include <signal.h>
 #include <stdio.h>
+#include <pthread.h>
+#include <iostream>
 
 //#include <wx/wx.h>
 
@@ -76,10 +78,10 @@ static const wxCmdLineEntryDesc cmdLineDesc[] =
 	{ wxCMD_LINE_SWITCH, "h", "help", "show this help", wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
 	{ wxCMD_LINE_OPTION, "c", "channels",    "# processing channels (1-4) default is 2", wxCMD_LINE_VAL_NUMBER },
 	{ wxCMD_LINE_OPTION, "i", "inputs",
-	  "connect inputs from these jack ports (separate each channel with commas).\n\t\t\t  Defaults to 'alsa_pcm:in_1,..." },
+	  "connect inputs from these jack ports (separate each channel with commas).\n\t\t\t  Defaults to 'alsa_pcm:capture_1,..." },
 	{ wxCMD_LINE_OPTION, "o", "outputs",
-	  "connect outputs to these jack ports (separate each channel with commas).\n\t\t\t  Defaults to 'alsa_pcm:out_1,...'" },
-	{ wxCMD_LINE_OPTION, "n", "jack-name",    "jack name.   default is freqtweak-PID"},
+	  "connect outputs to these jack ports (separate each channel with commas).\n\t\t\t  Defaults to 'alsa_pcm:playback_1,...'" },
+	{ wxCMD_LINE_OPTION, "n", "jack-name",    "jack name.   default is freqtweak_1"},
 	{ wxCMD_LINE_OPTION, "p", "preset",    "load given preset initially"},
 	{ wxCMD_LINE_OPTION, "r", "rc-dir",    "what directory to use for run-control state. default is ~/.freqtweak"},
 	{ wxCMD_LINE_NONE }
@@ -91,30 +93,129 @@ FTapp::FTapp()
 {
 }
 
-static void onTerminate(int arg)
-{
-	//::wxGetApp().getMainwin()->cleanup();
-	::wxGetApp().getMainwin()->Close(TRUE);
 
-	::wxGetApp().ExitMainLoop();
-	printf ("bye bye, hope you had fun...\n");
+static void* watchdog_thread(void* arg)
+{
+  sigset_t signalset;
+  //struct ecasound_state* state = reinterpret_cast<struct ecasound_state*>(arg);
+  int signalno;
+  bool exiting = false;
+  
+  /* register cleanup routine */
+  //atexit(&ecasound_atexit_cleanup);
+
+  // cerr << "Watchdog-thread created, pid=" << getpid() << "." << endl;
+
+  while (!exiting)
+  {
+	  sigemptyset(&signalset);
+	  
+	  /* handle the following signals explicitly */
+	  sigaddset(&signalset, SIGTERM);
+	  sigaddset(&signalset, SIGINT);
+	  sigaddset(&signalset, SIGHUP);
+	  sigaddset(&signalset, SIGPIPE);
+	  
+	  /* block until a signal received */
+	  sigwait(&signalset, &signalno);
+	  
+	  //cerr << endl << "freqtweak: watchdog-thread received signal " << signalno << ". Cleaning up..." << endl;
+
+	  if (signalno == SIGHUP) {
+		  // reinit iosupport
+		  cerr << "freqtweak got SIGHUP... reiniting" << endl;
+		  wxThread::Sleep(200);
+
+		  FTioSupport * iosup = FTioSupport::instance();
+		  if (!iosup->isInited()) {
+			  iosup->init();
+			  if (iosup->startProcessing()) {
+				  iosup->reinit();
+			  }
+		  }
+
+		  if (::wxGetApp().getMainwin()) {
+			  ::wxGetApp().getMainwin()->updateDisplay();
+		  }
+	  }
+	  else {
+		  exiting = true;
+	  }
+  }
+
+  ::wxGetApp().getMainwin()->Close(TRUE);
+  
+  ::wxGetApp().ExitMainLoop();
+  printf ("bye bye, hope you had fun...\n");
+
+  /* to keep the compilers happy; never actually executed */
+  return(0);
 }
+
+
+
+/**
+ * Sets up a signal mask with sigaction() that blocks 
+ * all common signals, and then launces an watchdog
+ * thread that waits on the blocked signals using
+ * sigwait().
+ */
+void FTapp::setupSignals()
+{
+  pthread_t watchdog;
+
+  /* man pthread_sigmask:
+   *  "...signal actions and signal handlers, as set with
+   *   sigaction(2), are shared between all threads"
+   */
+
+  struct sigaction blockaction;
+  blockaction.sa_handler = SIG_IGN;
+  sigemptyset(&blockaction.sa_mask);
+  blockaction.sa_flags = 0;
+
+  /* ignore the following signals */
+  sigaction(SIGTERM, &blockaction, 0);
+  sigaction(SIGINT, &blockaction, 0);
+  sigaction(SIGHUP, &blockaction, 0);
+  sigaction(SIGPIPE, &blockaction, 0);
+
+  int res = pthread_create(&watchdog, 
+			   NULL, 
+			   watchdog_thread, 
+			   NULL);
+  if (res != 0) {
+    cerr << "freqtweak: Warning! Unable to create watchdog thread." << endl;
+  }
+}
+
+
 
 // `Main program' equivalent: the program execution "starts" here
 bool FTapp::OnInit()
 {
-	signal (SIGTERM, onTerminate);
-	signal (SIGINT, onTerminate);
 
-	wxString inputports[4];
-	wxString outputports[4];
+// 	signal (SIGTERM, onTerminate);
+// 	signal (SIGINT, onTerminate);
+
+// 	signal (SIGHUP, onHangup);
+
+	
+	wxString inputports[FT_MAXPATHS];
+	wxString outputports[FT_MAXPATHS];
 	wxString jackname;
 	wxString preset;
 	wxString rcdir;
 	int pcnt = 2;
+	int icnt = 0;
+	int ocnt = 0;
+	bool connected = true;
 	
 	SetExitOnFrameDelete(TRUE);
 
+	setupSignals();
+
+	
 	if (sizeof(sample_t) != sizeof(fftw_real)) {
 		fprintf(stderr, "FFTW Mismatch!  You need to build FreqTweak against a single-precision\n");
 		fprintf(stderr, "  FFTW library.  See the INSTALL file for instructions.\n");  		
@@ -129,7 +230,7 @@ bool FTapp::OnInit()
 	wxCmdLineParser parser(argc, argv);
 	parser.SetDesc(cmdLineDesc);
 	parser.SetLogo(wxString::Format("FreqTweak %s\n%s%s%s%s", freqtweak_version,
-					"Copyright 2002 Jesse Chappell\n",
+					"Copyright 2002-2003 Jesse Chappell\n",
 					"FreqTweak comes with ABSOLUTELY NO WARRANTY\n",
 					"This is free software, and you are welcome to redistribute it\n",
 					"under certain conditions; see the file COPYING for details\n"));
@@ -145,53 +246,12 @@ bool FTapp::OnInit()
 	long longval;
 
 	if (parser.Found ("c", &longval)) {
-		if (longval < 1 || longval > 4) {
-			fprintf(stderr, "Error: channel count must be in range [1-4]\n");
+		if (longval < 1 || longval > FT_MAXPATHS) {
+			fprintf(stderr, "Error: channel count must be in range [1-%d]\n", FT_MAXPATHS);
 			parser.Usage();
 			return FALSE;
 		}
 		pcnt = (int) longval;
-	}
-	
-	if (parser.Found ("i", &strval))
-	{
-		// parse comma separated values
-		wxString port = strval.BeforeFirst(',');
-		wxString remain = strval.AfterFirst(',');
-		int id=0;
-		while (!port.IsEmpty() && id < pcnt) {
-			inputports[id++] = port;			
-			port = remain.BeforeFirst(',');
-			remain = remain.AfterFirst(',');
-		}
-		
-	}
-	else {
-		// connect default ports
-		for (int id=0; id < pcnt; id++) {
-			inputports[id] = wxString::Format ("alsa_pcm:capture_%d", id+1);				
-		}
-	}
-
-	// OUTPUT PORTS
-	if (parser.Found ("o", &strval))
-	{
-		// parse comma separated values
-		wxString port = strval.BeforeFirst(',');
-		wxString remain = strval.AfterFirst(',');
-		int id=0;
-		while (!port.IsEmpty() && id < pcnt) {
-			outputports[id++] = port;			
-			port = remain.BeforeFirst(',');
-			remain = remain.AfterFirst(',');
-		}
-		
-	}
-	else {
-		// connect default ports
-		for (int id=0; id < pcnt; id++) {
-			outputports[id] = wxString::Format ("alsa_pcm:playback_%d", id+1);
-		}
 	}
 
 	if (parser.Found ("n", &jackname)) {
@@ -207,10 +267,66 @@ bool FTapp::OnInit()
 
 	if (!iosup->init()) {
 		fprintf(stderr, "Error connecting to jack!\n");
-		return FALSE;
+		connected = false;
 	}
 
+
 	
+	if (parser.Found ("i", &strval))
+	{
+		// parse comma separated values
+		wxString port = strval.BeforeFirst(',');
+		wxString remain = strval.AfterFirst(',');
+		int id=0;
+		while (!port.IsEmpty() && id < pcnt) {
+			inputports[id++] = port;			
+			port = remain.BeforeFirst(',');
+			remain = remain.AfterFirst(',');
+			++icnt;
+		}
+		
+	}
+	else {
+		// default input ports
+		const char ** ports = iosup->getPhysicalInputPorts();
+		if (ports) {
+			// default input ports
+			for (int id=0; id < pcnt && ports[id]; ++id, ++icnt) {
+				inputports[id] = ports[id];
+			}
+
+			free (ports);
+		}
+	}
+
+	// OUTPUT PORTS
+	if (parser.Found ("o", &strval))
+	{
+		// parse comma separated values
+		wxString port = strval.BeforeFirst(',');
+		wxString remain = strval.AfterFirst(',');
+		int id=0;
+		while (!port.IsEmpty() && id < pcnt) {
+			outputports[id++] = port;			
+			port = remain.BeforeFirst(',');
+			remain = remain.AfterFirst(',');
+			++ocnt;
+		}
+		
+	}
+	else {
+		const char ** ports = iosup->getPhysicalOutputPorts();
+		if (ports) {
+			// default output ports
+			for (int id=0; id < pcnt && ports[id]; ++id, ++ocnt) {
+				outputports[id] = ports[id];
+			}
+			
+			free (ports);
+		}
+	}
+
+
 	
 	// Create the main application window
 	_mainwin = new FTmainwin(pcnt, "FreqTweak", rcdir,
@@ -218,29 +334,31 @@ bool FTapp::OnInit()
 
 	
 	// Show it and tell the application that it's our main window
-	_mainwin->SetSize(654,760);
+	_mainwin->SetSize(669,770);
 	_mainwin->Show(TRUE);
 
 	SetTopWindow(_mainwin);
 
-
-	// only start processing after building mainwin
-	iosup->startProcessing();
-
-
-	if ( preset.IsEmpty()) {
-		// connect initial I/O
-		for (int id=0; id < pcnt; id++)
-		{
-			iosup->connectPathInput(id, inputports[id]);
-			iosup->connectPathOutput(id, outputports[id]);
+	if (connected)
+	{
+		// only start processing after building mainwin and connected
+		// to JACK
+		iosup->startProcessing();
+		if ( preset.IsEmpty()) {
+			// connect initial I/O
+			for (int id=0; id < icnt; ++id)
+			{
+				iosup->connectPathInput(id, inputports[id]);
+			}
+			for (int id=0; id < ocnt; ++id)
+			{
+				iosup->connectPathOutput(id, outputports[id]);
+			}
+		}
+		else {
+			_mainwin->loadPreset(preset);
 		}
 	}
-	else {
-		_mainwin->loadPreset(preset);
-	}
-	
-
 	
 	_mainwin->updateDisplay();
 	
