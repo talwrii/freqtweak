@@ -226,6 +226,10 @@ bool FTconfigManager::storeSettings (const char * name)
 
 bool FTconfigManager::loadSettings (const char * name)
 {
+	if (strcmp (name, "") == 0) {
+		return false;
+	}
+	
 	wxString dirname(wxString::Format("%s/presets/%s", _basedir.c_str(), name));
 
 	if ( ! wxDir::Exists(dirname) ) {
