@@ -62,17 +62,72 @@
 	      (sound design, etc).  The spectrum analysis is
 	      pretty useful in its own right.
 
-	    <h3> Download </h3>
-	     Get the source code and build it yourself
-	  <a
-	    href="http://sourceforge.net/project/showfiles.php?group_id=64313">here</a>.<br>
-	  Alternatively, you can get prebuilt binary packages for
-	  various RedHat distros at
-	  <a
-	    href="http://www-ccrma.stanford.edu/planetccrma/software/soundapps.html#freqtweak">Planet CCRMA</a>.
+<p>
 
+	  <table border=0 width="100%" cellpadding=6 cellspacing=0>
+		<tr bgcolor="#bbbbbb">
+		  <th align=left>
+		    News
+		  </th>
+		</tr>
+		<tr bgcolor="#eeeeee">
+		  <td>
+		    Version 0.5.0 released --
+		    <font size=-1>
+		      -- arbitrarily selectable and reorderable modules
+		      -- preset blending feature
+		      -- two new modules: limiter and warp
+		      -- new preset format (conversion script available)
+		      -- internal design cleanup
+		    <p>
+		      The preset format has changed for 0.5.0 and
+		      above.  Use the included <a
+			href="ft_preset_convert.py">ft_preset_convert.py</a>
+		      script to convert your existing presets.  If
+		      your freqtweak rc files are in the default location
+		      ( ~/.freqtweak/ ) just execute the script with
+		      no arguments,
+		      otherwise specify the directory containing
+		      preset dirs as the first argument.
+		    </font>
+		    
+		  </td>
+		</tr>
+		  
+	    </table>
+<p>
+	      
+	  <table border=0 width="100%" cellpadding=6 cellspacing=0>
+		<tr bgcolor="#bbbbbb">
+		  <th align=left>
+		    Download
+		  </th>
+		</tr>
+
+		<tr bgcolor="#dddddd">
+		  <td>
+		    Get the source code and build it yourself
+		    <a
+		      href="http://sourceforge.net/project/showfiles.php?group_id=64313">here</a>.<br>
+		    Alternatively, you can get prebuilt binary packages for
+		    various RedHat distros at
+		    <a
+		      href="http://www-ccrma.stanford.edu/planetccrma/software/soundapps.html#freqtweak">Planet CCRMA</a>.
+		    </td>
+		</tr>  
+	    </table>
+
+<p>
+	  <table border=0 width="100%" cellpadding=6 cellspacing=0>
+		<tr bgcolor="#bbbbbb">
+		  <th align=left>
+		    Features
+		  </th>
+		</tr>
+		<tr bgcolor="#eeeeee">
+		  <td>
 	    
-	    <h3>Features</h3>
+
 
 	    FreqTweak supports manipulating the spectral filters at several frequency resolutions
 	    (64,128,256,512,1024,2048, or 4096 bands) depending on your
@@ -158,11 +213,23 @@
 		  (it affects both axes).
 		  </font>
 	    </ul>
-	    
-	    <h3>Requirements</h3>
-	    <ul compact>
+		  </td>
+		</tr>  
+	    </table>
+
+<p>
+	  <table border=0 width="100%" cellpadding=6 cellspacing=0>
+		<tr bgcolor="#bbbbbb">
+		  <th align=left>
+	    Requirements
+		  </th>
+		</tr>
+		<tr bgcolor="#eeeeee">
+		  <td>
+	    	    
+
+	    <ul>
 	      <li> <a href="http://jackit.sf.net">JACK</a> --
-		<font size=-1>
 		providing
 		realtime low-latency audio interconnection and
 		delivery.  JACK requires the <a
@@ -172,20 +239,31 @@
 		please study the <a href="http://www.djcj.org">Linux
 		  Audio User Guide</a> and make sure to read the
 		section on JACK.
-		  </font>
 	      <li> <a href="http://www.fftw.org">FFTW</a> --
-		<font size=-1>for speedy FFT processing  (compiled as
+		for speedy FFT processing  (compiled as
 		single-precision)</font>
 
 	      <li> <a href="http://www.wxwindows.org">wxWindows</a>
-		<font size=-1>
 		(wxGTK) -- the GUI toolkit I've chosen to use.
 		It should work with the most recent 2.2.x and 2.3.x
-		and 2.4.x series.
-		  </font>
+		and 2.4.x series.  I haven't tested with the 2.2.x in
+			a while though....
 	    </ul>
+		  </td>
+		</tr>  
+	    </table>
 
-	    <h3>Mouse Control</h3>
+<p>
+	  <table border=0 width="100%" cellpadding=6 cellspacing=0>
+		<tr bgcolor="#bbbbbb">
+		  <th align=left>
+		    Mouse Control
+		  </th>
+		</tr>
+		<tr bgcolor="#eeeeee">
+		  <td>
+	    	    
+
 
 	    <font size=-1>
 	    <ul>
@@ -224,8 +302,23 @@
 		<li> The G and GS buttons mean Toggle Grid and Toggle
 	        Grid Snap respectively.
 
+		    </ul>
+		  </font>
+		  </td>
+		</tr>  
+	    </table>
 
-      <li>  Here is an example of using freqtweak with an alsaplayer feeding it
+<p>
+	  <table border=0 width="100%" cellpadding=6 cellspacing=0>
+		<tr bgcolor="#bbbbbb">
+		  <th align=left>
+		    Tips
+		  </th>
+		</tr>
+		<tr bgcolor="#eeeeee">
+		  <td>
+		    <font size=-1>
+	    Here is an example of using freqtweak with an alsaplayer feeding it
 	      and output going to speakers (alsa_pcm:out_?) without using a JACK patchbay:
 	      <br>
 	      Start freqtweak first with this command line: <p>
@@ -235,20 +328,35 @@
 
                    &nbsp;&nbsp; alsaplayer -o jack -d ft:in_1,ft:in_2  &amp; 
                   
-	      
-	    </ul>
-	  </font>
+	      </font>
+		  </td>
+		</tr>  
+	    </table>
 
-	    <h3> TODO </h3>
-	    <font size=-1>
+	    <p>
+
+	    <table border=0 width="100%" cellpadding=6 cellspacing=0>
+		<tr bgcolor="#bbbbbb">
+		  <th align=left>
+		    TODO
+		  </th>
+		</tr>
+		<tr bgcolor="#eeeeee">
+		  <td>
+		    <font size=-1>
 	    <ul>
 	      <li> Automated filter modulation (via plugins?)
 	      <li> Plot performance optimizations (OpenGL?)
 	      <li> Whatever else the users want :)
 	      </ul>
 	    </font>
+		  </td>
+		</tr>  
+	    </table>
 	    
 	    <hr>
+	    <center>
+
 	    Please address questions, bugfixes, etc to the
 	    <a href="https://lists.sourceforge.net/lists/listinfo/freqtweak-user">mailing list</a>
 	  at <a
@@ -260,15 +368,15 @@
 	      <font size=-1>
 	    <!-- Created: Wed Oct  9 17:02:31 EDT 2002 -->
 	    <!-- hhmts start -->
-Last modified: Wed Jul 16 01:55:52 EDT 2003
+Last modified: Wed Jul 16 23:27:09 EDT 2003
 <!-- hhmts end -->
 </font>
 	    <p>
-	    <A href="http://sourceforge.net">
+	      <A href="http://sourceforge.net">
 	      <IMG
 		   src="http://sourceforge.net/sflogo.php?group_id=64313&amp;type=5"
 		   width="210" height="62" border="0" alt="SourceForge Logo"></ A>
-	    
+	    </center>
 	  </td>
     </tr>
   </table>

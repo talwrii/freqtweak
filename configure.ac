@@ -11,7 +11,7 @@
 AC_INIT(src/FTapp.cpp)
 
 
-BETA=dev
+BETA=
 
 FREQTWEAK_MAJOR_VERSION=0
 FREQTWEAK_MINOR_VERSION=5
@@ -80,16 +80,16 @@ AM_CONDITIONAL(ARCH_686,test "$ARCH_TYPE" = "i686")
 AM_CONDITIONAL(ARCH_PPC,test "$ARCH_TYPE" = "ppc")
 AM_CONDITIONAL(ARCH_ULTRA,test "$ARCH_TYPE" = "sun4u")
 
-dnl AC_MSG_CHECKING(for gcc optimization flags)
-dnl old_cflags=$CFLAGS
-dnl CFLAGS="$CFLAGS -O2 -fexpensive-optimizations -funroll-loops -finline-functions -ffast-math"
-dnl AC_TRY_COMPILE([#include <stdio.h>],
-dnl [ printf ("hello, world"); ],
-dnl [ EXTRA_OPT_CFLAGS="-O2 -fexpensive-optimizations -funroll-loops -finline-functions -ffast-math"],[ EXTRA_OPT_CFLAGS=""])
-dnl CFLAGS=$old_cflags
-dnl AC_MSG_RESULT([$EXTRA_OPT_CFLAGS])
+AC_MSG_CHECKING(for gcc optimization flags)
+old_cflags=$CFLAGS
+CFLAGS="$CFLAGS -O2 -fexpensive-optimizations -funroll-loops -finline-functions -ffast-math"
+AC_TRY_COMPILE([#include <stdio.h>],
+[ printf ("hello, world"); ],
+[ EXTRA_OPT_CFLAGS="-O2 -fexpensive-optimizations -funroll-loops -finline-functions -ffast-math"],[ EXTRA_OPT_CFLAGS=""])
+CFLAGS=$old_cflags
+AC_MSG_RESULT([$EXTRA_OPT_CFLAGS])
 
-dnl ARCH_CFLAGS="$CFLAGS $EXTRA_OPT_CFLAGS"
+ARCH_CFLAGS="$CFLAGS $EXTRA_OPT_CFLAGS"
 
 if test "$ARCH_TYPE" = "i486" || test "$ARCH_TYPE" = "i586" || test "$ARCH_TYPE" = "i686"
 then

@@ -8,16 +8,16 @@ For building and installation instructions please see the INSTALL file.
 
 **** Description ****
 
-FreqTweak is a tool for realtime audio spectral manipulation and display. It
-provides several algorithms for processing audio data in the frequency domain
-and a highly interactive GUI to manipulate the associated filters for each. It
-also provides high-resolution spectral displays in the form of scrolling-
-raster spectragrams and energy vs frequency plots displaying both pre- and
-post-processed spectra.
+FreqTweak is a tool for realtime audio spectral manipulation and
+display. It provides several algorithms for processing audio data in
+the frequency domain and a highly interactive GUI to manipulate the
+associated filters for each. It also provides high-resolution spectral
+displays in the form of scrolling- raster spectragrams and energy vs
+frequency plots displaying both pre- and post-processed spectra.
 
-It is an extremely addictive audio toy, I have to pry myself away from playing
-with it so I can work on it! I hope it has value for serious audio work too
-(sound design, etc). The spectrum analysis is pretty useful in its own right.
+It is an extremely addictive audio toy, but I hope it has value for
+serious audio work too (sound design, etc). The spectrum analysis is
+pretty useful in its own right.
 
 
 **** Features ****
@@ -60,6 +60,19 @@ of all filters can be stored or loaded as presets.
       Delay accomplishes. Granted, I don't have all the automated filter
       modulations (yet ;). See their website for audio examples of what is
       possible with this cool effect.
+
+    ** Limit --	This is very harsh brick wall limiter on a per-bin
+		basis.  It is not very pleasant, but can be interesting.
+
+    ** Warp  --	  This one is a little different, both axes represent
+		  frequency, and the identity matrix is unaltered
+		  audio.  Changing the value (height) of a bin,
+		  reallocates the energy at that frequency to the new
+		  frequency bin represented by the height of the bar.
+		  For instance, if all bins are the same height, all
+		  the frequency energy is added to a single bin.  This
+		  is a sensitive filter, the Log frequency scale is helpful here
+		  (it affects both axes).
 
 
 **** Requirements ****

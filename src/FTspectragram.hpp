@@ -78,7 +78,7 @@ public:
 	void OnXscaleMenu (wxMenuEvent &event);
 	
 	float powerLogScale(float yval);
-
+	
   protected:
 
 	void initColorTable();

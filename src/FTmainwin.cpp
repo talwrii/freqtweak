@@ -2608,7 +2608,7 @@ void FTmainwin::updateAllExtra ()
 		engine = _processPath[i]->getSpectralEngine();
 		vector<FTprocI *> procmods;
 		engine->getProcessorModules (procmods);
-	
+
 		int rowcnt=-1; // preincremented below
 	
 		for (unsigned int n=0; n < procmods.size(); ++n)

@@ -170,7 +170,6 @@ void FTspectragram::setPlotType (PlotType pt)
 	}
 }
 
-
 void FTspectragram::OnPaint(wxPaintEvent & event)
 {
 	//printf ("Spectragram::OnPaint\n");

@@ -9,7 +9,7 @@ Version 0.5.0
  * arbitrarily selectable and reorderable modules
  * preset blending feature
  * two new modules: limiter and warp
- * new preset format (conversion script available)
+ * new preset format (conversion script included: ft_preset_convert.py)
  * internal design cleanup
 
 Version 0.4.8

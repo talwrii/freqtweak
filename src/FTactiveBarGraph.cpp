@@ -103,7 +103,7 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 {
 	SetBackgroundColour(*wxBLACK);
 	
-	_mainwin->normalizeFontSize(_boundsFont, 12, "999");
+	_mainwin->normalizeFontSize(_boundsFont, 11, "999");
 
 	
 	_barBrush0.SetColour(_barColor0);
@@ -1960,20 +1960,20 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 		val = yToDb (pY);
 		if (showreal) {
 			realval = valToDb (data[frombin]);
-			_valstr.Printf ("C: %8.1f dB   @: %8.1f dB", val, realval);
+			_valstr.Printf ("C: %7.1f dB  @: %7.1f dB", val, realval);
 		}
 		else {
-			_valstr.Printf ("C: %8.1f dB", val);
+			_valstr.Printf ("C: %7.1f dB", val);
 		}
 	}
 	else if (specmod->getModifierType() == FTspectrumModifier::SEMITONE_MODIFIER) {
 		val = yToSemi (pY);
 		if (showreal) {
 			realval = valToSemi (data[frombin]);
-			_valstr.Printf ("C: %8.1f semi   @: %8.1f semi", val, realval);
+			_valstr.Printf ("C: %7.1f semi  @: %7.1f semi", val, realval);
 		}
 		else {
-			_valstr.Printf ("C: %8.1f dB", val);
+			_valstr.Printf ("C: %7.1f dB", val);
 		}
 	}
 	else if (specmod->getModifierType() == FTspectrumModifier::TIME_MODIFIER) {
@@ -1982,16 +1982,16 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 		if (showreal) {
 			realval = data[frombin];
 			if (_gridChoiceIndex >= _beatscutoff) {
-				_valstr.Printf ("C: %8.3f beats    @: %8.3f beats", val * _tempo/60.0, realval * _tempo/60.0);
+				_valstr.Printf ("C: %7.3f beats  @: %7.3f beats", val * _tempo/60.0, realval * _tempo/60.0);
 			} else {
-				_valstr.Printf ("C: %8.0f ms    @: %8.0f ms", val * 1000.0, realval * 1000.0);
+				_valstr.Printf ("C: %7.0f ms  @: %7.0f ms", val * 1000.0, realval * 1000.0);
 			}
 		}
 		else {
 			if (_gridChoiceIndex >= _beatscutoff) {
-				_valstr.Printf ("C: %8.3f beats", val * _tempo/60.0);
+				_valstr.Printf ("C: %7.3f beats", val * _tempo/60.0);
 			} else {
-				_valstr.Printf ("C: %8.0f ms", val * 1000.0);
+				_valstr.Printf ("C: %7.0f ms", val * 1000.0);
 			}
 		}
 	}
@@ -2000,17 +2000,17 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 		val = yToVal (pY);
 		if (showreal) {
 			realval = data[frombin];
-			_valstr.Printf ("C: %8.1f %%    @: %8.1f %%", val * 100.0, realval * 100.0);
+			_valstr.Printf ("C: %7.1f %%  @: %7.1f %%", val * 100.0, realval * 100.0);
 		}
 		else {
-			_valstr.Printf ("C: %8.1f %%", val * 100.0);
+			_valstr.Printf ("C: %7.1f %%", val * 100.0);
 		}
 	}
 	else if (specmod->getModifierType() == FTspectrumModifier::DB_MODIFIER) {
 		val = yToVal (pY);
 		if (showreal) {
 			realval = data[frombin];
-			_valstr.Printf ("C: %8.2f dB   @: %8.2f dB", val, realval);
+			_valstr.Printf ("C: %7.2f dB  @: %7.2f dB", val, realval);
 		}
 		else {
 			_valstr.Printf ("C: %8.2f dB", val);
@@ -2029,7 +2029,7 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 			realval = data[frombin];
 			realval = ((realval - _absmin) / (_absmax-_absmin)) * samprate * 0.5;
 			
-			_valstr.Printf ("C: %5d Hz   @: %5d Hz", (int) val, (int) realval);
+			_valstr.Printf ("C: %5d Hz  @: %5d Hz", (int) val, (int) realval);
 		}
 		else {
 			_valstr.Printf ("C: %5d Hz", (int)val);
@@ -2039,7 +2039,7 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 		val = yToVal (pY);
 		if (showreal) {
 			realval = data[frombin];
-			_valstr.Printf ("C: %8.3f   @: %8.3f ", val, realval);
+			_valstr.Printf ("C: %7.3f  @: %7.3f ", val, realval);
 		}
 		else {
 			_valstr.Printf ("C: %8.3f", val);
