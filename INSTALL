@@ -6,6 +6,7 @@ You will need to have the following packages installed:
   JACK  ( >= 0.34 )			[ http://jackit.sourceforge.net ]
   FFTW  (tested with 2.1.3 and 3.0)		[ http://www.fftw.org ]
   wxGTK (tested with 2.2.x, 2.3.x, and 2.4.x)   [ http://www.wxwindow.org ]
+  libsigc++ >= 1.2    [ libsigc.sourceforge.net ]
 
 IMPORTANT NOTE:  you will need to use FFTW with single precision.
    If configuring FFTW ( < 3) you will want to use "--enable-float --enable-type-prefix"

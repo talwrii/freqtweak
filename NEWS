@@ -5,6 +5,11 @@ See the end for copying conditions.
 
 Please send freqtweak bug reports to freqtweak-user@lists.sourceforge.net
 
+Version 0.6.0 -- 23 April 2004
+ * added filter Modulators, Rotate, Rotate LFO,
+   Value LFO, and Randomize
+ * minor bugfixes
+
 Version 0.5.3
  * reworked all string handling to be compatible with unicode
    versions of wxGTK
