@@ -275,7 +275,7 @@ void FTmainwin::buildGui()
 	wxPanel * configpanel = new wxPanel (ctrlbook, -1);
 	wxBoxSizer *configSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	_presetCombo = new wxComboBox (configpanel, FT_PresetCombo, "",  wxDefaultPosition, wxSize(200,-1));
+	_presetCombo = new wxComboBox (configpanel, FT_PresetCombo, "",  wxDefaultPosition, wxSize(200,-1), 0, 0,  wxCB_SORT);
 	configSizer->Add( _presetCombo, 0, wxALL|wxALIGN_CENTER, 2);
 
 	
@@ -2332,7 +2332,10 @@ void FTmainwin::rebuildDisplay(bool dolink)
 	updateGraphs(0, ALL_SPECMOD);
 
 	updateDisplay();
-	
+
+	if (_blendDialog) {
+		_blendDialog->refreshState();
+	}
 }
 
 void FTmainwin::handlePathCount (wxCommandEvent &event)

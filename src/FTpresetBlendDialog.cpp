@@ -54,6 +54,7 @@ BEGIN_EVENT_TABLE(FTpresetBlendDialog, wxDialog)
 	EVT_COMBOBOX (ID_PriPresetCombo, FTpresetBlendDialog::onCombo)
 	EVT_COMBOBOX (ID_SecPresetCombo, FTpresetBlendDialog::onCombo)
 	
+	
 END_EVENT_TABLE()
 
 
@@ -102,21 +103,55 @@ void FTpresetBlendDialog::init()
 {
 	wxBoxSizer * mainsizer = new wxBoxSizer(wxVERTICAL);
 
+	wxFont titleFont(12, wxDEFAULT, wxNORMAL, wxBOLD);
 
-	wxBoxSizer * comboSizer = new wxBoxSizer(wxHORIZONTAL);
 	
-	_priPresetBox = new wxComboBox (this, ID_PriPresetCombo, "",  wxDefaultPosition, wxSize(175,-1));
-	comboSizer->Add( _priPresetBox, 0, wxALL|wxALIGN_LEFT, 2);
+	wxBoxSizer *tmpsizer, *tmpsizer2;
+	wxStaticText * stattext;
+	wxBoxSizer * comboSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	comboSizer->Add(2,-1,1);
+	tmpsizer = new wxBoxSizer(wxVERTICAL);
+	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
+	
+	stattext = new wxStaticText(this, -1, "Preset 1: ", wxDefaultPosition, wxSize(-1, -1));
+	stattext->SetFont(titleFont);
+	tmpsizer2->Add(stattext, 0, wxALL|wxEXPAND, 1);
 
-	_secPresetBox = new wxComboBox (this, ID_SecPresetCombo, "",  wxDefaultPosition, wxSize(175,-1));
-	comboSizer->Add( _secPresetBox, 0, wxALL|wxALIGN_LEFT, 2);
+	_priStatus = new wxStaticText(this, -1, "not set", wxDefaultPosition, wxSize(-1, -1));
+	tmpsizer2->Add(_priStatus, 0, wxALL, 1);
+	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 1);
+	
+	_priPresetBox = new wxComboBox (this, ID_PriPresetCombo, "",  wxDefaultPosition, wxSize(175,-1), 0, 0, wxCB_READONLY|wxCB_SORT);
+	tmpsizer->Add( _priPresetBox, 0, wxALL|wxEXPAND|wxALIGN_LEFT, 1);
+	
+	comboSizer->Add( tmpsizer, 0, wxALL|wxALIGN_LEFT, 1);
 
-	mainsizer->Add (comboSizer, 0, wxEXPAND|wxALL, 5);
+	comboSizer->Add(1,-1,1);
 
-	wxBoxSizer *tmpsizer = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText * stattext = new wxStaticText(this, -1, "Master", wxDefaultPosition, wxSize(_namewidth, -1));
+	tmpsizer = new wxBoxSizer(wxVERTICAL);
+	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
+	
+	stattext = new wxStaticText(this, -1, "Preset 2: ", wxDefaultPosition, wxSize(-1, -1));
+	stattext->SetFont(titleFont);
+	tmpsizer2->Add(stattext, 0, wxALL|wxEXPAND, 1);
+
+	_secStatus = new wxStaticText(this, -1, "not set", wxDefaultPosition, wxSize(-1, -1));
+	tmpsizer2->Add(_secStatus, 0, wxALL|wxEXPAND, 1);
+	tmpsizer->Add (tmpsizer2, 0, wxALL|wxEXPAND, 1);
+	
+	_secPresetBox = new wxComboBox (this, ID_SecPresetCombo, "",  wxDefaultPosition, wxSize(175,-1),  0, 0, wxCB_READONLY|wxCB_SORT);
+	tmpsizer->Add( _secPresetBox, 0, wxALL|wxEXPAND|wxALIGN_LEFT, 1);
+
+	comboSizer->Add( tmpsizer, 0, wxALL|wxALIGN_LEFT, 1);
+
+	
+	mainsizer->Add (comboSizer, 0, wxEXPAND|wxALL, 2);
+
+	tmpsizer = new wxBoxSizer(wxHORIZONTAL);
+	stattext = new wxStaticText(this, -1, "Master", wxDefaultPosition, wxSize(_namewidth, -1));
+	stattext->SetFont(titleFont);
+	stattext->SetSize(_namewidth, -1);
+	
 	tmpsizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 	_masterBlend = new wxSlider(this, ID_MasterSlider, 0, 0, 1000);
 	tmpsizer->Add (_masterBlend, 1, wxALL|wxALIGN_CENTRE_VERTICAL, 3);
@@ -155,6 +190,7 @@ void FTpresetBlendDialog::init()
 
 void FTpresetBlendDialog::refreshState(const string & defname, bool usefirst, const string & defsec, bool usesec)
 {
+	wxFont titleFont(12, wxDEFAULT, wxNORMAL, wxBOLD);
 
 	// not compatible with old wx
 	_procSizer->Clear (true);
@@ -211,6 +247,8 @@ void FTpresetBlendDialog::refreshState(const string & defname, bool usefirst, co
 				wxBoxSizer * tmpsizer = new wxBoxSizer(wxHORIZONTAL);
 				
 				wxStaticText * stattext = new wxStaticText(_procPanel, -1, filts[m]->getName().c_str(), wxDefaultPosition, wxSize(_namewidth, -1));
+				stattext->SetFont(titleFont);
+				stattext->SetSize(_namewidth, -1);
 				tmpsizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 				
 				wxSlider * slid = new wxSlider(_procPanel, ID_FilterBlendSlider, 0, 0, 1000);
@@ -232,22 +270,39 @@ void FTpresetBlendDialog::refreshState(const string & defname, bool usefirst, co
 	if (usefirst) {
 		if (_presetBlender->setPreset (defname, 0)) {
 			_priPresetBox->SetValue (wxString(defname.c_str()));
+			_priStatus->SetLabel ("ready");
+		}
+		else {
+			_priStatus->SetLabel ("not set or invalid");
 		}
 	}
 	else {
 		if (_presetBlender->setPreset (origfirst.c_str(), 0)) {
 			_priPresetBox->SetValue (origfirst);
+			_priStatus->SetLabel ("ready");
+		}
+		else {
+			_priStatus->SetLabel ("not set or invalid");
 		}
 	}
 	
 	if (usesec) {
 		if (_presetBlender->setPreset (defsec, 1)) {
 			_secPresetBox->SetValue (wxString(defsec.c_str()));
+			_secStatus->SetLabel ("ready");
 		}
+		else {
+			_secStatus->SetLabel ("not set or invalid");
+		}
+		
 	}
 	else {
 		if (_presetBlender->setPreset (origsec.c_str(), 1)) {
 			_secPresetBox->SetValue (origsec);
+			_secStatus->SetLabel ("ready");
+		}
+		else {
+			_secStatus->SetLabel ("not set or invalid");
 		}
 	}
 	
@@ -282,7 +337,11 @@ void FTpresetBlendDialog::onCombo(wxCommandEvent &ev)
 				printf ("error could not load preset %s\n", name.c_str());
 				_priPresetBox->SetSelection(-1);
 				_priPresetBox->SetValue("");
+				_priStatus->SetLabel ("not set or invalid");
 
+			}
+			else {
+				_priStatus->SetLabel ("ready");
 			}
 		}
 	}
@@ -297,6 +356,10 @@ void FTpresetBlendDialog::onCombo(wxCommandEvent &ev)
 				printf ("error could not load preset %s\n", name.c_str());
 				_secPresetBox->SetSelection(-1);
 				_secPresetBox->SetValue("");
+				_secStatus->SetLabel ("not set or invalid");
+			}
+			else {
+				_secStatus->SetLabel ("ready");
 			}
 		}
 	}

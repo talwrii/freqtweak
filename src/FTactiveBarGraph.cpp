@@ -799,6 +799,27 @@ int FTactiveBarGraph::valToY(float val)
 		float semi = valToSemi (val);
 		y = (int) (( (semi - _minsemi) / (_maxsemi - _minsemi)) * _height);
 	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::FREQ_MODIFIER) {
+
+		if (_xScaleType == XSCALE_1X || _xScaleType == XSCALE_2X)
+		{
+			y = (int) ( (val - _min)/(_max-_min) * _height);
+		}
+		else if (_xScaleType == XSCALE_LOGA)
+		{
+			// use log scale for freq
+			y = (int) ((FTutils::fast_log10(val+1) / FTutils::fast_log10(_absmax*0.5)) * _height);
+
+			// printf ("bin %d  fromx=%d  tox=%d\n", bin, fromx, tox);
+		}
+		else if (_xScaleType == XSCALE_LOGB)
+		{
+			y = (int) ((FTutils::fast_log10(val+1) / FTutils::fast_log10(_absmax*0.3333)) * _height);
+		}
+		
+		//  scale it however the X scale is
+
+	}
 	else {
 		y = (int) ( (val - _min)/(_max-_min) * _height);
 	}	
@@ -841,10 +862,32 @@ float FTactiveBarGraph::yToVal(int y)
 		//printf ("y=%d  val=%g  db=%g\n",  y, val, db);
 
 	}
+	else if (_specMod->getModifierType() == FTspectrumModifier::FREQ_MODIFIER) {
+
+		if (_xScaleType == XSCALE_1X || _xScaleType == XSCALE_2X)
+		{
+			val = (((_height - y) / (float)_height)) * (_max-_min) + _min;
+			//y = (int) ( (val - _min)/(_max-_min) * _height);
+		}
+		else if (_xScaleType == XSCALE_LOGA)
+		{
+			// use log scale for freq
+			//y = (int) ((FTutils::fast_log10(val) / FTutils::fast_log10(_absmax*0.5)) * _height);
+
+			val = (int) ::pow ( (double) (_absmax*0.5), (double) (_height-y)/_height ) - 1;
+
+			// printf ("bin %d  fromx=%d  tox=%d\n", bin, fromx, tox);
+		}
+		else if (_xScaleType == XSCALE_LOGB)
+		{
+			//y = (int) ((FTutils::fast_log10(val) / FTutils::fast_log10(_absmax*0.3333)) * _height);
+			val = (int) ::pow ( (double) (_absmax*0.3333), (double) (_height-y)/_height ) - 1;
+		}
+	}
 	else {
 		val = (((_height - y) / (float)_height)) * (_max-_min) + _min;
 	}	
-
+	
 	return val;
 }
 
@@ -1887,11 +1930,29 @@ void FTactiveBarGraph::updatePositionLabels(int pX, int pY, bool showreal, FTspe
 		}
 		
 	}
+	else if (specmod->getModifierType() == FTspectrumModifier::FREQ_MODIFIER) {
+		FTioSupport *iosup = FTioSupport::instance();
+		float samprate = (float) iosup->getSampleRate();
+		
+		val = yToVal (pY);
+
+		val = ((val - _absmin) / (_absmax-_absmin)) * samprate * 0.5;
+		
+		if (showreal) {
+			realval = data[frombin];
+			realval = ((realval - _absmin) / (_absmax-_absmin)) * samprate * 0.5;
+			
+			_valstr.Printf ("C: %5d Hz   @: %5d Hz", (int) val, (int) realval);
+		}
+		else {
+			_valstr.Printf ("C: %5d Hz", (int)val);
+		}
+	}
 	else {
 		val = yToVal (pY);
 		if (showreal) {
 			realval = data[frombin];
-			_valstr.Printf ("C: %8.3f    @: %8.3f", val, realval);
+			_valstr.Printf ("C: %8.3f   @: %8.3f ", val, realval);
 		}
 		else {
 			_valstr.Printf ("C: %8.3f", val);

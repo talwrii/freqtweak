@@ -72,6 +72,9 @@ class FTpresetBlendDialog
 	wxComboBox * _priPresetBox;
 	wxComboBox * _secPresetBox;
 
+	wxStaticText * _priStatus;
+	wxStaticText * _secStatus;
+	
 	wxSlider *    _masterBlend;
 	vector<wxSlider*> _blendSliders;
 

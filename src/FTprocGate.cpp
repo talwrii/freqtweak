@@ -38,7 +38,7 @@ void FTprocGate::initialize()
 {
 	// create filters
 
-	_filter = new FTspectrumModifier("Gate Top", "gate", 0, FTspectrumModifier::DB_MODIFIER, GATE_SPECMOD, _fftN/2, -90.0);
+	_filter = new FTspectrumModifier("Gate Bottom", "gate", 0, FTspectrumModifier::DB_MODIFIER, GATE_SPECMOD, _fftN/2, -90.0);
 	_filter->setRange(-90.0, 0.0);
 	//_gateFilter->reset();
 	_filter->setBypassed(true); // by default
