@@ -295,8 +295,8 @@ src/Makefile
 src/version.h
 ])
 
-echo 
+echo "
+
+"
 
 echo Now type \'make\' to build FreqTweak.
-
-echo
