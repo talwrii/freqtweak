@@ -5,9 +5,14 @@ See the end for copying conditions.
 
 Please send freqtweak bug reports to jesse@essej.net.
 
+Version 0.4.1
+ * Fixed problem with wxWindows version inconsistencies related
+   to wxListBox
+
 Version 0.4
 
 * Initial release.
+
 
 -------------------------------------------------------
 Copying information:
