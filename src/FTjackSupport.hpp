@@ -88,7 +88,6 @@ class FTjackSupport
 
 	// JACK callbacks are static
 	static int processCallback (jack_nframes_t nframes, void *arg);
-	static int bufsizeCallback (jack_nframes_t nframes, void *arg);
 	static int srateCallback (jack_nframes_t nframes, void *arg);
 	static void jackShutdown (void *arg);
 	static int portsChanged (jack_port_id_t port, int blah, void *arg);

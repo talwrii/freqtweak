@@ -109,13 +109,6 @@ bool FTjackSupport::init()
 
 	jack_set_process_callback (_jackClient, FTjackSupport::processCallback, 0);
 
-	/* tell the JACK server to call `bufsize()' whenever
-	   the maximum number of frames that will be passed
-	   to `process()' changes
-	*/
-
-	jack_set_buffer_size_callback (_jackClient, FTjackSupport::bufsizeCallback, 0);
-
 	/* tell the JACK server to call `srate()' whenever
 	   the sample rate of the system changes.
 	*/
@@ -593,19 +586,6 @@ int FTjackSupport::processCallback (jack_nframes_t nframes, void *arg)
 	return 0;	
 }
 
-int FTjackSupport::bufsizeCallback (jack_nframes_t nframes, void *arg)
-{
-	FTjackSupport * jsup = (FTjackSupport *) FTioSupport::instance();
-
-	for (int i=0; i < FT_MAXPATHS; i++)
-	{
-		if (jsup->_pathInfos[i]) {
-			jsup->_pathInfos[i]->procpath->setMaxBufsize(nframes);
-		}
-	}
-	
-	return 0;
-}
 
 int FTjackSupport::srateCallback (jack_nframes_t nframes, void *arg)
 {
