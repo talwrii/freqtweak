@@ -179,7 +179,20 @@
 		<li> The L and LA buttons mean Link and Link All
 		respectively.
 
-		
+
+      <li>  Here is an example of using freqtweak with an alsaplayer feeding it
+	      and output going to speakers (alsa_pcm:out_?) without using a JACK patchbay:
+	      <br>
+	      Start freqtweak first with this command line: <p>
+              &nbsp;&nbsp;freqtweak -i none,none -n ft  &amp; 
+		<p>
+              [ you will see some jack errors, ignore them.. they are intentional ]
+		<p>
+             Start alsaplayer like so: <p>
+
+                   &nbsp;&nbsp; alsaplayer -o jack -d ft:in_1,ft:in_2  &amp; 
+                  
+	      
 	    </ul>
 	  </font>
 
@@ -203,7 +216,7 @@
 	    <font size=-1>
 	    <!-- Created: Wed Oct  9 17:02:31 EDT 2002 -->
 	    <!-- hhmts start -->
-Last modified: Sun Oct 13 16:00:27 EDT 2002
+Last modified: Tue Oct 15 22:09:57 EDT 2002
 <!-- hhmts end -->
 </font>
 	    <p>
