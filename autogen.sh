@@ -22,5 +22,5 @@ autoconf || {
 
 echo "Running ./configure --enable-maintainer-mode $@..."
 
-#./configure --enable-maintainer-mode $@
+./configure --enable-maintainer-mode $@
 

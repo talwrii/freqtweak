@@ -57,7 +57,8 @@ class FTspectralManip
 		FFT_512 = 512,
 		FFT_1024 = 1024,
 		FFT_2048 = 2048,
-		FFT_4096 = 4096
+		FFT_4096 = 4096,
+		FFT_8192 = 8192
 
 	};
 

@@ -90,16 +90,18 @@ FTspectragram::FTspectragram(FTmainwin * mwin, wxWindow *parent, wxWindowID id,
 			     PlotType pt)
 
 	: wxPanel(parent, id, pos, size, style, name)
-	, _mwin(mwin), _ptype(pt), _minCutoff(0.0), _dbAbsMin(-200.0), _dbAdjust(-38.0)
-	, _yMin(-90.0), _yMax(0.0), _raster(0), _imageBuf(0)
+	, _mwin(mwin), _ptype(pt)
+	, _width(0), _height(0)
+	, _minCutoff(0.0), _dbAbsMin(-200.0), _dbAdjust(-38.0)
+	, _yMin(-90.0), _yMax(0.0), _imageBuf(0)
+	, _rasterImage(0), _rasterData(0)
 	, _colorTableType(COLOR_BVRYW), _justresized(false)
 	, _fillColor(20,120,120), _maxval(0.0), _xScaleType(XSCALE_1X)
+	, _dataLength(1024)
 {
 	initColorTable();
 
 	// max size
-	_raster = new wxBitmap(1600, 1);
-
 	_rasterData = new unsigned char[1600 * 3];
 	_rasterImage = new wxImage(1600, 1 , _rasterData, true);
 	
@@ -123,7 +125,6 @@ FTspectragram::FTspectragram(FTmainwin * mwin, wxWindow *parent, wxWindowID id,
 FTspectragram::~FTspectragram()
 {
 	delete [] _rasterData;
-	if (_raster) delete _raster;
 	if (_imageBuf) delete _imageBuf;
 	if (_rasterImage) delete _rasterImage;
 
@@ -131,6 +132,30 @@ FTspectragram::~FTspectragram()
 	delete [] _points;
 
 	
+}
+
+void FTspectragram::setDataLength(unsigned int len)
+{
+	// this is the new max length our raster
+	// data needs to handle
+	if (_rasterData)
+		delete [] _rasterData;
+	
+	if ((int) len <  _width) {
+		_rasterData = new unsigned char[_width * 3];
+		_dataLength = _width;
+	}
+	else {
+		_rasterData = new unsigned char[len * 3];
+		_dataLength = len;
+	}
+
+	if (_rasterImage)
+		delete _rasterImage;
+	
+	//_rasterImage = new wxImage(_width, 1 , _rasterData, true);
+	_rasterImage = new wxImage(_dataLength, 1 , _rasterData, true);
+
 }
 
 
@@ -190,10 +215,17 @@ void FTspectragram::OnSize(wxSizeEvent & event)
 	_width = w;
 	_height = h;
 
-	if (_rasterImage) {
-		delete _rasterImage;
+
+	if (_width > (int) _dataLength) {
+		setDataLength(_width);
 	}
-	_rasterImage = new wxImage(_width, 1 , _rasterData, true);
+	else {
+		if (_rasterImage) 
+			delete _rasterImage;
+		//_rasterImage = new wxImage(_width, 1 , _rasterData, true);
+		_rasterImage = new wxImage(_dataLength, 1 , _rasterData, true);
+	}
+	
 	
 	event.Skip();
 }
@@ -244,7 +276,8 @@ void FTspectragram::plotNextDataSpectragram (const float *data, int length)
 
 	int x1,x2;
 	
-	if (_width >= length)
+//	if (_width >= length)
+	if (1)
 	{
 		/*
 		if (_width > length) {
@@ -335,10 +368,10 @@ void FTspectragram::plotNextDataSpectragram (const float *data, int length)
 	//sdc.Blit(0,0,_width, 1, &rdc, 0,0);
 
 	
-	if (_width > length) {
-		//printf ("undersampled: w=%d  l=%d  sxale=%g\n", _width, length, xscale);
+	//if (_width > length) {
+		//printf ("undersampled: w=%d  l=%d  sxale=%g\n", _width, length, _xscale);
 		sdc.SetUserScale(_xscale, 1.0);
-	}
+		//}
 
 	sdc.DrawBitmap (_rasterImage->ConvertToBitmap(), 0, 0, false);
 	

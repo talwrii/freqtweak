@@ -577,7 +577,7 @@ void FTmainwin::buildGui()
 	_inspecLabelButtonAlt = new wxButton(_rowPanel, FT_InSpecLabelId, "In Spectra",
  					  wxDefaultPosition, wxSize(labwidth,bheight));
 	_inspecLabelButtonAlt->SetFont(titleAltFont);
-	_inspecLabelButton->SetToolTip("Show In Spectra");
+	_inspecLabelButtonAlt->SetToolTip("Show In Spectra");
 	_inspecLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -1197,8 +1197,11 @@ void FTmainwin::createPathStuff(int i)
 	
 	// plots and active graphs
 	_inputSpectragram[i] = new FTspectragram(this, _inspecPanels[i], -1);
+	_inputSpectragram[i]->setDataLength((unsigned int)manip->getFFTsize() >> 1);
 	_outputSpectragram[i] = new FTspectragram(this, _outspecPanels[i], -1);
-			
+	_outputSpectragram[i]->setDataLength((unsigned int)manip->getFFTsize() >> 1);
+	
+	
 	_freqGraph[i] = new FTactiveBarGraph(this, _freqPanels[i], -1);
 	_freqGraph[i]->setSpectrumModifier(manip->getFreqFilter());
 	//_freqGraph[i]->setXscale(XSCALE_LOGA);
@@ -2344,6 +2347,9 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 			_delayGraph[i]->setTopSpectrumModifier(_delayGraph[i]->getTopSpectrumModifier());
 			_feedbackGraph[i]->setSpectrumModifier(_feedbackGraph[i]->getSpectrumModifier());
 			_feedbackGraph[i]->setTopSpectrumModifier(_feedbackGraph[i]->getTopSpectrumModifier());
+
+			_inputSpectragram[i]->setDataLength((unsigned int)_processPath[i]->getSpectralManip()->getFFTsize() >> 1);
+			_outputSpectragram[i]->setDataLength((unsigned int)_processPath[i]->getSpectralManip()->getFFTsize() >> 1);
 		}
 
 		for (int i=0; i < _pathCount; i++) {

@@ -69,6 +69,7 @@ public:
 	void setXscale(XScaleType sc);
 	XScaleType getXscale() { return _xScaleType; }
 	
+	void setDataLength(unsigned int len);
 	
 	void OnPaint ( wxPaintEvent &event);
 	void OnSize ( wxSizeEvent &event);
@@ -139,7 +140,8 @@ public:
 	wxString _freqstr;
 
 	wxMenu * _xscaleMenu;
-	
+
+	unsigned int _dataLength;
   private:
 	// any class wishing to process wxWindows events must use this macro
 	DECLARE_EVENT_TABLE()	
