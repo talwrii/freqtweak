@@ -199,7 +199,7 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 
 	EVT_BUTTON(FT_GridSnapBase, FTmainwin::handleGridButtons)
 
-	EVT_SPINCTRL(FT_TempoSpinId, FTmainwin::handleChoices)
+	EVT_SPINCTRL(FT_TempoSpinId, FTmainwin::handleSpins)
 
 	EVT_TITLEMENU_COMMAND (0, FTmainwin::handleTitleMenuCmd)
 END_EVENT_TABLE()
@@ -2035,7 +2035,7 @@ void FTmainwin::minimizeRow (wxWindow * showwin, wxWindow * hidewin, int itemi, 
 }
 
 
-void FTmainwin::handleChoices (wxCommandEvent &event)
+void FTmainwin::handleSpins (wxSpinEvent &event)
 {
 	wxObject *source = event.GetEventObject();
 
@@ -2055,7 +2055,14 @@ void FTmainwin::handleChoices (wxCommandEvent &event)
 		}
 
 	}
-	else if (source == _freqBinsChoice) {
+
+}
+
+void FTmainwin::handleChoices (wxCommandEvent &event)
+{
+	wxObject *source = event.GetEventObject();
+
+	if (source == _freqBinsChoice) {
 		int sel = _freqBinsChoice->GetSelection();
 
 		// MUST bypass and wait until not working
@@ -2717,7 +2724,7 @@ void FTmainwin::handleSashDragged (wxSashEvent &event)
 }
 
 
-void FTmainwin::handleGain (wxCommandEvent &event)
+void FTmainwin::handleGain (wxSpinEvent &event)
 {
 	wxObject *source = event.GetEventObject();
 
@@ -2735,7 +2742,7 @@ void FTmainwin::handleGain (wxCommandEvent &event)
 	}
 }
 
-void FTmainwin::handleMixSlider (wxCommandEvent &event)
+void FTmainwin::handleMixSlider (wxScrollEvent &event)
 {
 	wxObject *source = event.GetEventObject();
 

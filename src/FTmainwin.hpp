@@ -28,6 +28,7 @@ using namespace std;
 
 //#include <wx/sashwin.h>
 #include <wx/laywin.h>
+#include <wx/spinctrl.h>
 
 #include "FTtypes.hpp"
 #include "FTspectragram.hpp"
@@ -35,7 +36,6 @@ using namespace std;
 #include "FTspectrumModifier.hpp"
 
 
-class wxSpinCtrl;
 
 class FTprocessPath;
 class FTactiveBarGraph;
@@ -169,9 +169,10 @@ class FTmainwin : public wxFrame
 	
 	void handleChoices (wxCommandEvent &event);
 	void handleSashDragged (wxSashEvent &event);
+	void handleSpins (wxSpinEvent &event);
 
-	void handleMixSlider (wxCommandEvent &event);
-	void handleGain (wxCommandEvent &event);
+	void handleMixSlider (wxScrollEvent &event);
+	void handleGain (wxSpinEvent &event);
 	void handlePathCount (wxCommandEvent &event);
 	void changePathCount (int newcnt, bool rebuild=false, bool ignorelink=false);
 	
