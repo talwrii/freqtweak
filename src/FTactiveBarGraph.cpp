@@ -889,7 +889,7 @@ void FTactiveBarGraph::OnMouseActivity( wxMouseEvent &event)
 				}
 			}
 
-			float leftY, rightY;
+			int leftY, rightY;
 
 			if (sign != linesign)
 			{
