@@ -48,7 +48,7 @@ FTjackSupport::FTjackSupport(const char *name)
 		snprintf(_name, sizeof(_name)-1, "%s", name);
 	}
 	else {
-		strncat(_name, "", sizeof(_name)-1);
+		snprintf(_name, sizeof(_name)-1, "");
 	}
 }
 
