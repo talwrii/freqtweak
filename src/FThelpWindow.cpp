@@ -66,8 +66,8 @@ void FThelpWindow::init()
 		_htmlWin->LoadPage(helppath);
 	}
 	else {
-		_htmlWin->SetPage(wxString(wxT("Help information could not be found at ") + helppath +
-				  wxT(" . If you can't get it, please see http://freqtweak.sf.net")));
+		_htmlWin->SetPage(wxString(wxT("Help information could not be found at ")) + helppath +
+				  wxString(wxT(" . If you can't get it, please see http://freqtweak.sf.net")));
 				  
 	}
 		
