@@ -24,6 +24,8 @@
 
 #include "FTutils.hpp"
 
+#include <stdint.h>
+
 /*
  * Please excuse all the macros.
  * They are used for explicit inlining of
@@ -77,7 +79,7 @@ float FTutils::fast_log10 (float x)
                                                                                \
                                                                                \
     /* "bits" representation of the argument "x" */                            \
-    unsigned long* xbits = (unsigned long*)&x;                                 \
+    uint32_t* xbits = (uint32_t*)&x;                                           \
                                                                                \
     /* exponent of IEEE float */                                               \
     int expo;                                                                  \
@@ -152,7 +154,7 @@ float FTutils::fast_log2 (float x)
                                                                                \
                                                                                \
     /* "bits" representation of the argument "x" */                            \
-    unsigned long* xbits = (unsigned long*)&x;                                 \
+    uint32_t* xbits = (uint32_t*)&x;                                           \
                                                                                \
     /* exponent of IEEE float */                                               \
     int expo;                                                                  \
@@ -246,7 +248,7 @@ float FTutils::fast_fourth_root (float x)
                                                                                \
                                                                                \
     /* "bits" representation of argument x */                                  \
-    unsigned int* xbits = (unsigned int *) &x;                                 \
+    uint32_t* xbits = (uint32_t*) &x;                                          \
                                                                                \
     /* factor of 2^(4k) */                                                     \
     float two_to_4k = 1.0;                                                     \
@@ -349,7 +351,7 @@ float FTutils::fast_square_root (float x)
                                                                                \
                                                                                \
     /* "bits" representation of argument x */                                  \
-    unsigned int* xbits = (unsigned int *) &x;                                 \
+    uint32_t* xbits = (uint32_t*) &x;                                          \
                                                                                \
     /* factor of 2^(2k) */                                                     \
     float two_to_2k = 1.0;                                                     \
