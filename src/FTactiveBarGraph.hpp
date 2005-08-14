@@ -94,6 +94,7 @@ class FTactiveBarGraph
 	void readExtra(FTspectrumModifier * sp);
 	
   protected:
+	void updateSize();
 
 	void xToBinRange(int x, int &frombin, int &tobin);
 	void binToXRange(int bin, int &fromx, int &tox);

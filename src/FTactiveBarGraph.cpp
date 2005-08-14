@@ -86,11 +86,11 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	  ,_mindb(-50.0), _maxdb(0.0), _absmindb(-60), _absmaxdb(0.0), _absposmindb(0.0f), _absposmaxdb(24.0)
 	,_minsemi(-12.0), _maxsemi(12), _absminsemi(-12), _absmaxsemi(12)
 	, _tmpfilt(0), _toptmpfilt(0)
-	, _barColor0(wxT("skyblue")), _barColor1(wxT("steelblue"))
-	,  _barColor2(wxT("seagreen")), _barColor3(wxT("darkseagreen"))
-	,_barColorDead(wxT("gray30"))
+	, _barColor0(135, 207, 235), _barColor1(69, 130, 181)
+	,  _barColor2(46, 140, 87), _barColor3(143, 189, 143)
+	,_barColorDead(77,77,77)
 	,_tipColor(200,200,0)
-	, _penColor(wxT("blue")), _gridColor(wxT("gray25"))
+	, _penColor(0,0,255), _gridColor(64,64,64)
 	,_backingMap(0)
 	, _xScaleType(XSCALE_1X), _lastX(0)
 	, _dragging(false), _zooming(false)
@@ -99,7 +99,7 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	, _mouseCaptured(false), _bypassed(false)
 	//, _boundsFont(8, wxDEFAULT, wxNORMAL, wxNORMAL, false, "Helvetica")
 	  , _boundsFont(8, wxDEFAULT, wxNORMAL, wxNORMAL)	
-	, _textColor(wxT("white"))
+	, _textColor(255,255,255)
 	, _tempo(120)
 {
 	SetBackgroundColour(*wxBLACK);
@@ -119,7 +119,7 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	_barBrushDead.SetColour(_barColorDead);
 	_barBrushDead.SetStyle(wxSOLID);
 
-	_bypassBrush.SetColour(wxColour(wxT("gray30")));
+	_bypassBrush.SetColour(wxColour(77,77,77));
 	_bypassBrush.SetStyle(wxSOLID);
 
 	
@@ -143,6 +143,8 @@ FTactiveBarGraph::FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID 
 	_xscaleMenu->Append ( new wxMenuItem(_xscaleMenu, FT_LogbXscale, wxT("logB Scale")));
 
 	// grid choices can't be determined until we get a specmod
+
+	updateSize();
 }
 
 FTactiveBarGraph::~FTactiveBarGraph()
@@ -1331,21 +1333,27 @@ void FTactiveBarGraph::recalculate()
 }
 
 
-void FTactiveBarGraph::OnSize(wxSizeEvent & event)
+void FTactiveBarGraph::updateSize()
 {
-
 	GetClientSize(&_width, &_height);
 	//printf ("ActiveBarGraph::OnSize:  width=%d\n", _width);
 
-	if (_backingMap) delete _backingMap;
+	if (_width > 0 && _height > 0 ) 
+	{
+		if (_backingMap) delete _backingMap;
+		
+		_backingMap = new wxBitmap(_width, _height);
+		
+		SetBackgroundColour(*wxBLACK);
+		//Clear();
+		
+		recalculate();
+	}
+}
 
-	_backingMap = new wxBitmap(_width, _height);
-	
-	SetBackgroundColour(*wxBLACK);
-	//Clear();
-
-	recalculate();
-
+void FTactiveBarGraph::OnSize(wxSizeEvent & event)
+{
+	updateSize();
 	event.Skip();
 }
 

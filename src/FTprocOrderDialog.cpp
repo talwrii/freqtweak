@@ -121,7 +121,7 @@ void FTprocOrderDialog::init()
 	
 	sourceSizer->Add (_sourceList, 1, wxEXPAND|wxALL, 2);
 
-	mainsizer->Add (sourceSizer, 1, wxEXPAND|wxALL, 2);
+	mainsizer->Add (sourceSizer, 1, wxEXPAND|wxALL, 6);
 	
 
 	
@@ -130,17 +130,17 @@ void FTprocOrderDialog::init()
 
 	midbuttSizer->Add (-1, 20);
 	
-	butt = new wxButton(this, ID_AddButton, wxT("Add ->"), wxDefaultPosition, wxSize(-1,40));
+	butt = new wxButton(this, ID_AddButton, wxT("Add ->"), wxDefaultPosition, wxSize(-1,-1));
 	midbuttSizer->Add(butt, 0, wxEXPAND|wxALL, 2);
 	
-	butt = new wxButton(this, ID_RemoveButton, wxT("Remove"), wxDefaultPosition, wxSize(-1,30));
+	butt = new wxButton(this, ID_RemoveButton, wxT("Remove"), wxDefaultPosition, wxSize(-1,-1));
 	midbuttSizer->Add(butt, 0, wxEXPAND|wxALL, 2);
 
 	midbuttSizer->Add (-1, 15);
 	
-	butt = new wxButton(this, ID_UpButton, wxT("Up"), wxDefaultPosition, wxSize(-1,30));
+	butt = new wxButton(this, ID_UpButton, wxT("Up"), wxDefaultPosition, wxSize(-1,-1));
 	midbuttSizer->Add(butt, 0, wxEXPAND|wxALL, 2);
-	butt = new wxButton(this, ID_DownButton, wxT("Down"), wxDefaultPosition, wxSize(-1, 30));
+	butt = new wxButton(this, ID_DownButton, wxT("Down"), wxDefaultPosition, wxSize(-1, -1));
 	midbuttSizer->Add(butt, 0, wxEXPAND|wxALL, 2);
 
 	midbuttSizer->Add (-1, 5, 1);
@@ -175,7 +175,7 @@ void FTprocOrderDialog::init()
 	targSizer->Add(buttSizer, 0, wxALL|wxEXPAND, 0);
 
 
-	mainsizer->Add(targSizer, 1, wxALL|wxEXPAND, 4);
+	mainsizer->Add(targSizer, 1, wxALL|wxEXPAND, 6);
 
 
 	refreshState();

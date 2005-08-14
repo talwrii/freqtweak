@@ -583,7 +583,7 @@ void FTmainwin::buildGui()
 	// uppersizer
 	tmpsizer = new wxBoxSizer(wxVERTICAL);
 	tmpsizer->Add (_pathCountChoice, 0, wxALL, 1);
-	tmpsizer->Add (_bypassAllButton, 1, wxALL, 1 );
+	tmpsizer->Add (_bypassAllButton, 0, wxALL, 1 );
 	_uppersizer->Add(tmpsizer, 0, wxEXPAND);
 
 	mainvsizer->Add(_uppersizer, 0, wxLEFT|wxRIGHT|wxBOTTOM|wxEXPAND, 2);
@@ -730,7 +730,8 @@ void FTmainwin::buildGui()
 
 	// lowersizer
 	tmpsizer = new wxBoxSizer(wxVERTICAL);
-	tmpsizer->Add (_muteAllButton, 1, wxALL, 1);
+	tmpsizer->Add (1,1,1);
+	tmpsizer->Add (_muteAllButton, 0, wxALL, 1);
 	tmpsizer->Add (_linkMixButton, 0, wxALL, 1);
 	_lowersizer->Add(tmpsizer, 0, wxEXPAND);
 
@@ -1174,6 +1175,9 @@ void FTmainwin::createPathStuff(int i)
 
 	_outspecPanels[i] = new wxPanel(_outspecPanel, -1);
 
+
+	wxStaticBox *inbox = new wxStaticBox(_upperPanels[i], -1, wxString::Format(wxT("Input %d"), i+1));
+	wxStaticBox *outbox = new wxStaticBox(_lowerPanels[i], -1, wxString::Format(wxT("Output %d"), i+1));
 	
 	// plots and active graphs
 	_inputSpectragram[i] = new FTspectragram(this, _inspecPanels[i], -1);
@@ -1194,8 +1198,7 @@ void FTmainwin::createPathStuff(int i)
 	
 	// input area
 	{
-		wxStaticBox *box = new wxStaticBox(_upperPanels[i], -1, wxString::Format(wxT("Input %d"), i+1));
-		tmpsizer = new wxStaticBoxSizer (box, wxVERTICAL);
+		tmpsizer = new wxStaticBoxSizer (inbox, wxVERTICAL);
 		tmpsizer->Add (_inputButton[i], 0, wxBOTTOM|wxEXPAND, 1);
 		
 		tmpsizer2 = new wxBoxSizer (wxHORIZONTAL);
@@ -1283,8 +1286,7 @@ void FTmainwin::createPathStuff(int i)
 
 	// output stuff
 	{		
-		wxStaticBox *box = new wxStaticBox(_lowerPanels[i], -1, wxString::Format(wxT("Output %d"), i+1));
-		tmpsizer = new wxStaticBoxSizer (box, wxVERTICAL);
+		tmpsizer = new wxStaticBoxSizer (outbox, wxVERTICAL);
 
 		tmpsizer2 = new wxBoxSizer (wxHORIZONTAL);
 		tmpsizer2->Add (_muteButton[i], 1, wxRIGHT, 5);

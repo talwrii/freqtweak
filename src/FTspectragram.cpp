@@ -119,7 +119,7 @@ FTspectragram::FTspectragram(FTmainwin * mwin, wxWindow *parent, wxWindowID id,
 
 	_linePen.SetColour(255,255,255);
 
-	
+	updateSize();
 }
 
 FTspectragram::~FTspectragram()
@@ -200,7 +200,7 @@ void FTspectragram::OnPaint(wxPaintEvent & event)
 }
 
 
-void FTspectragram::OnSize(wxSizeEvent & event)
+void FTspectragram::updateSize()
 {
 	int w,h;
 	GetClientSize(&w, &h);
@@ -224,8 +224,11 @@ void FTspectragram::OnSize(wxSizeEvent & event)
 		//_rasterImage = new wxImage(_width, 1 , _rasterData, true);
 		_rasterImage = new wxImage(_dataLength, 1 , _rasterData, true);
 	}
-	
-	
+}
+
+void FTspectragram::OnSize(wxSizeEvent & event)
+{
+	updateSize();
 	event.Skip();
 }
 

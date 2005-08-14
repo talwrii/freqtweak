@@ -102,3 +102,5 @@ freqtweak_SOURCES = \
 	LockMonitor.hpp \
 	cycles.h
 
+mac: freqtweak
+	`@WX_CONFIG@ --rezflags` freqtweak

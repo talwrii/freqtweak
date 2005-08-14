@@ -297,8 +297,19 @@ dnl LIBS="$LIBS $JACK_LIB"
 #AC_MSG_CHECKING(for wxWindows)
 
 dnl wxwindows
-AC_PATH_PROG(WX_CONFIG1, wxgtk2-2.5-config, no, $PATH:/usr/local/bin )
-if [[ "$WX_CONFIG1" = "no" ]] ; then
+AC_ARG_WITH(wxconfig-path,
+            [  --with-wxconfig-path=PATH    full path to wx-config to use])
+
+if test "x$with_wxconfig_path" != "x"  ; then
+        WX_CONFIG=$with_wxconfig_path
+else
+	WX_CONFIG=""
+fi
+
+if [[ "$WX_CONFIG" = "" ]] ; then
+
+  AC_PATH_PROG(WX_CONFIG1, wxgtk2-2.5-config, no, $PATH:/usr/local/bin )
+  if [[ "$WX_CONFIG1" = "no" ]] ; then
 
 	AC_PATH_PROG(WX_CONFIG2, wxgtk2-2.4-config, no, $PATH:/usr/local/bin )
 	if [[ "$WX_CONFIG2" = "no" ]] ; then
@@ -318,9 +329,12 @@ if [[ "$WX_CONFIG1" = "no" ]] ; then
 	else
 		WX_CONFIG=$WX_CONFIG2
 	fi
-else	
-   WX_CONFIG=$WX_CONFIG1
+  else	
+     WX_CONFIG=$WX_CONFIG1
+  fi
 fi
+
+AC_SUBST(WX_CONFIG)
 
 WX_LIBS="`$WX_CONFIG --libs`"
 

@@ -80,6 +80,7 @@ public:
 	float powerLogScale(float yval);
 	
   protected:
+	void updateSize();
 
 	void initColorTable();
 	void plotNextDataSpectragram (const float *data, int length);
