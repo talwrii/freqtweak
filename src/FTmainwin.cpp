@@ -532,6 +532,9 @@ void FTmainwin::buildGui()
 	// create master link and bypass buttons
 	_inspecLabelButton = new wxButton(_inspecPanel, FT_InSpecLabelId, wxT("In Spectra"),
  					  wxDefaultPosition, wxSize(_labwidth,_bheight));
+	_inspecLabelButton->SetBackgroundColour(*wxBLACK);
+	_inspecLabelButton->SetForegroundColour(*wxWHITE);
+	_inspecLabelButton->SetThemeEnabled(false);
 	_inspecLabelButton->SetFont(_titleFont);
 	_inspecLabelButton->SetToolTip(wxT("Hide In Spectra"));
 
@@ -540,6 +543,9 @@ void FTmainwin::buildGui()
 	// create alts
 	_inspecLabelButtonAlt = new wxButton(_rowPanel, FT_InSpecLabelId, wxT("In Spectra"),
  					  wxDefaultPosition, wxSize(_labwidth,_bheight));
+	_inspecLabelButtonAlt->SetBackgroundColour(*wxBLACK);
+	_inspecLabelButtonAlt->SetForegroundColour(*wxWHITE);
+	_inspecLabelButtonAlt->SetThemeEnabled(false);
 	_inspecLabelButtonAlt->SetFont(_titleAltFont);
 	_inspecLabelButtonAlt->SetToolTip(wxT("Show In Spectra"));
 	_inspecLabelButtonAlt->Show(false);
@@ -695,6 +701,9 @@ void FTmainwin::buildGui()
 
 	_outspecLabelButton = new wxButton(_outspecPanel, FT_OutSpecLabelId, wxT("Out Spectra"),
 						  wxDefaultPosition, wxSize(_labwidth,_bheight));
+	_outspecLabelButton->SetBackgroundColour(*wxBLACK);
+	_outspecLabelButton->SetForegroundColour(*wxWHITE);
+	_outspecLabelButton->SetThemeEnabled(false);
 	_outspecLabelButton->SetFont(_titleFont);
 	_outspecLabelButton->SetToolTip(wxT("Hide Out Spectra"));
 
@@ -704,6 +713,9 @@ void FTmainwin::buildGui()
 						  wxDefaultPosition, wxSize(_labwidth,_bheight));
 	_outspecLabelButtonAlt->SetFont(_titleAltFont);
 	_outspecLabelButtonAlt->SetToolTip(wxT("Show Out Spectra"));
+	_outspecLabelButtonAlt->SetBackgroundColour(*wxBLACK);
+	_outspecLabelButtonAlt->SetForegroundColour(*wxWHITE);
+	_outspecLabelButtonAlt->SetThemeEnabled(false);
 	_outspecLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
