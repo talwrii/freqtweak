@@ -45,7 +45,7 @@ public:
 	FTspectragram(FTmainwin *mwin, wxWindow *parent, wxWindowID id, 
 		      const wxPoint& pos = wxDefaultPosition,
 		      const wxSize& size = wxDefaultSize,
-		      long style = wxRAISED_BORDER,
+		      long style = 0,
 		      const wxString& name = wxT("Spectragram"),
 		      PlotType pt = SPECTRAGRAM);
 //		      PlotType pt = AMPFREQ_SOLID);
@@ -91,6 +91,20 @@ public:
 	void xToFreqRange(int x, float &fromfreq, float &tofreq, int &frombin, int &tobin);
 	void xToBinRange(int x, int &frombin, int &tobin);
 	void binToXRange(int bin, int &fromx, int &tox, int width, int bins);
+
+	bool setDiscreteColor(int index, int r, int g, int b) {
+		
+		if (index < _discreteColorCount)
+		{
+			_discreteColors[index][0] = r;
+			_discreteColors[index][1] = g;
+			_discreteColors[index][2] = b;
+			
+			return true;
+		}
+		return false;
+	}
+
 	
 	FTmainwin * _mwin;
 	PlotType _ptype;

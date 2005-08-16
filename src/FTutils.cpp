@@ -26,6 +26,11 @@
 
 #include <stdint.h>
 
+#include <locale.h>
+#include <cstring>
+#include <cstdlib>
+
+
 #include <cmath>
 using namespace std;
 
@@ -523,4 +528,19 @@ double FTutils::triangle_wave (double time, double freq_Hz)
     return tr;
 }
 
+
+
+LocaleGuard::LocaleGuard (const char* str)
+{
+	old = strdup (setlocale (LC_NUMERIC, NULL));
+	if (strcmp (old, str)) {
+		setlocale (LC_NUMERIC, str);
+	} 
+}
+
+LocaleGuard::~LocaleGuard ()
+{
+	setlocale (LC_NUMERIC, old);
+	free ((char*)old);
+}
 

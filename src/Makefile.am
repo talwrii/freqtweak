@@ -100,7 +100,14 @@ freqtweak_SOURCES = \
 	FTmodValueLFO.cpp \
 	FTmodValueLFO.hpp \
 	LockMonitor.hpp \
-	cycles.h
+	cycles.h \
+	pix_button.hpp \
+	pix_button.cpp \
+	slider_bar.hpp \
+	slider_bar.cpp \
+	spin_box.hpp \
+	spin_box.cpp \
+	pixmap_includes.hpp
 
 mac: freqtweak
 	`@WX_CONFIG@ --rezflags` freqtweak

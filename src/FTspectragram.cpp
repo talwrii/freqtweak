@@ -615,7 +615,17 @@ void FTspectragram::initColorTable()
       }
       else if (_colorTableType == COLOR_BVRYW)
       {
-	 _discreteColorCount = 7;
+	      _discreteColorCount = 6;
+	      setDiscreteColor(0, 0, 0, 0); // black
+	      setDiscreteColor(1, 0, 0, 149); // blue
+	      setDiscreteColor(2, 57, 122, 138); // blue-green
+	      setDiscreteColor(3, 92, 165, 79); // green
+	      setDiscreteColor(4, 229, 171, 0); // orange
+	      setDiscreteColor(5, 255, 0, 18); // red
+
+
+	      /*  
+	      _discreteColorCount = 7;
 	 // black
 	 _discreteColors[0][0] = 0;
 	 _discreteColors[0][1] = 0;
@@ -644,7 +654,7 @@ void FTspectragram::initColorTable()
 	 _discreteColors[6][0] = 100;
 	 _discreteColors[6][1] = 160;
 	 _discreteColors[6][2] = 100;
-
+	      */
 	 
 
 	 

@@ -118,4 +118,70 @@ inline float FTutils::powerLogScale(float yval, float min)
 }
 
 
+
+/* 32 bit "pointer cast" union */
+typedef union {
+        float f;
+        int32_t i;
+} ls_pcast32;
+	
+static inline float flush_to_zero(float f)
+{
+	ls_pcast32 v;
+
+	v.f = f;
+
+	// original: return (v.i & 0x7f800000) == 0 ? 0.0f : f;
+	// version from Tim Blechmann
+	return (v.i & 0x7f800000) < 0x08000000 ? 0.0f : f;
+}
+
+
+
+/* A set of branchless clipping operations from Laurent de Soras */
+
+static inline float f_max(float x, float a)
+{
+	x -= a;
+	x += fabsf(x);
+	x *= 0.5;
+	x += a;
+
+	return x;
+}
+
+static inline float f_min(float x, float b)
+{
+	x = b - x;
+	x += fabsf(x);
+	x *= 0.5;
+	x = b - x;
+
+	return x;
+}
+
+static inline float f_clamp(float x, float a, float b)
+{
+	const float x1 = fabsf(x - a);
+	const float x2 = fabsf(x - b);
+
+	x = x1 + a + b;
+	x -= x2;
+	x *= 0.5;
+
+	return x;
+}
+
+
+struct LocaleGuard {
+	LocaleGuard (const char*);
+	~LocaleGuard ();
+	const char* old;
+};
+
+
+#define DB_CO(g) ((g) > -90.0f ? pow(10.0, (g) * 0.05) : 0.0)
+#define CO_DB(v) (20.0 * log10(v))
+
+
 #endif

@@ -41,7 +41,7 @@ class FTactiveBarGraph
 	FTactiveBarGraph(FTmainwin *win, wxWindow *parent, wxWindowID id, 
 		      const wxPoint& pos = wxDefaultPosition,
 		      const wxSize& size = wxDefaultSize,
-		      long style = wxRAISED_BORDER,
+		      long style = 0,
 		      const wxString& name = wxT("ActiveBarGraph"));
 
 	virtual ~FTactiveBarGraph();

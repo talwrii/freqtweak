@@ -24,6 +24,9 @@
 #include <vector>
 using namespace std;
 
+#include <sigc++/sigc++.h>
+
+
 #include <wx/wx.h>
 
 //#include <wx/sashwin.h>
@@ -49,6 +52,10 @@ class FTlinkMenu;
 class FTprocOrderDialog;
 class FTpresetBlendDialog;
 class FTmodulatorDialog;
+
+namespace JLCui {
+	class PixButton;
+}
 
 BEGIN_DECLARE_EVENT_TYPES()
    DECLARE_EVENT_TYPE( FT_EVT_TITLEMENU_COMMAND, 9000)
@@ -107,7 +114,7 @@ public:
  *
  */
 
-class FTmainwin : public wxFrame
+class FTmainwin : public wxFrame, public SigC::Object
 {
   public:
 	// ctor(s)
@@ -163,6 +170,12 @@ class FTmainwin : public wxFrame
 	void handleBypassButtons (wxCommandEvent &event);
 	void handleLinkButtons (wxCommandEvent &event);
 	void handleLabelButtons (wxCommandEvent &event);
+
+	void bypass_clicked_events (int button, JLCui::PixButton *);
+	void link_clicked_events (int button, JLCui::PixButton *);
+	void plot_clicked_events (int button, JLCui::PixButton *);
+	void grid_clicked_events (int button, JLCui::PixButton *);
+	void grid_pressed_events (int button, JLCui::PixButton *);
 	
 	void handlePlotTypeButtons (wxCommandEvent &event);
 	void handleGridButtons (wxCommandEvent &event);
@@ -231,7 +244,7 @@ class FTmainwin : public wxFrame
 	wxButton * _bypassAllButton;
 	wxButton * _muteAllButton;
 
-	vector<wxButton *> _bypassAllButtons;
+	vector<JLCui::PixButton *> _bypassAllButtons;
 	
 // 	wxButton * _scaleBypassAllButton;
 // 	wxButton * _mashBypassAllButton;
@@ -240,7 +253,7 @@ class FTmainwin : public wxFrame
 // 	wxButton * _delayBypassAllButton;
 // 	wxButton * _feedbBypassAllButton;
 
-	vector<wxButton *> _linkAllButtons;
+	vector<JLCui::PixButton *> _linkAllButtons;
 	
 // 	wxButton * _scaleLinkAllButton;
 // 	wxButton * _mashLinkAllButton;
@@ -249,7 +262,7 @@ class FTmainwin : public wxFrame
 // 	wxButton * _delayLinkAllButton;
 // 	wxButton * _feedbLinkAllButton;
 
-	vector<wxButton *> _gridButtons;
+	vector<JLCui::PixButton *> _gridButtons;
 	
 // 	wxButton * _scaleGridButton;
 // 	wxButton * _gateGridButton;
@@ -257,7 +270,7 @@ class FTmainwin : public wxFrame
 // 	wxButton * _delayGridButton;
 // 	wxButton * _feedbGridButton;
 
-	vector<wxButton *> _gridSnapButtons;
+	vector<JLCui::PixButton *> _gridSnapButtons;
 	
 // 	wxButton * _scaleGridSnapButton;
 // 	wxButton * _gateGridSnapButton;
@@ -292,12 +305,12 @@ class FTmainwin : public wxFrame
 
 
 
-	wxButton * _inspecSpecTypeAllButton;
-	wxButton * _inspecPlotSolidTypeAllButton;
-	wxButton * _inspecPlotLineTypeAllButton;
-	wxButton * _outspecSpecTypeAllButton;
-	wxButton * _outspecPlotSolidTypeAllButton;
-	wxButton * _outspecPlotLineTypeAllButton;
+	JLCui::PixButton * _inspecSpecTypeAllButton;
+	JLCui::PixButton * _inspecPlotSolidTypeAllButton;
+	JLCui::PixButton * _inspecPlotLineTypeAllButton;
+	JLCui::PixButton * _outspecSpecTypeAllButton;
+	JLCui::PixButton * _outspecPlotSolidTypeAllButton;
+	JLCui::PixButton * _outspecPlotLineTypeAllButton;
 
 
 	
@@ -334,14 +347,14 @@ class FTmainwin : public wxFrame
 	wxButton * _muteButton[FT_MAXPATHS];
 
     
-	wxButton * _inspecSpecTypeButton[FT_MAXPATHS];
-	wxButton * _inspecPlotSolidTypeButton[FT_MAXPATHS];
-	wxButton * _inspecPlotLineTypeButton[FT_MAXPATHS];
-	wxButton * _outspecSpecTypeButton[FT_MAXPATHS];
-	wxButton * _outspecPlotSolidTypeButton[FT_MAXPATHS];
-	wxButton * _outspecPlotLineTypeButton[FT_MAXPATHS];
+	JLCui::PixButton * _inspecSpecTypeButton[FT_MAXPATHS];
+	JLCui::PixButton * _inspecPlotSolidTypeButton[FT_MAXPATHS];
+	JLCui::PixButton * _inspecPlotLineTypeButton[FT_MAXPATHS];
+	JLCui::PixButton * _outspecSpecTypeButton[FT_MAXPATHS];
+	JLCui::PixButton * _outspecPlotSolidTypeButton[FT_MAXPATHS];
+	JLCui::PixButton * _outspecPlotLineTypeButton[FT_MAXPATHS];
 
-	vector<wxButton **> _bypassButtons;
+	vector<JLCui::PixButton **> _bypassButtons;
 	
 // 	wxButton * _scaleBypassButton[FT_MAXPATHS];
 // 	wxButton * _mashBypassButton[FT_MAXPATHS];
@@ -350,7 +363,7 @@ class FTmainwin : public wxFrame
 // 	wxButton * _delayBypassButton[FT_MAXPATHS];
 // 	wxButton * _feedbBypassButton[FT_MAXPATHS];
 
-	vector<wxButton **> _linkButtons;
+	vector<JLCui::PixButton **> _linkButtons;
 
 // 	wxButton * _scaleLinkButton[FT_MAXPATHS];
 // 	wxButton * _mashLinkButton[FT_MAXPATHS];
