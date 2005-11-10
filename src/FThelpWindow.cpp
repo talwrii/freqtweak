@@ -58,9 +58,11 @@ void FThelpWindow::init()
 	const int sizes[] = {7, 8, 10, 12, 16, 22, 30};
 	
 	_htmlWin->SetFonts(wxT(""), wxT(""), sizes);
-
+#ifndef __WXMAC__
 	wxString helppath = wxString(wxT(HELP_HTML_PATH)) + wxFileName::GetPathSeparator() + wxString(wxT("usagehelp.html")); 
-	
+#else
+	wxString helppath("");
+#endif	
 	if (wxFile::Access(helppath, wxFile::read))
 	{
 		_htmlWin->LoadPage(helppath);

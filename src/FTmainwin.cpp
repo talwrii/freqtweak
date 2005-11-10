@@ -191,13 +191,13 @@ BEGIN_EVENT_TABLE(FTmainwin, wxFrame)
 	EVT_BUTTON(FT_InSpecTypeId, FTmainwin::handlePlotTypeButtons)
 	EVT_BUTTON(FT_OutSpecTypeId, FTmainwin::handlePlotTypeButtons)
 
-	EVT_BUTTON(FT_BypassId, FTmainwin::handleBypassButtons)
-	EVT_BUTTON(FT_MuteId, FTmainwin::handleBypassButtons)
+	EVT_CHECKBOX(FT_BypassId, FTmainwin::handleBypassButtons)
+	EVT_CHECKBOX(FT_MuteId, FTmainwin::handleBypassButtons)
 
 	EVT_BUTTON(FT_StoreButton, FTmainwin::handleStoreButton)
 	EVT_BUTTON(FT_LoadButton, FTmainwin::handleLoadButton)
 
-	EVT_BUTTON(FT_MixLinkedButton, FTmainwin::handleLinkButtons)
+	EVT_CHECKBOX(FT_MixLinkedButton, FTmainwin::handleLinkButtons)
 	EVT_BUTTON(FT_IOreconnectButton, FTmainwin::handleIOButtons)
 	EVT_BUTTON(FT_IOdisconnectButton, FTmainwin::handleIOButtons)
 
@@ -557,18 +557,18 @@ void FTmainwin::buildGui()
 	_inspecLabelButtonAlt->SetConstraints(constr);
 
 
-	_bypassAllButton  = new  wxButton(this, FT_BypassId, wxT("Bypass All"),
+	_bypassAllCheck  = new  wxCheckBox(this, FT_BypassId, wxT("Bypass All"),
 					     wxDefaultPosition, wxSize(_labwidth,_bheight+3));
-	_bypassAllButton->SetFont(_buttFont);
+	_bypassAllCheck->SetFont(_buttFont);
 
-	_muteAllButton  = new  wxButton(this, FT_MuteId, wxT("Mute All"),
+	_muteAllCheck  = new  wxCheckBox(this, FT_MuteId, wxT("Mute All"),
 					     wxDefaultPosition, wxSize(_labwidth,_bheight+3));
-	_muteAllButton->SetFont(_buttFont);
+	_muteAllCheck->SetFont(_buttFont);
 
 
-	_linkMixButton  = new  wxButton(this, FT_MixLinkedButton, wxT("Link Mix"),
+	_linkMixCheck  = new  wxCheckBox(this, FT_MixLinkedButton, wxT("Link Mix"),
 					     wxDefaultPosition, wxSize(_labwidth,_bheight+3));
-	_linkMixButton->SetFont(_buttFont);
+	_linkMixCheck->SetFont(_buttFont);
 
 	
 
@@ -618,7 +618,8 @@ void FTmainwin::buildGui()
 	// uppersizer
 	tmpsizer = new wxBoxSizer(wxVERTICAL);
 	tmpsizer->Add (_pathCountChoice, 0, wxALL, 1);
-	tmpsizer->Add (_bypassAllButton, 0, wxALL, 1 );
+	tmpsizer->Add (1,4, 0);
+	tmpsizer->Add (_bypassAllCheck, 0, wxALL, 1 );
 	_uppersizer->Add(tmpsizer, 0, wxEXPAND);
 
 	mainvsizer->Add(_uppersizer, 0, wxLEFT|wxRIGHT|wxBOTTOM|wxEXPAND, 2);
@@ -626,7 +627,7 @@ void FTmainwin::buildGui()
 	
 	// input spectragram
 	tmpsizer = new wxBoxSizer(wxVERTICAL);
-	tmpsizer->Add (_inspecLabelButton, 0, wxALL|wxEXPAND , 0);
+	tmpsizer->Add (_inspecLabelButton, 0, wxALL , 1);
 	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
 	tmpsizer2->Add (_inspecSpecTypeAllButton, 0, wxALL, 1);
 	tmpsizer2->Add (_inspecPlotLineTypeAllButton, 0, wxALL, 1);
@@ -715,7 +716,7 @@ void FTmainwin::buildGui()
 	_outspecLabelButtonAlt->SetToolTip(wxT("Show Out Spectra"));
 	_outspecLabelButtonAlt->SetBackgroundColour(*wxBLACK);
 	_outspecLabelButtonAlt->SetForegroundColour(*wxWHITE);
-	_outspecLabelButtonAlt->SetThemeEnabled(false);
+	//_outspecLabelButtonAlt->SetThemeEnabled(false);
 	_outspecLabelButtonAlt->Show(false);
 	constr = new wxLayoutConstraints;
 	constr->left.SameAs (_rowPanel, wxLeft, 2);
@@ -762,7 +763,7 @@ void FTmainwin::buildGui()
 		
 	// output spectragram
 	tmpsizer = new wxBoxSizer(wxVERTICAL);
-	tmpsizer->Add (_outspecLabelButton, 0, wxALL|wxEXPAND , 0);
+	tmpsizer->Add (_outspecLabelButton, 0, wxALL , 1);
 	tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
 	tmpsizer2->Add (_outspecSpecTypeAllButton, 1, wxALL, 1);
 	tmpsizer2->Add (_outspecPlotLineTypeAllButton, 1, wxALL, 1);
@@ -790,9 +791,9 @@ void FTmainwin::buildGui()
 
 	// lowersizer
 	tmpsizer = new wxBoxSizer(wxVERTICAL);
-	tmpsizer->Add (1,1,1);
-	tmpsizer->Add (_muteAllButton, 0, wxALL, 1);
-	tmpsizer->Add (_linkMixButton, 0, wxALL, 1);
+	tmpsizer->Add (1,10,0);
+	tmpsizer->Add (_muteAllCheck, 0, wxALL, 1);
+	tmpsizer->Add (_linkMixCheck, 0, wxALL, 1);
 	_lowersizer->Add(tmpsizer, 0, wxEXPAND);
 
 	mainvsizer->Add(_lowersizer, 0, wxLEFT|wxRIGHT|wxBOTTOM|wxEXPAND, 2);
@@ -980,7 +981,7 @@ void FTmainwin::pushProcRow(FTspectrumModifier *specmod)
 			
 	// main row stuff
 	wxBoxSizer * rowbuttsizer = new wxBoxSizer(wxVERTICAL);
-	rowbuttsizer->Add (labbutt, 0, wxALL|wxEXPAND , 0);
+	rowbuttsizer->Add (labbutt, 0, wxALL , 1);
 	wxBoxSizer * tmpsizer2 = new wxBoxSizer(wxHORIZONTAL);
 	tmpsizer2->Add (bypallbutt, 0, wxALL, 1);
 	tmpsizer2->Add (linkallbutt, 0, wxALL, 1);
@@ -1315,8 +1316,8 @@ void FTmainwin::createPathStuff(int i)
 	
 	_outputButton[i] = new wxButton(_lowerPanels[i], (int) FT_OutputButtonId, wxT("No Output"), wxDefaultPosition, wxSize(-1,-1));
 	
-	_bypassButton[i] = new wxButton(_upperPanels[i], (int) FT_BypassId, wxT("Bypass"), wxDefaultPosition, wxSize(-1,-1));
-	_muteButton[i] = new wxButton(_lowerPanels[i], (int) FT_MuteId, wxT("Mute"), wxDefaultPosition, wxSize(-1,-1));
+	_bypassCheck[i] = new wxCheckBox(_upperPanels[i], (int) FT_BypassId, wxT("Bypass"), wxDefaultPosition, wxSize(-1,-1));
+	_muteCheck[i] = new wxCheckBox(_lowerPanels[i], (int) FT_MuteId, wxT("Mute"), wxDefaultPosition, wxSize(-1,-1));
 	
 	// input area
 	{
@@ -1324,7 +1325,7 @@ void FTmainwin::createPathStuff(int i)
 		tmpsizer->Add (_inputButton[i], 0, wxBOTTOM|wxEXPAND, 1);
 		
 		tmpsizer2 = new wxBoxSizer (wxHORIZONTAL);
-		tmpsizer2->Add (_bypassButton[i], 1, wxRIGHT, 3);
+		tmpsizer2->Add (_bypassCheck[i], 1, wxRIGHT|wxALIGN_CENTRE_VERTICAL, 3);
 		
 		stattext = new wxStaticText(_upperPanels[i], -1, wxT("Gain (dB)"), wxDefaultPosition, wxDefaultSize);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 0);
@@ -1448,7 +1449,7 @@ void FTmainwin::createPathStuff(int i)
 		tmpsizer = new wxStaticBoxSizer (outbox, wxVERTICAL);
 
 		tmpsizer2 = new wxBoxSizer (wxHORIZONTAL);
-		tmpsizer2->Add (_muteButton[i], 1, wxRIGHT, 5);
+		tmpsizer2->Add (_muteCheck[i], 1, wxRIGHT, 5);
 		stattext = new wxStaticText(_lowerPanels[i], -1, wxT("Dry"), wxDefaultPosition, wxDefaultSize);
 		tmpsizer2->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 1);
 		_mixSlider[i] = new wxSlider(_lowerPanels[i], FT_MixSlider, 1000, 0, 1000);
@@ -1591,10 +1592,10 @@ void FTmainwin::updateDisplay()
 
 		
 
-		_bypassButton[i]->SetBackgroundColour(engine->getBypassed() ? (_activeBg) : (_defaultBg));
+		_bypassCheck[i]->SetValue(engine->getBypassed());
 		if (!engine->getBypassed()) bypassed = false;
 		
-		_muteButton[i]->SetBackgroundColour(engine->getMuted() ? (_activeBg) : (_defaultBg));
+		_muteCheck[i]->SetValue(engine->getMuted());
 		if (!engine->getMuted()) muted = false;
 
 
@@ -1641,9 +1642,9 @@ void FTmainwin::updateDisplay()
 	}
 
 	
-	_bypassAllButton->SetBackgroundColour ((bypassed ? (_activeBg) : (_defaultBg)));
-	_muteAllButton->SetBackgroundColour ((muted ? (_activeBg) : (_defaultBg)));
-	_linkMixButton->SetBackgroundColour ((_linkedMix ? (_activeBg) : (_defaultBg)));
+	_bypassAllCheck->SetValue (bypassed);
+	_muteAllCheck->SetValue (muted);
+	_linkMixCheck->SetValue (_linkedMix);
 
 	_inspecSpecTypeAllButton->set_active (inspec);
 	_inspecPlotLineTypeAllButton->set_active (inplotline);
@@ -1877,8 +1878,8 @@ void FTmainwin::handleBypassButtons (wxCommandEvent &event)
 // 				   _barGraphs[rowcnt][i]->setBypassed (filts[m]->getBypassed());
 // 				   done = true;
 // 			   }
-			   if (source == _bypassAllButton) {
-				   engine->setBypassed( _bypassAllButton->GetBackgroundColour() != _activeBg);
+			   if (source == _bypassAllCheck) {
+				   engine->setBypassed( _bypassAllCheck->GetValue());
 				   if (engine->getBypassed()) {
 					   _updateTokens[i]->setIgnore(true);
 				   }
@@ -1889,8 +1890,8 @@ void FTmainwin::handleBypassButtons (wxCommandEvent &event)
 				   done = true;
 				   break;
 			   }
-			   else if (source == _bypassButton[i]) {
-				   engine->setBypassed( !engine->getBypassed());
+			   else if (source == _bypassCheck[i]) {
+				   engine->setBypassed( _bypassCheck[i]->GetValue());
 				   if (engine->getBypassed()) {
 					   _updateTokens[i]->setIgnore(true);
 				   }
@@ -1901,13 +1902,13 @@ void FTmainwin::handleBypassButtons (wxCommandEvent &event)
 				   alldone = done = true;
 				   break;
 			   }
-			   else if (source == _muteAllButton) {
-				   engine->setMuted( _muteAllButton->GetBackgroundColour() != _activeBg);
+			   else if (source == _muteAllCheck) {
+				   engine->setMuted( _muteAllCheck->GetValue());
 				   done = true;
 				   break;
 			   }
-			   else if (source == _muteButton[i]) {
-				   engine->setMuted( !engine->getMuted());
+			   else if (source == _muteCheck[i]) {
+				   engine->setMuted( _muteCheck[i]->GetValue());
 				   done = alldone = true;
 				   break;
 			   }
@@ -2186,9 +2187,9 @@ void FTmainwin::handleLinkButtons (wxCommandEvent &event)
 
 	   if (alldone) break;
 
-	   if (source == _linkMixButton) {
+	   if (source == _linkMixCheck) {
 		   // toggle it
-		   _linkedMix = (_linkMixButton->GetBackgroundColour() != _activeBg);
+		   _linkedMix = (_linkMixCheck->GetValue());
 	   }
 	   
    }

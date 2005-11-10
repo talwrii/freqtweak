@@ -241,9 +241,11 @@ class FTmainwin : public wxFrame, public SigC::Object
 // 	FTactiveBarGraph * _gateGraph[FT_MAXPATHS];
 
 
-	wxButton * _bypassAllButton;
-	wxButton * _muteAllButton;
-
+	//wxButton * _bypassAllButton;
+	//wxButton * _muteAllButton;
+	wxCheckBox * _bypassAllCheck;
+	wxCheckBox * _muteAllCheck;
+	
 	vector<JLCui::PixButton *> _bypassAllButtons;
 	
 // 	wxButton * _scaleBypassAllButton;
@@ -313,8 +315,8 @@ class FTmainwin : public wxFrame, public SigC::Object
 	JLCui::PixButton * _outspecPlotLineTypeAllButton;
 
 
-	
-	wxButton * _linkMixButton;
+	wxCheckBox * _linkMixCheck;
+	//wxButton * _linkMixButton;
 
 	
 	
@@ -343,8 +345,10 @@ class FTmainwin : public wxFrame, public SigC::Object
 	wxSpinCtrl *_gainSpinCtrl[FT_MAXPATHS];
 	wxSlider * _mixSlider[FT_MAXPATHS];
 	
-	wxButton * _bypassButton[FT_MAXPATHS];
-	wxButton * _muteButton[FT_MAXPATHS];
+	//wxButton * _bypassButton[FT_MAXPATHS];
+	//wxButton * _muteButton[FT_MAXPATHS];
+	wxCheckBox * _bypassCheck[FT_MAXPATHS];
+	wxCheckBox * _muteCheck[FT_MAXPATHS];
 
     
 	JLCui::PixButton * _inspecSpecTypeButton[FT_MAXPATHS];
