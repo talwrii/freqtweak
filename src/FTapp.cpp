@@ -253,12 +253,12 @@ bool FTapp::OnInit()
 	}
 
 	if (parser.Found (wxT("S"), &jackdir)) {
-	       FTioSupport::setDefaultServer ((const char *) jackdir.c_str());
+	       FTioSupport::setDefaultServer ((const char *) jackdir.ToAscii());
 	}
 	
 	if (parser.Found (wxT("n"), &jackname)) {
 		// FIXME: needs wchar_t->char conversion
-       	       FTioSupport::setDefaultName (jackname.mb_str ());
+       	       FTioSupport::setDefaultName ((const char *)jackname.ToAscii());
 	}
 
 	parser.Found (wxT("r"), &rcdir);
@@ -355,11 +355,11 @@ bool FTapp::OnInit()
 			// connect initial I/O
 			for (int id=0; id < icnt; ++id)
 			{
-				iosup->connectPathInput(id, inputports[id].mb_str());
+				iosup->connectPathInput(id, (const char *) inputports[id].ToAscii());
 			}
 			for (int id=0; id < ocnt; ++id)
 			{
-				iosup->connectPathOutput(id, outputports[id].mb_str());
+				iosup->connectPathOutput(id, (const char *) outputports[id].ToAscii());
 			}
 
 			// load last settings
