@@ -17,7 +17,7 @@ COMMON_FLAGS =  -Wall -D_REENTRANT \
 
 #AM_CFLAGS = $(AM_CXXFLAGS)
 
-EXTRA_DIST = ftlogo.xpm
+EXTRA_DIST = ftlogo.xpm $(wildcard pixmaps/*.xpm)
 
 #freqtweak_LDADD = @JACK_LIBS@ @XML_LIBS@
 
