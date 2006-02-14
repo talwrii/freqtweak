@@ -76,7 +76,6 @@ bool FTjackSupport::init()
 {
 
 #ifdef HAVE_JACK_CLIENT_OPEN
-	// TODO: use jack_client_open
 	jack_options_t options = JackNullOption;
 	jack_status_t status;
 	const char *server_name = NULL;
