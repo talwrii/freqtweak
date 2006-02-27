@@ -279,7 +279,7 @@ void FTspectragram::plotNextDataSpectragram (const float *data, int length)
 	int x1,x2;
 	
 //	if (_width >= length)
-	if (1)
+	if (_width == length)
 	{
 		/*
 		if (_width > length) {
@@ -315,6 +315,101 @@ void FTspectragram::plotNextDataSpectragram (const float *data, int length)
 
 		
 	}
+	else if (_width > length)
+	{
+		double xscale = (double)_width / ((double)length-1);
+      
+		int xadj = (int) (xscale * 0.5);
+
+		double xposf = -xadj;
+		int lasti = 0;
+		coli = 0;
+      
+		for(j = 0; j < length; j++, xposf+=xscale)
+		{
+			i = (int) lrint(xposf);
+	      
+			while (lasti < i) {
+				// fill blanks with last
+
+				binToXRange(lasti, x1, x2, _length, _length);
+				for (int n=x1; n <= x2; ++n) { 
+					_rasterData[3*n] = _colorMap[coli][0];
+					_rasterData[3*n+1] = _colorMap[coli][1];
+					_rasterData[3*n+2] = _colorMap[coli][2];
+				}		      
+				++lasti;
+			}
+	      
+			dbval = powerLogScale(data[j]);
+	      
+			// normalize it from _dataRefMin/Max to 0-numcolors
+			coli = (int) (((dbval - _yMin) / ( _yMax - _yMin)) * _colorCount);
+	      
+			if (coli >= (int)_colorCount) {
+				coli = (int) (_colorCount-1);
+			}
+			else if (coli < 0) {
+				coli = 0;
+			}
+	      
+		}
+		
+		while (lasti < _width) {
+			// fill blanks with last
+			binToXRange(lasti, x1, x2, _length, _length);
+			for (int n=x1; n <= x2; ++n) { 
+				_rasterData[3*n] = _colorMap[coli][0];
+				_rasterData[3*n+1] =  _colorMap[coli][1];
+				_rasterData[3*n+2] =  _colorMap[coli][2];
+			}
+			++lasti;
+		}
+	      
+	}
+	else {
+		j = 0;
+		int nextj;
+		
+		for(i = 0; i < _width; i++)
+		{
+			nextj = (int)((i+1)*xSkipD + 0.5);
+			sum = -100000;
+
+			for (; j < nextj; ++j)
+			{
+				if ((data[j] ) > sum)
+				{
+					sum = (data[j] );
+				}
+			}
+
+			dbval = powerLogScale(sum);
+	    
+			// normalize it from _dataRefMin/Max to 0-numcolors
+			//coli = (int) (((sum - _dataRefMin) / refDiff) * _colorCount);
+
+			coli = (int) (((dbval - _yMin) / ( _yMax - _yMin)) * _colorCount);
+
+			if (coli >= (int) _colorCount) {
+				coli = (int)_colorCount-1;
+			}
+			else if (coli < 0) {
+				coli = 0;
+			}
+	 
+			binToXRange(i, x1, x2, _length, _length);
+			for (int n=x1; n <= x2; ++n) { 
+				_rasterData[3*n] =  _colorMap[coli][0];
+				_rasterData[3*n+1] =  _colorMap[coli][1];
+				_rasterData[3*n+2] =  _colorMap[coli][2];
+			}
+	 
+		}
+
+
+	}
+/*
 	else {
 		// Assume they want average
 		// (_scaleType == DATA_MAX)
@@ -355,12 +450,12 @@ void FTspectragram::plotNextDataSpectragram (const float *data, int length)
 				_rasterData[3*n] = _colorMap[coli][0];
 				_rasterData[3*n + 1] = _colorMap[coli][1];
 				_rasterData[3*n + 2] = _colorMap[coli][2];
-			}
+				}
 
 			
-		}
+			}
 	}
-	
+*/
 	
 	// this is double buffered
 	// move the specbuf down
@@ -372,7 +467,7 @@ void FTspectragram::plotNextDataSpectragram (const float *data, int length)
 	
 	//if (_width > length) {
 		//printf ("undersampled: w=%d  l=%d  sxale=%g\n", _width, length, _xscale);
-		sdc.SetUserScale(_xscale, 1.0);
+	//	sdc.SetUserScale(_xscale, 1.0);
 		//}
 
 	sdc.DrawBitmap (wxBitmap (_rasterImage), 0, 0, false);

@@ -129,7 +129,7 @@ void FTmodulatorGui::init()
 
 	stattext = new wxStaticText(this, -1, wxString::FromAscii(_modulator->getName().c_str()),
 				    wxDefaultPosition, wxSize(-1, -1));
-	stattext->SetFont(wxFont(stattext->GetFont().GetPointSize(), wxDEFAULT, wxNORMAL, wxBOLD, false, "arial"));
+	stattext->SetFont(wxFont(stattext->GetFont().GetPointSize(), wxDEFAULT, wxNORMAL, wxBOLD, false, wxT("arial")));
 	topSizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
 
@@ -553,7 +553,7 @@ void FTmodulatorGui::onChoiceChanged(wxCommandEvent &ev)
 	if (obj && (ctrl = obj->control)) {
 
 		
-		ctrl->setValue (string((choice->GetStringSelection().c_str())));
+		ctrl->setValue (string(static_cast<const char *> (choice->GetStringSelection().mb_str())));
 
 		//cerr << " choice changed for " << ctrl->getName() <<  ": new val = " << choice->GetStringSelection().c_str() << endl;
 		

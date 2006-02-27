@@ -263,9 +263,9 @@ void FTmainwin::normalizeFontSize(wxFont & fnt, int height, wxString fitstr)
 
 void FTmainwin::buildGui()
 {
-	_bwidth = 20;
+	_bwidth = 22;
 	_labwidth = 74;
-	_bheight = 18;
+	_bheight = 22;
 	_rowh = 68;
 
 
@@ -1311,7 +1311,6 @@ void FTmainwin::createPathStuff(int i)
 	
 	
 	// I/O buttons
-	
 	_inputButton[i] = new wxButton(_upperPanels[i], (int) FT_InputButtonId, wxT("No Input"), wxDefaultPosition, wxSize(-1,-1));
 	
 	_outputButton[i] = new wxButton(_lowerPanels[i], (int) FT_OutputButtonId, wxT("No Output"), wxDefaultPosition, wxSize(-1,-1));
@@ -2736,7 +2735,7 @@ void FTmainwin::handleIOButtons (wxCommandEvent &event)
 			wxThread::Sleep(200);
 			iosup->close();
 			
-			iosup->setName (_ioNameText->GetValue().mb_str());
+			iosup->setName (static_cast<const char *> (_ioNameText->GetValue().mb_str()));
 			if (iosup->init()) {
 				if (iosup->startProcessing()) {
 					iosup->reinit();
