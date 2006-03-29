@@ -61,7 +61,7 @@ void FThelpWindow::init()
 #ifndef __WXMAC__
 	wxString helppath = wxString(wxT(HELP_HTML_PATH)) + wxFileName::GetPathSeparator() + wxString(wxT("usagehelp.html")); 
 #else
-	wxString helppath("");
+	wxString helppath(wxT(""));
 #endif	
 	if (wxFile::Access(helppath, wxFile::read))
 	{
