@@ -50,6 +50,7 @@ class FTspectrumModifier
 
 	class Listener {
 	  public:
+	  	virtual ~Listener() {}
 		virtual void goingAway(FTspectrumModifier * ft) = 0;
 	};
 	

@@ -308,8 +308,11 @@ fi
 
 if [[ "$WX_CONFIG" = "" ]] ; then
 
-  AC_PATH_PROG(WX_CONFIG1, wxgtk2-2.5-config, no, $PATH:/usr/local/bin )
-  if [[ "$WX_CONFIG1" = "no" ]] ; then
+  AC_PATH_PROG(WX_CONFIG0, wx-config-2.6, no, $PATH:/usr/local/bin )
+  if [[ "$WX_CONFIG0" = "no" ]] ; then
+
+   AC_PATH_PROG(WX_CONFIG1, wxgtk2-2.5-config, no, $PATH:/usr/local/bin )
+   if [[ "$WX_CONFIG1" = "no" ]] ; then
 
 	AC_PATH_PROG(WX_CONFIG2, wxgtk2-2.4-config, no, $PATH:/usr/local/bin )
 	if [[ "$WX_CONFIG2" = "no" ]] ; then
@@ -329,8 +332,11 @@ if [[ "$WX_CONFIG" = "" ]] ; then
 	else
 		WX_CONFIG=$WX_CONFIG2
 	fi
-  else	
-     WX_CONFIG=$WX_CONFIG1
+   else	
+      WX_CONFIG=$WX_CONFIG1
+   fi
+  else
+      WX_CONFIG=$WX_CONFIG0
   fi
 fi
 
