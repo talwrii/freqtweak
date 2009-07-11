@@ -129,7 +129,7 @@ void FTmodulatorGui::init()
 
 	stattext = new wxStaticText(this, -1, wxString::FromAscii(_modulator->getName().c_str()),
 				    wxDefaultPosition, wxSize(-1, -1));
-	stattext->SetFont(wxFont(stattext->GetFont().GetPointSize(), wxDEFAULT, wxNORMAL, wxBOLD, false, wxT("arial")));
+	stattext->SetFont(wxFont(stattext->GetFont().GetPointSize(), wxDEFAULT, wxNORMAL, wxBOLD));
 	topSizer->Add (stattext, 0, wxALL|wxALIGN_CENTRE_VERTICAL, 2);
 
 
