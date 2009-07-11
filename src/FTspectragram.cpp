@@ -259,8 +259,8 @@ void FTspectragram::plotNextDataSpectragram (const float *data, int length)
 		sdc.SelectObject(*_imageBuf);
 	else return;
 
-	sdc.SetOptimization(true);
-	dc.SetOptimization(true);
+	//sdc.SetOptimization(true);
+	//dc.SetOptimization(true);
 	//rdc.SetOptimization(true);
 
 	
@@ -470,7 +470,7 @@ void FTspectragram::plotNextDataSpectragram (const float *data, int length)
 	//	sdc.SetUserScale(_xscale, 1.0);
 		//}
 
-	sdc.DrawBitmap (wxBitmap (_rasterImage), 0, 0, false);
+	sdc.DrawBitmap (wxBitmap (*_rasterImage), 0, 0, false);
 	
 	
 	// blit to screen
@@ -492,8 +492,8 @@ void FTspectragram::plotNextDataAmpFreq (const float *data, int length)
 	else
 		return;
 
-	sdc.SetOptimization(true);
-	dc.SetOptimization(true);
+	//sdc.SetOptimization(true);
+	//dc.SetOptimization(true);
 	
 	float dbval, sum;
 	int yval, i, k, j;

@@ -265,13 +265,13 @@ void FTmainwin::buildGui()
 {
 	_bwidth = 22;
 	_labwidth = 74;
-	_bheight = 22;
+	_bheight = 24;
 	_rowh = 68;
 
 
-	normalizeFontSize(_buttFont, _bheight-4, wxT("BA"));
-	normalizeFontSize(_titleFont, _bheight-4, wxT("EQ"));
-	normalizeFontSize(_titleAltFont, _bheight-4, wxT("EQ"));
+	normalizeFontSize(_buttFont, _bheight-8, wxT("BA"));
+	normalizeFontSize(_titleFont, _bheight-8, wxT("EQ"));
+	normalizeFontSize(_titleAltFont, _bheight-8, wxT("EQ"));
 	
 	// set the frame icon
 	//SetIcon(wxICON(mondrian));
@@ -3769,7 +3769,7 @@ FTtitleButton::FTtitleButton(FTmainwin * mwin, bool minimized, wxWindow *parent,
 	: wxButton(parent, id, label, pos, size, style, validator, name), _mainwin(mwin), _minimized(minimized)
 {
 	SetForegroundColour(*wxWHITE);
-	SetBackgroundColour(wxColour(30,30,30));
+	SetBackgroundColour(wxColour(50,50,50));
 	SetThemeEnabled(false);
 }
 
