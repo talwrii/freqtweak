@@ -110,4 +110,5 @@ freqtweak_SOURCES = \
 	pixmap_includes.hpp
 
 mac: freqtweak
-	`@WX_CONFIG@ --rezflags` freqtweak
+	/Developer/Tools/Rez -d __DARWIN__ -t APPL Carbon.r -o freqtweak
+

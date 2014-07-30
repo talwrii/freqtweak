@@ -22,7 +22,7 @@
 
 
 #include <wx/wx.h>
-
+#include <vector>
 
 class FTportSelectionDialog
    : public wxDialog
@@ -43,7 +43,7 @@ class FTportSelectionDialog
 			  const wxString& name = wxT("PortSelectionDialog"));
 
 
-    const char ** getSelectedPorts();
+    std::vector<wxString> getSelectedPorts();
 
     void update();
     

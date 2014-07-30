@@ -1727,14 +1727,11 @@ void FTmainwin::handleInputButton(wxCommandEvent &event)
 		   dial->SetSize(wxSize(190,190));
 		   dial->CentreOnParent();
 		   if (dial->ShowModal() == wxID_OK) {
-			   const char ** pnames = dial->getSelectedPorts();
-			   FTioSupport::instance()->disconnectPathInput(i, NULL); // disconnect all
-			   if (pnames) {
-				   for (int j=0; pnames[j]; j++) {
-					   FTioSupport::instance()->connectPathInput(i, pnames[j]);
-				   }
-				   free(pnames);
-			   }
+				std::vector<wxString> pnames = dial->getSelectedPorts();
+				FTioSupport::instance()->disconnectPathInput(i, NULL); // disconnect all
+				for (unsigned j=0; j<pnames.size(); j++) {
+					FTioSupport::instance()->connectPathInput(i, pnames[j].mb_str());
+				}
 		   }
 		   dial->Close();
 	   }
@@ -1760,14 +1757,11 @@ void FTmainwin::handleOutputButton(wxCommandEvent &event)
 		   dial->SetSize(wxSize(190,190));
 		   dial->CentreOnParent();
 		   if (dial->ShowModal() == wxID_OK) {
-			   const char ** pnames = dial->getSelectedPorts();
-			   FTioSupport::instance()->disconnectPathOutput(i, NULL); // disconnect all
-			   if (pnames) {
-				   for (int j=0; pnames[j]; j++) {
-					   FTioSupport::instance()->connectPathOutput(i, pnames[j]);
-				   }
-				   free(pnames);
-			   }
+				std::vector<wxString> pnames = dial->getSelectedPorts();
+				FTioSupport::instance()->disconnectPathOutput(i, NULL); // disconnect all
+				for (unsigned j=0; j<pnames.size(); j++) {
+					FTioSupport::instance()->connectPathOutput(i, pnames[j].mb_str());
+				}
 		   }
 
 		   dial->Close();

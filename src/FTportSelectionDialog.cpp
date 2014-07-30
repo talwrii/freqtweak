@@ -133,17 +133,15 @@ void FTportSelectionDialog::update()
 
 }
 
-const char ** FTportSelectionDialog::getSelectedPorts()
+std::vector<wxString> FTportSelectionDialog::getSelectedPorts()
 {
 	int n = _selectedPorts.GetCount();
-	const char ** pnames = (const char **) malloc(sizeof(char*) * n+1);
+	std::vector<wxString> pnames;
 
 	for (int i=0; i < n; i++) {
-		pnames[i] = wxString(_selectedPorts.Item(i)->GetData()).mb_str();
+		pnames.push_back(wxString(_selectedPorts.Item(i)->GetData()));
 	}
-	pnames[n] = NULL;
 
-	// must be deleted by them
 	return pnames;
 }
 

@@ -1061,7 +1061,7 @@ void FTactiveBarGraph::OnPaint(wxPaintEvent & event)
 		return;
 	}
 
-	backdc.BeginDrawing();
+	//backdc.BeginDrawing();
 
 	backdc.SetBackground(_bgBrush);
 	backdc.Clear();
@@ -1164,7 +1164,7 @@ void FTactiveBarGraph::OnPaint(wxPaintEvent & event)
 
 	}	
 	
-	backdc.EndDrawing();
+	//backdc.EndDrawing();
 
 	// blit to screen
 	dc.Blit(0,0, _width, _height, &backdc, 0,0);
